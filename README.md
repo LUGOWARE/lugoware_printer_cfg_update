@@ -1,11 +1,12 @@
 # LUGOWARE 프린터 설정 자동 업데이트 시스템
 
-이 저장소는 LUGOWARE 3D 프린터의 설정 파일을 자동으로 업데이트하기 위한 시스템입니다.  
+이 저장소는 LUGOWARE FLEX4 3D 프린터의 설정 파일을 자동으로 업데이트하기 위한 시스템입니다.  
 Mainsail 화면에서 버튼 하나로 최신 설정을 받아올 수 있습니다.
 
-> **모델별 안내**  
-> - **W 모델** : 현재 지원 (이 저장소)  
-> - **M / L 모델** : 별도 안내 예정 — 업데이트 전 LUGOWARE에 문의해 주세요.
+> **지원 모델**  
+> - **FLEX4 W** — 브랜치: `FLEX4_W`  
+> - **FLEX4 M** — 브랜치: `FLEX4_M`  
+> - **FLEX4 L** — 브랜치: `FLEX4_L`
 
 ---
 
@@ -41,6 +42,19 @@ SSH 접속 후 아래 명령어를 **복사해서 붙여넣기** 하고 Enter:
 ```bash
 curl -sSL https://raw.githubusercontent.com/LUGOWARE/lugoware_printer_cfg_update/main/install.sh | bash
 ```
+
+실행하면 프린터 모델을 선택하는 메뉴가 나타납니다:
+
+```
+프린터 모델을 선택하세요:
+  1) FLEX4 W
+  2) FLEX4 M
+  3) FLEX4 L
+
+번호 입력 (1/2/3):
+```
+
+본인 프린터 모델에 맞는 번호를 입력하고 Enter를 누르면 자동으로 설치가 완료됩니다.
 
 완료 메시지가 뜨면 Mainsail에서 **Klipper**와 **Moonraker**를 재시작해 주세요.
 
