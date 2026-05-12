@@ -17,8 +17,8 @@ read -p "번호 입력 (1/2/3): " model_choice
 
 case $model_choice in
     1) BRANCH="FLEX4-W"; MODEL="FLEX4 W" ;;
-    2) BRANCH="FLEX4-M"; MODEL="FLEX4 M" ;;
-    3) BRANCH="FLEX4-L"; MODEL="FLEX4 L" ;;
+    2) BRANCH="FLEX4_M"; MODEL="FLEX4 M" ;;
+    3) BRANCH="FLEX4_L"; MODEL="FLEX4 L" ;;
     *) echo "잘못된 입력입니다. 1, 2, 3 중에 선택해 주세요."; exit 1 ;;
 esac
 
