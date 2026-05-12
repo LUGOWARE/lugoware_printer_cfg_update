@@ -1,3 +1,9 @@
 printer.cfg
 printer_custom.cfg
-*.bak
+moonraker.conf
+mainsail.cfg
+timelapse.cfg
+sonar.conf
+print_area_bed_mesh.cfg
+*.bkp
+*.swp
