@@ -40,7 +40,7 @@ Mainsail 웹 화면 좌측 상단 또는 KlipperScreen 화면에서 프린터 IP
 SSH 접속 후 아래 명령어를 **복사해서 붙여넣기** 하고 Enter:
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/LUGOWARE/lugoware_printer_cfg_update/main/install.sh | bash
+bash <(curl -sSL https://raw.githubusercontent.com/LUGOWARE/lugoware_printer_cfg_update/main/install.sh)
 ```
 
 실행하면 프린터 모델을 선택하는 메뉴가 나타납니다:
