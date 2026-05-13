@@ -9,16 +9,16 @@ echo ""
 
 # 모델 선택
 echo "프린터 모델을 선택하세요:"
-echo "  1) FLEX4 W"
-echo "  2) FLEX4 M"
-echo "  3) FLEX4 L"
+echo "  1) FLEX4 M"
+echo "  2) FLEX4 L"
+echo "  3) FLEX4 W"
 echo ""
 read -p "번호 입력 (1/2/3): " model_choice </dev/tty
 
 case $model_choice in
-    1) BRANCH="FLEX4_W"; MODEL="FLEX4 W" ;;
-    2) BRANCH="FLEX4_M"; MODEL="FLEX4 M" ;;
-    3) BRANCH="FLEX4_L"; MODEL="FLEX4 L" ;;
+    1) BRANCH="FLEX4_M"; MODEL="FLEX4 M" ;;
+    2) BRANCH="FLEX4_L"; MODEL="FLEX4 L" ;;
+    3) BRANCH="FLEX4_W"; MODEL="FLEX4 W" ;;
     *) echo "잘못된 입력입니다. 1, 2, 3 중에 선택해 주세요."; exit 1 ;;
 esac
 
