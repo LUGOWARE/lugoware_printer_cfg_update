@@ -10,9 +10,11 @@ Mainsail 화면에서 버튼 하나로 최신 설정을 받아올 수 있습니�
 
 ---
 
+
 <img width="818" height="282" alt="image" src="https://github.com/user-attachments/assets/11c165f2-297a-465b-8b20-bbab5925df4e" />
 
 Mainsail 업데이트 관리자에 lugoware_config 목록이 있다면 설치하지 않으셔도 됩니다.
+
 
 ## 최초 설치 방법 (처음 한 번만)
 
