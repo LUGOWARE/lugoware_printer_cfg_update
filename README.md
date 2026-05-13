@@ -51,9 +51,9 @@ bash <(curl -sSL https://raw.githubusercontent.com/LUGOWARE/lugoware_printer_cfg
 
 ```
 프린터 모델을 선택하세요:
-  1) FLEX4 W
-  2) FLEX4 M
-  3) FLEX4 L
+  1) FLEX4 M
+  2) FLEX4 L
+  3) FLEX4 W
 
 번호 입력 (1/2/3):
 ```
