@@ -13,7 +13,7 @@ echo "  1) FLEX4 W"
 echo "  2) FLEX4 M"
 echo "  3) FLEX4 L"
 echo ""
-read -p "번호 입력 (1/2/3): " model_choice
+read -p "번호 입력 (1/2/3): " model_choice </dev/tty
 
 case $model_choice in
     1) BRANCH="FLEX4_W"; MODEL="FLEX4 W" ;;
