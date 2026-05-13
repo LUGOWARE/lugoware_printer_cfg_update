@@ -107,6 +107,7 @@ make menuconfig
 ```
 <img width="702" height="182" alt="1" src="https://github.com/user-attachments/assets/2d5e778a-62bf-4ae7-878a-d18a5e4599e5" />
 <img width="346" height="107" alt="2" src="https://github.com/user-attachments/assets/59467b26-5418-4592-8139-46bc12e92d2d" />
+
 사진과 같이 설정을 하고 Q -> Y를 눌러 적용합니다.
 
 설정한 내용을 바탕으로 펌웨어 파일을 컴파일(제작)합니다.
