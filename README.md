@@ -4,9 +4,9 @@
 Mainsail 화면에서 버튼 하나로 최신 설정을 받아올 수 있습니다.
 
 > **지원 모델**  
-> - **FLEX4 M** — 브랜치: `FLEX4_M`  
-> - **FLEX4 L** — 브랜치: `FLEX4_L`
-> - **FLEX4 W** — 브랜치: `FLEX4_W`
+> - **FLEX4 M**
+> - **FLEX4 L**
+> - **FLEX4 W**
 
 ---
 
