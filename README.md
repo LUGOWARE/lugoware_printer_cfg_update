@@ -69,10 +69,10 @@ bash <(curl -sSL https://raw.githubusercontent.com/LUGOWARE/lugoware_printer_cfg
 
 ## 이후 업데이트 방법 (설치 완료 후)
 
-Mainsail 화면 우측 상단 → **업데이트 매니저** 패널에서  
+Mainsail 화면 우측 상단 → **업데이트 관리자** 패널에서  
 **lugoware_config** 항목의 **업데이트 버튼** 클릭
 
-끝입니다. 자동으로 최신 설정이 적용됩니다.
+자동으로 최신 설정이 적용됩니다.
 
 ---
 
