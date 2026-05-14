@@ -1,5 +1,7 @@
 # LUGOWARE 프린터 설정 자동 업데이트 시스템
 
+🌐 [English](README_EN.md) | 한국어
+
 이 저장소는 LUGOWARE FLEX4 3D 프린터의 설정 파일을 자동으로 업데이트하기 위한 시스템입니다.  
 Mainsail 화면에서 버튼 하나로 최신 설정을 받아올 수 있습니다.
 
@@ -43,18 +45,24 @@ SSH 접속 후 아래 명령어를 **복사해서 붙여넣기** 하고 Enter:
 bash <(curl -sSL https://raw.githubusercontent.com/LUGOWARE/lugoware_printer_cfg_update/main/install.sh)
 ```
 
-실행하면 프린터 모델을 선택하는 메뉴가 나타납니다:
+실행하면 프린터 모델과 언어를 선택하는 메뉴가 나타납니다:
 
 ```
-프린터 모델을 선택하세요:
-  1) FLEX4 W
-  2) FLEX4 M
-  3) FLEX4 L
+프린터 모델을 선택하세요 / Select printer model:
+  1) FLEX4 M
+  2) FLEX4 L
+  3) FLEX4 W
 
 번호 입력 (1/2/3):
+
+언어를 선택하세요 / Select language:
+  1) 한국어
+  2) English
+
+번호 입력 / Enter number (1/2):
 ```
 
-본인 프린터 모델에 맞는 번호를 입력하고 Enter를 누르면 자동으로 설치가 완료됩니다.
+본인 프린터 모델과 언어에 맞는 번호를 입력하고 Enter를 누르면 자동으로 설치가 완료됩니다.
 
 완료 메시지가 뜨면 Mainsail에서 **Klipper**와 **Moonraker**를 재시작해 주세요.
 
@@ -81,7 +89,7 @@ Mainsail 화면 우측 상단 → **업데이트 매니저** 패널에서
 
 | 파일 | 설명 |
 |------|------|
-| `printer.cfg` | 프린터별 고유 설정 (SAVE_CONFIG 포함) |
+| `printer.cfg` | 프린터별 고유 설정 (MCU 시리얼, SAVE_CONFIG 포함) |
 | `printer_custom.cfg` | 개인 튜닝 값 (pressure advance 등) |
 | `moonraker.conf` | Moonraker 서버 설정 |
 | `mainsail.cfg` | Mainsail UI 설정 |
