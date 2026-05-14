@@ -8,7 +8,7 @@ echo "=== LUGOWARE 설정 업데이트 시스템 설치 ==="
 echo ""
 
 # 모델 선택
-echo "프린터 모델을 선택하세요:"
+echo "프린터 모델을 선택하세요 / Select printer model:"
 echo "  1) FLEX4 M"
 echo "  2) FLEX4 L"
 echo "  3) FLEX4 W"
