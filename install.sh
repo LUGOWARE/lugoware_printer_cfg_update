@@ -78,17 +78,47 @@ echo "[3/6] printer.cfg 확인 중..."
 if ! grep -q "include printer_base.cfg" "$CONFIG_DIR/printer.cfg" 2>/dev/null; then
     echo "  -> printer.cfg 분리 중..."
     python3 - << 'PYEOF'
-import os
+import os, re
 CONFIG_DIR = os.path.expanduser("~/printer_data/config")
 content = open(f"{CONFIG_DIR}/printer.cfg").read()
-idx = content.find('#*# <---')
-save_config = content[idx:] if idx != -1 else ''
-new_cfg = "[include printer_base.cfg]\n[include printer_custom.cfg]\n\n" + save_config
+
+# MCU 섹션 추출 (virtual_sdcard path 줄까지)
+vsd_match = re.search(r'\[virtual_sdcard\][^\[]*?path\s*:.*?\n', content, re.DOTALL)
+if vsd_match:
+    mcu_section = content[:vsd_match.end()].strip()
+else:
+    mcu_section = ''
+
+# SAVE_CONFIG 섹션 추출
+save_idx = content.find('#*# <---')
+save_config = content[save_idx:] if save_idx != -1 else ''
+
+new_cfg = mcu_section + "\n\n[include printer_base.cfg]\n[include printer_custom.cfg]\n\n" + save_config
 open(f"{CONFIG_DIR}/printer.cfg", 'w').write(new_cfg)
-print("  -> printer.cfg 분리 완료")
+print("  -> printer.cfg 분리 완료 (MCU 섹션 보존)")
 PYEOF
 else
     echo "  -> 이미 분리됨, 건너뜀"
+    # 기존 설치 마이그레이션: MCU 섹션이 printer_base.cfg에 있으면 printer.cfg로 이동
+    python3 - << 'PYEOF'
+import os, re
+CONFIG_DIR = os.path.expanduser("~/printer_data/config")
+base_content = open(f"{CONFIG_DIR}/printer_base.cfg").read()
+printer_content = open(f"{CONFIG_DIR}/printer.cfg").read()
+
+# printer.cfg에 MCU 섹션이 없고 printer_base.cfg에 있는 경우 마이그레이션
+if '[mcu]' not in printer_content and '[mcu]' in base_content:
+    vsd_match = re.search(r'\[virtual_sdcard\][^\[]*?path\s*:.*?\n', base_content, re.DOTALL)
+    if vsd_match:
+        mcu_section = base_content[:vsd_match.end()].strip()
+        new_printer = mcu_section + "\n\n" + printer_content
+        open(f"{CONFIG_DIR}/printer.cfg", 'w').write(new_printer)
+        print("  -> MCU 섹션을 printer.cfg로 이동 완료")
+    else:
+        print("  -> MCU 섹션 없음, 건너뜀")
+else:
+    print("  -> MCU 섹션 이미 printer.cfg에 있음, 건너뜀")
+PYEOF
 fi
 
 # 4. printer_custom.cfg 없으면 생성
