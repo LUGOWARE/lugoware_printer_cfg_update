@@ -4,9 +4,16 @@
 Mainsail 화면에서 버튼 하나로 최신 설정을 받아올 수 있습니다.
 
 > **지원 모델**  
-> - **FLEX4 M** — 브랜치: `FLEX4_M`  
-> - **FLEX4 L** — 브랜치: `FLEX4_L`
-> - **FLEX4 W** — 브랜치: `FLEX4_W`
+> - **FLEX4 M**
+> - **FLEX4 L**
+> - **FLEX4 W**
+
+---
+
+
+<img width="818" height="282" alt="image" src="https://github.com/user-attachments/assets/11c165f2-297a-465b-8b20-bbab5925df4e" />
+
+Mainsail 업데이트 관리자에 lugoware_config 목록이 있다면 설치하지 않으셔도 됩니다.
 
 ---
 
@@ -37,7 +44,7 @@ Mainsail 웹 화면 좌측 상단 또는 KlipperScreen 화면에서 프린터 IP
 
 ### 4단계 — 설치 명령어 실행
 
-SSH 접속 후 아래 명령어를 **복사해서 붙여넣기** 하고 Enter:
+SSH 접속 후 아래 명령어를 **복사해서 붙여넣기(마우스 오른쪽 클릭)** 하고 Enter:
 
 ```bash
 bash <(curl -sSL https://raw.githubusercontent.com/LUGOWARE/lugoware_printer_cfg_update/main/install.sh)
@@ -47,9 +54,9 @@ bash <(curl -sSL https://raw.githubusercontent.com/LUGOWARE/lugoware_printer_cfg
 
 ```
 프린터 모델을 선택하세요:
-  1) FLEX4 W
-  2) FLEX4 M
-  3) FLEX4 L
+  1) FLEX4 M
+  2) FLEX4 L
+  3) FLEX4 W
 
 번호 입력 (1/2/3):
 ```
@@ -62,10 +69,10 @@ bash <(curl -sSL https://raw.githubusercontent.com/LUGOWARE/lugoware_printer_cfg
 
 ## 이후 업데이트 방법 (설치 완료 후)
 
-Mainsail 화면 우측 상단 → **업데이트 매니저** 패널에서  
+Mainsail 화면 우측 상단 → **업데이트 관리자** 패널에서  
 **lugoware_config** 항목의 **업데이트 버튼** 클릭
 
-끝입니다. 자동으로 최신 설정이 적용됩니다.
+자동으로 최신 설정이 적용됩니다.
 
 ---
 
@@ -91,9 +98,29 @@ Mainsail 화면 우측 상단 → **업데이트 매니저** 패널에서
 ## 문제 해결
 
 **업데이트 후 Klipper가 시작되지 않는 경우**  
-SSH 접속 후 아래 명령어로 로그 확인:
-```bash
-journalctl -u klipper -n 50
+SSH 접속 후 아래 명령어를 복사 붙여넣기하여 펌웨어 업데이트 진행
+
+Klipper 펌웨어 소스 코드가 있는 폴더로 이동하여 펌웨어 설정 화면을 엽니다.
+```
+cd klipper
+make menuconfig
+```
+<img width="702" height="182" alt="1" src="https://github.com/user-attachments/assets/2d5e778a-62bf-4ae7-878a-d18a5e4599e5" />
+<img width="346" height="107" alt="2" src="https://github.com/user-attachments/assets/59467b26-5418-4592-8139-46bc12e92d2d" />
+
+사진과 같이 설정을 하고 Q -> Y를 눌러 적용합니다.
+
+설정한 내용을 바탕으로 펌웨어 파일을 컴파일(제작)합니다.
+```
+make
+```
+제작된 펌웨어를 프린터 메인보드에 업로드합니다.
+```
+make flash FLASH_DEVICE=/dev/ttyACM0
+```
+프린터를 재시작하여 새 펌웨어를 적용합니다.
+```
+sudo reboot
 ```
 
 **업데이트 버튼이 보이지 않는 경우**  
