@@ -16,9 +16,9 @@ echo ""
 read -p "번호 입력 (1/2/3): " model_choice </dev/tty
 
 case $model_choice in
-    1) BRANCH="FLEX4_M"; MODEL="FLEX4 M" ;;
-    2) BRANCH="FLEX4_L"; MODEL="FLEX4 L" ;;
-    3) BRANCH="FLEX4_W"; MODEL="FLEX4 W" ;;
+    1) BRANCH="FLEX4_M"; MODEL="FLEX4 M"; MODEL_CODE="HM1" ;;
+    2) BRANCH="FLEX4_L"; MODEL="FLEX4 L"; MODEL_CODE="HL1" ;;
+    3) BRANCH="FLEX4_W"; MODEL="FLEX4 W"; MODEL_CODE="HW1" ;;
     *) echo "잘못된 입력입니다. 1, 2, 3 중에 선택해 주세요."; exit 1 ;;
 esac
 
@@ -73,51 +73,83 @@ echo "Config files updated from repo. (language: $LANG_CODE)"
 EOF
 chmod +x "$REPO_DIR/.git/hooks/post-merge"
 
-# 3. printer.cfg 분리 (기존 고객 - 아직 분리 안 된 경우만)
+# 3. printer.cfg 분리
 echo "[3/6] printer.cfg 확인 중..."
+export MODEL_CODE_VAR="$MODEL_CODE"
 if ! grep -q "include printer_base.cfg" "$CONFIG_DIR/printer.cfg" 2>/dev/null; then
     echo "  -> printer.cfg 분리 중..."
     python3 - << 'PYEOF'
 import os, re
 CONFIG_DIR = os.path.expanduser("~/printer_data/config")
+model_code = os.environ.get('MODEL_CODE_VAR', 'HW1')
 content = open(f"{CONFIG_DIR}/printer.cfg").read()
 
-# MCU 섹션 추출 (virtual_sdcard path 줄까지)
-vsd_match = re.search(r'\[virtual_sdcard\][^\[]*?path\s*:.*?\n', content, re.DOTALL)
-if vsd_match:
-    mcu_section = content[:vsd_match.end()].strip()
-else:
-    mcu_section = ''
+# MCU serial 추출
+mcu_match = re.search(r'\[mcu\][^\[]*?serial\s*:\s*(\S+)', content, re.DOTALL)
+mcu_serial = mcu_match.group(1) if mcu_match else '/dev/serial/by-id/YOUR_MCU_SERIAL'
 
 # SAVE_CONFIG 섹션 추출
 save_idx = content.find('#*# <---')
-save_config = content[save_idx:] if save_idx != -1 else ''
+save_config = ('\n' + content[save_idx:]) if save_idx != -1 else ''
 
-new_cfg = mcu_section + "\n\n[include printer_base.cfg]\n[include printer_custom.cfg]\n\n" + save_config
+new_cfg = (
+    f"# ########==========================={model_code}_M5P_MULTISET============================########\n"
+    f"# ########============================== MCU 설정 ===============================########\n"
+    f"\n"
+    f"[include mainsail.cfg]\n"
+    f"[include timelapse.cfg]\n"
+    f"[include printer_base.cfg]\n"
+    f"[include printer_custom.cfg]\n"
+    f"\n"
+    f"[mcu CB2]\n"
+    f"serial: /tmp/klipper_host_mcu\n"
+    f"\n"
+    f"[mcu]\n"
+    f"serial: {mcu_serial}\n"
+    f"\n"
+    f"[virtual_sdcard]\n"
+    f"path: /home/biqu/printer_data/gcodes\n"
+    f"{save_config}"
+)
 open(f"{CONFIG_DIR}/printer.cfg", 'w').write(new_cfg)
-print("  -> printer.cfg 분리 완료 (MCU 섹션 보존)")
+print(f"  -> printer.cfg 생성 완료 (MCU: {mcu_serial})")
 PYEOF
 else
     echo "  -> 이미 분리됨, 건너뜀"
-    # 기존 설치 마이그레이션: MCU 섹션이 printer_base.cfg에 있으면 printer.cfg로 이동
+    # 기존 설치 마이그레이션: MCU 섹션이 printer.cfg에 없으면 추가
     python3 - << 'PYEOF'
 import os, re
 CONFIG_DIR = os.path.expanduser("~/printer_data/config")
-base_content = open(f"{CONFIG_DIR}/printer_base.cfg").read()
+model_code = os.environ.get('MODEL_CODE_VAR', 'HW1')
 printer_content = open(f"{CONFIG_DIR}/printer.cfg").read()
 
-# printer.cfg에 MCU 섹션이 없고 printer_base.cfg에 있는 경우 마이그레이션
-if '[mcu]' not in printer_content and '[mcu]' in base_content:
-    vsd_match = re.search(r'\[virtual_sdcard\][^\[]*?path\s*:.*?\n', base_content, re.DOTALL)
-    if vsd_match:
-        mcu_section = base_content[:vsd_match.end()].strip()
-        new_printer = mcu_section + "\n\n" + printer_content
-        open(f"{CONFIG_DIR}/printer.cfg", 'w').write(new_printer)
-        print("  -> MCU 섹션을 printer.cfg로 이동 완료")
-    else:
-        print("  -> MCU 섹션 없음, 건너뜀")
+if '[mcu]' not in printer_content:
+    # printer_base.cfg에서 serial 찾기
+    base_content = open(f"{CONFIG_DIR}/printer_base.cfg").read()
+    mcu_match = re.search(r'\[mcu\][^\[]*?serial\s*:\s*(\S+)', base_content, re.DOTALL)
+    mcu_serial = mcu_match.group(1) if mcu_match else '/dev/serial/by-id/YOUR_MCU_SERIAL'
+
+    mcu_block = (
+        f"# ########==========================={model_code}_M5P_MULTISET============================########\n"
+        f"# ########============================== MCU 설정 ===============================########\n"
+        f"\n"
+        f"[include mainsail.cfg]\n"
+        f"[include timelapse.cfg]\n"
+        f"\n"
+        f"[mcu CB2]\n"
+        f"serial: /tmp/klipper_host_mcu\n"
+        f"\n"
+        f"[mcu]\n"
+        f"serial: {mcu_serial}\n"
+        f"\n"
+        f"[virtual_sdcard]\n"
+        f"path: /home/biqu/printer_data/gcodes\n"
+        f"\n"
+    )
+    open(f"{CONFIG_DIR}/printer.cfg", 'w').write(mcu_block + printer_content)
+    print(f"  -> MCU 섹션 추가 완료 (MCU: {mcu_serial})")
 else:
-    print("  -> MCU 섹션 이미 printer.cfg에 있음, 건너뜀")
+    print("  -> MCU 섹션 이미 존재, 건너뜀")
 PYEOF
 fi
 
