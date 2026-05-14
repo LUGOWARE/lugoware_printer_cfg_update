@@ -26,6 +26,26 @@ echo ""
 echo "선택된 모델: $MODEL (브랜치: $BRANCH)"
 echo ""
 
+# 언어 선택
+echo "언어를 선택하세요 / Select language:"
+echo "  1) 한국어"
+echo "  2) English"
+echo ""
+read -p "번호 입력 / Enter number (1/2): " lang_choice </dev/tty
+
+case $lang_choice in
+    1) LANG_CODE="ko" ;;
+    2) LANG_CODE="en" ;;
+    *) echo "잘못된 입력입니다. 1 또는 2를 선택해 주세요."; exit 1 ;;
+esac
+
+echo ""
+echo "선택된 언어 / Selected language: $LANG_CODE"
+echo ""
+
+# 언어 설정 저장
+echo "$LANG_CODE" > "$HOME/.lugoware_lang"
+
 # 1. 레포 클론 or 업데이트
 if [ -d "$REPO_DIR/.git" ]; then
     echo "[1/6] 기존 레포 업데이트 중..."
@@ -45,10 +65,11 @@ cat > "$REPO_DIR/.git/hooks/post-merge" << 'EOF'
 #!/bin/bash
 CONFIG_DIR="$HOME/printer_data/config"
 REPO_DIR="$HOME/lugoware_config"
-cp -f "$REPO_DIR/printer_base.cfg" "$CONFIG_DIR/printer_base.cfg"
-cp -f "$REPO_DIR/crowsnest.conf"   "$CONFIG_DIR/crowsnest.conf"
-cp -f "$REPO_DIR/KlipperScreen.conf" "$CONFIG_DIR/KlipperScreen.conf"
-echo "Config files updated from repo."
+LANG_CODE=$(cat "$HOME/.lugoware_lang" 2>/dev/null || echo "ko")
+cp -f "$REPO_DIR/printer_base.cfg"              "$CONFIG_DIR/printer_base.cfg"
+cp -f "$REPO_DIR/crowsnest.conf"                "$CONFIG_DIR/crowsnest.conf"
+cp -f "$REPO_DIR/KlipperScreen_${LANG_CODE}.conf" "$CONFIG_DIR/KlipperScreen.conf"
+echo "Config files updated from repo. (language: $LANG_CODE)"
 EOF
 chmod +x "$REPO_DIR/.git/hooks/post-merge"
 
@@ -83,9 +104,9 @@ fi
 
 # 5. 설정 파일 복사
 echo "[5/6] 설정 파일 복사 중..."
-cp -f "$REPO_DIR/printer_base.cfg"    "$CONFIG_DIR/printer_base.cfg"
-cp -f "$REPO_DIR/crowsnest.conf"      "$CONFIG_DIR/crowsnest.conf"
-cp -f "$REPO_DIR/KlipperScreen.conf"  "$CONFIG_DIR/KlipperScreen.conf"
+cp -f "$REPO_DIR/printer_base.cfg"                    "$CONFIG_DIR/printer_base.cfg"
+cp -f "$REPO_DIR/crowsnest.conf"                      "$CONFIG_DIR/crowsnest.conf"
+cp -f "$REPO_DIR/KlipperScreen_${LANG_CODE}.conf"     "$CONFIG_DIR/KlipperScreen.conf"
 echo "  -> 복사 완료"
 
 # 6. moonraker.conf 업데이트
@@ -96,7 +117,6 @@ import re, os
 branch = os.environ.get('BRANCH_VAR', '$BRANCH_VAR')
 path = os.path.expanduser("~/printer_data/config/moonraker.conf")
 content = open(path).read()
-# 기존 lugoware_config 섹션 제거 후 새로 추가
 content = re.sub(r'\[update_manager lugoware_config\][\s\S]*?(?=\[|\Z)', '', content).rstrip()
 content += f"""
 
@@ -114,7 +134,7 @@ PYEOF
 
 echo ""
 echo "============================================"
-echo "  설치 완료! 모델: $MODEL"
+echo "  설치 완료! 모델: $MODEL / 언어: $LANG_CODE"
 echo "============================================"
 echo ""
 echo "다음 단계:"
