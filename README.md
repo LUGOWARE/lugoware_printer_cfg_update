@@ -6,9 +6,9 @@
 Mainsail 화면에서 버튼 하나로 최신 설정을 받아올 수 있습니다.
 
 > **지원 모델**  
-> - **FLEX4 W** — 브랜치: `FLEX4_W`  
-> - **FLEX4 M** — 브랜치: `FLEX4_M`  
-> - **FLEX4 L** — 브랜치: `FLEX4_L`
+> - **FLEX4 W**
+> - **FLEX4 M**
+> - **FLEX4 L**
 
 ---
 
@@ -39,7 +39,7 @@ Mainsail 웹 화면 좌측 상단 또는 KlipperScreen 화면에서 프린터 IP
 
 ### 4단계 — 설치 명령어 실행
 
-SSH 접속 후 아래 명령어를 **복사해서 붙여넣기** 하고 Enter:
+SSH 접속 후 아래 명령어를 **복사해서 붙여넣기(마우스 오른쪽 클릭)** 하고 Enter:
 
 ```bash
 bash <(curl -sSL https://raw.githubusercontent.com/LUGOWARE/lugoware_printer_cfg_update/main/install.sh)
@@ -70,7 +70,7 @@ bash <(curl -sSL https://raw.githubusercontent.com/LUGOWARE/lugoware_printer_cfg
 
 ## 이후 업데이트 방법 (설치 완료 후)
 
-Mainsail 화면 우측 상단 → **업데이트 매니저** 패널에서  
+Mainsail에서 **프린터 설정** → **업데이트 관리자** 패널에서  
 **lugoware_config** 항목의 **업데이트 버튼** 클릭
 
 끝입니다. 자동으로 최신 설정이 적용됩니다.
