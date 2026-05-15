@@ -98,10 +98,11 @@ Mainsail에서 **프린터 설정** → **업데이트 관리자** 패널에서
 
 ## 문제 해결
 
-**업데이트 후 Klipper가 시작되지 않는 경우**  
-SSH 접속 후 아래 명령어로 로그 확인:
+**업데이트 후 Klipper가 시작되지 않는 경우**
+구버전 펌웨어는 클리퍼에 연결이 되지 않는 경우가 있습니다.
+SSH에 접속하여 아래 명령어를 입력하면 해결됩니다.
 ```bash
-journalctl -u klipper -n 50
+bash <(curl -sSL https://raw.githubusercontent.com/LUGOWARE/lugoware_printer_cfg_update/main/flash.sh)
 ```
 
 **업데이트 버튼이 보이지 않는 경우**  
