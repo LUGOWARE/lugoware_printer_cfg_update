@@ -104,9 +104,16 @@ SSH에 접속하여 아래 명령어를 입력하면 해결됩니다.
 ```bash
 bash <(curl -sSL https://raw.githubusercontent.com/LUGOWARE/lugoware_printer_cfg_update/main/flash.sh)
 ```
+password : biqu 입력
+
+```bash
+sudo reboot
+```
 
 **업데이트 버튼이 보이지 않는 경우**  
 설치가 완료되지 않은 것입니다. 4단계 명령어를 다시 실행해 주세요.
+
+---
 
 **기타 문의**  
 LUGOWARE 고객지원으로 연락해 주세요.
