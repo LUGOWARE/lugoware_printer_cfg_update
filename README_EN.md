@@ -6,9 +6,9 @@ This repository provides an automatic configuration update system for LUGOWARE F
 Get the latest settings with a single button click in Mainsail.
 
 > **Supported Models**  
-> - **FLEX4 W** — Branch: `FLEX4_W`  
-> - **FLEX4 M** — Branch: `FLEX4_M`  
-> - **FLEX4 L** — Branch: `FLEX4_L`
+> - **FLEX4 M**
+> - **FLEX4 L**
+> - **FLEX4 W**
 
 ---
 
@@ -39,7 +39,7 @@ Example: `192.168.0.39`
 
 ### Step 4 — Run the Installation Command
 
-After connecting via SSH, **copy and paste** the command below and press Enter:
+After connecting via SSH, **copy and paste (right-click)** the command below and press Enter:
 
 ```bash
 bash <(curl -sSL https://raw.githubusercontent.com/LUGOWARE/lugoware_printer_cfg_update/main/install.sh)
@@ -70,10 +70,8 @@ Once you see the completion message, restart **Klipper** and **Moonraker** in Ma
 
 ## How to Update (After Installation)
 
-Go to the top-right of Mainsail → **Update Manager** panel  
+In Mainsail, go to **Printer Settings** → **Update Manager** panel  
 Click the **Update** button next to **lugoware_config**
-
-That's it. The latest configuration will be applied automatically.
 
 ---
 
@@ -99,13 +97,28 @@ That's it. The latest configuration will be applied automatically.
 ## Troubleshooting
 
 **Klipper won't start after update**  
-Connect via SSH and check the log:
+Older firmware versions may fail to connect to Klipper.  
+Connect via SSH and run the following command to fix it:
+
 ```bash
-journalctl -u klipper -n 50
+bash <(curl -sSL https://raw.githubusercontent.com/LUGOWARE/lugoware_printer_cfg_update/main/flash.sh)
+```
+
+Password: biqu
+
+```bash
+sudo reboot
 ```
 
 **Update button is not visible**  
 Installation may not have completed. Run the Step 4 command again.
+
+**X-axis motor moves in the wrong direction after firmware update**  
+Early production units were designed with the motor direction reversed. After applying the latest firmware, the motor may run backwards.  
+In Mainsail, open `printer_base.cfg`, find `[stepper_x]` and change `dir_pin: PB1` to `dir_pin: !PB1`, then save and restart.  
+<img width="817" height="222" alt="image" src="https://github.com/user-attachments/assets/bf1903b1-2865-4c0d-a740-3951755f05b6" />
+
+---
 
 **Other inquiries**  
 Please contact LUGOWARE customer support.

@@ -6,9 +6,9 @@
 Mainsail 화면에서 버튼 하나로 최신 설정을 받아올 수 있습니다.
 
 > **지원 모델**  
-> - **FLEX4 W** — 브랜치: `FLEX4_W`  
-> - **FLEX4 M** — 브랜치: `FLEX4_M`  
-> - **FLEX4 L** — 브랜치: `FLEX4_L`
+> - **FLEX4 M**
+> - **FLEX4 L**
+> - **FLEX4 W**
 
 ---
 
@@ -39,7 +39,7 @@ Mainsail 웹 화면 좌측 상단 또는 KlipperScreen 화면에서 프린터 IP
 
 ### 4단계 — 설치 명령어 실행
 
-SSH 접속 후 아래 명령어를 **복사해서 붙여넣기** 하고 Enter:
+SSH 접속 후 아래 명령어를 **복사해서 붙여넣기(마우스 오른쪽 클릭)** 하고 Enter:
 
 ```bash
 bash <(curl -sSL https://raw.githubusercontent.com/LUGOWARE/lugoware_printer_cfg_update/main/install.sh)
@@ -70,10 +70,8 @@ bash <(curl -sSL https://raw.githubusercontent.com/LUGOWARE/lugoware_printer_cfg
 
 ## 이후 업데이트 방법 (설치 완료 후)
 
-Mainsail 화면 우측 상단 → **업데이트 매니저** 패널에서  
+Mainsail에서 **프린터 설정** → **업데이트 관리자** 패널에서  
 **lugoware_config** 항목의 **업데이트 버튼** 클릭
-
-끝입니다. 자동으로 최신 설정이 적용됩니다.
 
 ---
 
@@ -99,13 +97,28 @@ Mainsail 화면 우측 상단 → **업데이트 매니저** 패널에서
 ## 문제 해결
 
 **업데이트 후 Klipper가 시작되지 않는 경우**  
-SSH 접속 후 아래 명령어로 로그 확인:
+구버전 펌웨어는 클리퍼에 연결이 되지 않는 경우가 있습니다.  
+SSH에 접속하여 아래 명령어를 입력하면 해결됩니다.
+
 ```bash
-journalctl -u klipper -n 50
+bash <(curl -sSL https://raw.githubusercontent.com/LUGOWARE/lugoware_printer_cfg_update/main/flash.sh)
+```
+
+비밀번호 입력: biqu
+
+```bash
+sudo reboot
 ```
 
 **업데이트 버튼이 보이지 않는 경우**  
 설치가 완료되지 않은 것입니다. 4단계 명령어를 다시 실행해 주세요.
+
+**펌웨어 업데이트 후 X축 모터가 반대로 이동하는 경우**  
+초기 버전 기기는 모터의 방향이 반대로 설계되어서 최신 펌웨어를 적용할 경우 모터가 반대로 도는 현상이 있습니다.  
+Mainsail의 printer_base.cfg에서 [stepper_x] 목록의 dir_pin: PB1을 !PB1 로 변경하여 저장 후 재시작 합니다.  
+<img width="817" height="222" alt="image" src="https://github.com/user-attachments/assets/bf1903b1-2865-4c0d-a740-3951755f05b6" />
+
+---
 
 **기타 문의**  
 LUGOWARE 고객지원으로 연락해 주세요.
