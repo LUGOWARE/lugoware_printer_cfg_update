@@ -104,7 +104,7 @@ SSH에 접속하여 아래 명령어를 입력하면 해결됩니다.
 ```bash
 bash <(curl -sSL https://raw.githubusercontent.com/LUGOWARE/lugoware_printer_cfg_update/main/flash.sh)
 ```
-password : biqu 입력
+비밀번호 입력: biqu
 
 ```bash
 sudo reboot
