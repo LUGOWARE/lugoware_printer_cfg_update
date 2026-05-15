@@ -114,9 +114,9 @@ sudo reboot
 설치가 완료되지 않은 것입니다. 4단계 명령어를 다시 실행해 주세요.
 
 **펌웨어 업데이트 후 X축 모터가 반대로 이동하는 경우**  
-초기 버전 기기는 모터의 방향이 반대로 설계되어서 최신 펌웨어를 적용할 경우 모터가 반대로 도는 현상이 있습니다.
+초기 버전 기기는 모터의 방향이 반대로 설계되어서 최신 펌웨어를 적용할 경우 모터가 반대로 도는 현상이 있습니다.  
+Mainsail의 printer_base.cfg에서 [stepper_x] 목록의 dir_pin: PB1을 !PB1 로 변경하여 저장 후 재시작 합니다.
 <img width="817" height="222" alt="image" src="https://github.com/user-attachments/assets/bf1903b1-2865-4c0d-a740-3951755f05b6" />  
-dir_pin: PB1  -> !PB1 로 변경하여 저장 후 재시작 합니다.
 
 ---
 
