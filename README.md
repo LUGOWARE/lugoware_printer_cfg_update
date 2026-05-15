@@ -71,9 +71,7 @@ bash <(curl -sSL https://raw.githubusercontent.com/LUGOWARE/lugoware_printer_cfg
 ## 이후 업데이트 방법 (설치 완료 후)
 
 Mainsail에서 **프린터 설정** → **업데이트 관리자** 패널에서  
-**lugoware_config** 항목의 **업데이트 버튼** 클릭
-
-끝입니다. 자동으로 최신 설정이 적용됩니다.
+**lugoware_config** 항목의 **업데이트 버튼** 클릭  
 
 ---
 
@@ -115,7 +113,7 @@ sudo reboot
 
 **펌웨어 업데이트 후 X축 모터가 반대로 이동하는 경우**  
 초기 버전 기기는 모터의 방향이 반대로 설계되어서 최신 펌웨어를 적용할 경우 모터가 반대로 도는 현상이 있습니다.  
-Mainsail의 printer_base.cfg에서 [stepper_x] 목록의 dir_pin: PB1을 !PB1 로 변경하여 저장 후 재시작 합니다.
+Mainsail의 printer_base.cfg에서 [stepper_x] 목록의 dir_pin: PB1을 !PB1 로 변경하여 저장 후 재시작 합니다.  
 <img width="817" height="222" alt="image" src="https://github.com/user-attachments/assets/bf1903b1-2865-4c0d-a740-3951755f05b6" />  
 
 ---
