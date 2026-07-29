@@ -153,6 +153,41 @@ else:
 PYEOF
 fi
 
+# 3-1. z_offset SAVE_CONFIG 블록 보장 (초기 설치 시 필수)
+#   [probe]는 z_offset이 필수라, printer_base.cfg에서 주석 처리된 상태면
+#   SAVE_CONFIG 블록에 초기값이 없을 때 Klipper가 부팅 에러를 냄.
+#   printer.cfg 맨 아래에 넣어두면 부팅 에러도 없고, 업데이트(printer_base.cfg만 덮어씀)에도
+#   영향받지 않으며, 이후 보정값 저장(SAVE_CONFIG)도 정상 동작함.
+echo "[3-1] z_offset 초기값 확인 중..."
+python3 - << 'PYEOF'
+import os, re
+CONFIG_DIR = os.path.expanduser("~/printer_data/config")
+path = f"{CONFIG_DIR}/printer.cfg"
+content = open(path).read()
+
+save_idx = content.find('#*# <---')
+
+if save_idx == -1:
+    # SAVE_CONFIG 블록 자체가 없음 -> 새로 생성
+    block = (
+        "\n"
+        "#*# <---------------------- SAVE_CONFIG ---------------------->\n"
+        "#*# DO NOT EDIT THIS BLOCK OR BELOW. The contents are auto-generated.\n"
+        "#*#\n"
+        "#*# [probe]\n"
+        "#*# z_offset = 0.000\n"
+    )
+    open(path, 'w').write(content.rstrip() + "\n" + block)
+    print("  -> SAVE_CONFIG 블록 생성, z_offset 0.000 추가")
+elif re.search(r'^#\*#\s*z_offset\s*=', content[save_idx:], re.MULTILINE):
+    # 이미 z_offset 존재 (공장 보정값 등) -> 보존
+    print("  -> z_offset 이미 존재, 보존")
+else:
+    # SAVE_CONFIG 블록은 있으나 z_offset 없음 -> [probe] z_offset 추가
+    open(path, 'w').write(content.rstrip() + "\n#*#\n#*# [probe]\n#*# z_offset = 0.000\n")
+    print("  -> z_offset 0.000 추가")
+PYEOF
+
 # 4. printer_custom.cfg 없으면 생성
 echo "[4/6] printer_custom.cfg 확인 중..."
 if [ ! -f "$CONFIG_DIR/printer_custom.cfg" ]; then
