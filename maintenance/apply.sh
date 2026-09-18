@@ -57,8 +57,7 @@ PY
 sudo systemctl stop klipper
 # An interrupted/failed installation leaves Klipper stopped, with backups intact.
 trap 'echo "적용 실패: Klipper는 중지 상태입니다. 백업: $BACKUP_DIR" >&2' ERR
-install -m 644 "$ASSET_DIR/multi_pin.py" "$KLIPPER_DIR/klippy/extras/multi_pin.py.lugoware-new"
-mv -f "$KLIPPER_DIR/klippy/extras/multi_pin.py.lugoware-new" "$KLIPPER_DIR/klippy/extras/multi_pin.py"
+bash "$ASSET_DIR/setup_multi_pin.sh"
 sudo crontab "$BACKUP_DIR/root.crontab.new"
 sudo python3 "$ASSET_DIR/logo_guard.py" install
 bash "$ASSET_DIR/flash_firmware.sh"
@@ -68,4 +67,5 @@ sudo systemctl start klipper
 # after flashing and verify the actual flashed MCU, not just the process state.
 trap - ERR
 python3 "$ASSET_DIR/wait_ready.py" "$ASSET_DIR/../firmware/firmware.bin"
+python3 "$ASSET_DIR/verify_multi_pin.py" "$KLIPPER_DIR"
 echo "펌웨어, 히터 테스트 확장, 6시간 간격 KlipperScreen 재시작 설정 적용 완료. 백업: $BACKUP_DIR"
