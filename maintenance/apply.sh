@@ -54,8 +54,6 @@ lines.append('0 */6 * * * /bin/systemctl restart KlipperScreen')
 dest.write_text('\n'.join(lines) + '\n')
 PY
 
-was_active=0
-systemctl is-active --quiet klipper && was_active=1
 sudo systemctl stop klipper
 # An interrupted/failed installation leaves Klipper stopped, with backups intact.
 trap 'echo "적용 실패: Klipper는 중지 상태입니다. 백업: $BACKUP_DIR" >&2' ERR
@@ -65,11 +63,9 @@ sudo crontab "$BACKUP_DIR/root.crontab.new"
 sudo python3 "$ASSET_DIR/logo_guard.py" install
 bash "$ASSET_DIR/flash_firmware.sh"
 
-if [[ $was_active == 1 ]]; then
-    sudo systemctl start klipper
-    # Connection errors after startup should be visible for diagnosis.
-    trap - ERR
-    python3 "$ASSET_DIR/wait_ready.py"
-fi
+sudo systemctl start klipper
+# A previous failed attempt may have left the service stopped. Always start it
+# after flashing and verify the actual flashed MCU, not just the process state.
 trap - ERR
+python3 "$ASSET_DIR/wait_ready.py" "$ASSET_DIR/../firmware/firmware.bin"
 echo "펌웨어, 히터 테스트 확장, 6시간 간격 KlipperScreen 재시작 설정 적용 완료. 백업: $BACKUP_DIR"

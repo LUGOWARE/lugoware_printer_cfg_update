@@ -14,6 +14,6 @@ install -m 644 "$ASSET_DIR/../firmware/firmware.bin" "$KLIPPER_DIR/out/klipper.b
 cd "$KLIPPER_DIR"
 # Same uploader as STM32 make flash, without its build dependencies replacing
 # the supplied image. M5P: STM32G0B1, USB, 8 KiB bootloader.
-python3 scripts/flash_usb.py -t stm32g0b1 -d "$FLASH_DEVICE" \
+python3 "$ASSET_DIR/run_flash.py" python3 scripts/flash_usb.py -t stm32g0b1 -d "$FLASH_DEVICE" \
     -s 0x08002000 out/klipper.bin
-echo 'M5P 펌웨어 업로드 도구가 성공을 반환했습니다.'
+echo '전송 단계 완료. 실제 MCU 연결 및 버전을 확인해야 합니다.'
