@@ -33,6 +33,7 @@ sudo python3 "$ASSET_DIR/logo_guard.py" check
 # Refuse to stop Klipper during a print, pause, or active heating.
 # A Klipper error state is allowed so firmware mismatch can be repaired.
 python3 "$ASSET_DIR/check_idle.py"
+python3 "$ASSET_DIR/patch_prompts.py" "${KLIPPERSCREEN_DIR:-$HOME/KlipperScreen}/ks_includes/widgets/prompts.py" --check
 if [[ ${1:-} == --check ]]; then
     exit 0
 fi
@@ -94,6 +95,10 @@ status '[확인 완료] 펌웨어: MCU 버전 일치 및 Klipper READY'
 stage='히터 테스트 코드 실행 검증'
 python3 "$ASSET_DIR/verify_multi_pin.py" "$KLIPPER_DIR"
 status '[확인 완료] 히터 테스트: 파일 일치 및 SET_MULTI_PIN_MODE 명령 등록'
+stage='KlipperScreen 여러 줄 안내 패치'
+status '[진행] KlipperScreen prompts.py 패치 및 문법 검사'
+bash "$ASSET_DIR/apply_prompts.sh"
+status '[확인 완료] KlipperScreen: prompt_text 누적 패치 및 문법 검증'
 status '※ 실제 히터 출력과 재부팅 화면은 별도 확인이 필요합니다.'
 trap - ERR
 echo "펌웨어, 히터 테스트 확장, 6시간 간격 KlipperScreen 재시작 설정 적용 완료. 백업: $BACKUP_DIR"
