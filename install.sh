@@ -251,7 +251,7 @@ PYEOF
 
 # 공통 시스템 설정 (재실행해도 cron 중복 없음)
 echo "설정을 적용하고 있습니다. 완료될 때까지 전원을 유지해 주세요..."
-if ! bash "$COMMON_DIR/repo/maintenance/apply.sh" >> "$BACKUP_DIR/install.log" 2>&1; then
+if ! LUGOWARE_SHOW_STATUS=1 bash "$COMMON_DIR/repo/maintenance/apply.sh" 3>&1 >> "$BACKUP_DIR/install.log" 2>&1; then
     echo "설정 적용에 실패했습니다. 고객지원에 문의해 주세요. 기록: $BACKUP_DIR/install.log" >&2
     exit 1
 fi
@@ -262,7 +262,7 @@ echo "  설치 완료! 모델: $MODEL / 언어: $LANG_CODE"
 echo "============================================"
 echo ""
 echo "다음 단계:"
-echo "  Mainsail에서 Klipper와 Moonraker를 재시작해 주세요."
+echo "  Klipper는 재시작 및 검증 완료했습니다. Mainsail에서 Moonraker를 재시작해 주세요."
 echo ""
 echo "  이후 업데이트: Mainsail > 업데이트 매니저 > lugoware_config 업데이트 버튼"
 echo ""

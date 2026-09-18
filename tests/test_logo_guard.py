@@ -79,6 +79,28 @@ class LogoTests(unittest.TestCase):
         with self.assertRaises(subprocess.CalledProcessError):
             guard.install(self.root, run=self.run)
 
+    def test_verification_accepts_installed_state(self):
+        guard.install(self.root, run=self.run)
+        guard.verify(self.root, run=self.run)
+
+    def test_verification_rejects_overwritten_logo(self):
+        guard.install(self.root, run=self.run)
+        guard.path(self.root, '/boot/boot.bmp').write_bytes(b'changed')
+        with self.assertRaisesRegex(RuntimeError, 'asset mismatch'):
+            guard.verify(self.root, run=self.run)
+
+    def test_verification_rejects_missing_hook(self):
+        guard.install(self.root, run=self.run)
+        guard.path(self.root, '/etc/apt/apt.conf.d/99lugoware-logo').unlink()
+        with self.assertRaises(FileNotFoundError):
+            guard.verify(self.root, run=self.run)
+
+    def test_verification_rejects_pending_rebuild(self):
+        guard.install(self.root, run=self.run)
+        (guard.path(self.root, guard.STORE) / '.initramfs-pending').touch()
+        with self.assertRaisesRegex(RuntimeError, 'pending'):
+            guard.verify(self.root, run=self.run)
+
 
 if __name__ == '__main__':
     unittest.main()

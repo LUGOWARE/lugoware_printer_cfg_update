@@ -120,6 +120,26 @@ def install(root, run=subprocess.run):
     restore(root, force=True, run=run)
 
 
+def verify(root, run=subprocess.run):
+    for name, target in ASSETS.items():
+        saved = valid(name, (path(root, STORE) / name).read_bytes())
+        if path(root, target).read_bytes() != saved:
+            raise RuntimeError('Protected asset mismatch: ' + target)
+    for target, expected in (
+        ('/opt/lugoware/restore-logo.sh', WRAPPER),
+        ('/etc/systemd/system/lugoware-logo.service', SERVICE),
+        ('/etc/apt/apt.conf.d/99lugoware-logo', APT),
+        ('/etc/initramfs-tools/hooks/zz-lugoware-logo', HOOK),
+    ):
+        if path(root, target).read_text() != expected:
+            raise RuntimeError('Protection configuration mismatch: ' + target)
+    if path(root, '/opt/lugoware/logo_guard.py').read_bytes() != Path(__file__).read_bytes():
+        raise RuntimeError('Restore implementation mismatch')
+    if (path(root, STORE) / '.initramfs-pending').exists():
+        raise RuntimeError('Boot image rebuild is still pending')
+    run(['systemctl', 'is-enabled', '--quiet', 'lugoware-logo.service'], check=True)
+
+
 def main():
     if os.geteuid() != 0:
         raise SystemExit('Root privileges required')
@@ -135,6 +155,8 @@ def main():
             install(Path('/'))
         elif action == 'restore':
             restore(Path('/'))
+        elif action == 'verify':
+            verify(Path('/'))
         elif action != 'check':
             raise SystemExit('Unknown action')
 
