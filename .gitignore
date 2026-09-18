@@ -7,3 +7,5 @@ sonar.conf
 print_area_bed_mesh.cfg
 *.bkp
 *.swp
+__pycache__/
+*.pyc

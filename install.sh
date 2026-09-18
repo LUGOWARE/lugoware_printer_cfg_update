@@ -1,8 +1,13 @@
 #!/bin/bash
-set -e
+set -euo pipefail
 CONFIG_DIR="$HOME/printer_data/config"
 REPO_DIR="$HOME/lugoware_config"
 REPO_URL="https://github.com/LUGOWARE/lugoware_printer_cfg_update.git"
+
+if [[ $EUID -eq 0 ]]; then
+    echo "일반 SSH 사용자로 실행하세요 (sudo bash 사용 금지)." >&2
+    exit 1
+fi
 
 echo "=== LUGOWARE 설정 업데이트 시스템 설치 ==="
 echo ""
@@ -43,6 +48,16 @@ echo ""
 echo "선택된 언어 / Selected language: $LANG_CODE"
 echo ""
 
+# 공통 기능은 모델 브랜치와 별도로 main에서 같은 커밋으로 가져옵니다.
+COMMON_DIR=$(mktemp -d)
+trap 'rm -rf -- "$COMMON_DIR"' EXIT
+git clone --depth 1 --branch main "$REPO_URL" "$COMMON_DIR/repo"
+bash "$COMMON_DIR/repo/maintenance/apply.sh" --check
+export BACKUP_DIR="$HOME/lugoware_backups/$(date +%Y%m%d-%H%M%S)-$$"
+mkdir -p "$BACKUP_DIR"
+cp -a "$CONFIG_DIR" "$BACKUP_DIR/config"
+sudo -v
+
 # 언어 설정 저장
 echo "$LANG_CODE" > "$HOME/.lugoware_lang"
 
@@ -52,7 +67,7 @@ if [ -d "$REPO_DIR/.git" ]; then
     cd "$REPO_DIR"
     git fetch origin
     git checkout "$BRANCH"
-    git pull origin "$BRANCH"
+    git pull --ff-only origin "$BRANCH"
 else
     echo "[1/6] 레포 클론 중..."
     git clone -b "$BRANCH" "$REPO_URL" "$REPO_DIR"
@@ -228,6 +243,9 @@ managed_services: klipper
 open(path, 'w').write(content)
 print(f"  -> moonraker.conf 업데이트 완료 (브랜치: {branch})")
 PYEOF
+
+# 공통 시스템 설정 (재실행해도 cron 중복 없음)
+bash "$COMMON_DIR/repo/maintenance/apply.sh"
 
 echo ""
 echo "============================================"

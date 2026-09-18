@@ -64,6 +64,12 @@ bash <(curl -sSL https://raw.githubusercontent.com/LUGOWARE/lugoware_printer_cfg
 
 본인 프린터 모델과 언어에 맞는 번호를 입력하고 Enter를 누르면 자동으로 설치가 완료됩니다.
 
+이 명령은 설정 업데이트와 함께 **M5P 펌웨어 업로드**, **히터 테스트용 multi_pin.py 설치**,
+**KlipperScreen 6시간 간격 재시작 예약**도 적용합니다. 일반 SSH 사용자로 실행하고
+sudo 암호 요청에 응답하세요. 출력/일시정지/가열 중에는 실행할 수 없습니다.
+펌웨어는 main의 firmware/firmware.bin을 사용합니다.
+상세 동작, 히터 테스트 명령 및 새 펌웨어 배포 방법은 [통합 설치 안내](maintenance/README.md)를 참고하세요.
+
 완료 메시지가 뜨면 Mainsail에서 **Klipper**와 **Moonraker**를 재시작해 주세요.
 
 ---
@@ -72,6 +78,9 @@ bash <(curl -sSL https://raw.githubusercontent.com/LUGOWARE/lugoware_printer_cfg
 
 Mainsail에서 **프린터 설정** → **업데이트 관리자** 패널에서  
 **lugoware_config** 항목의 **업데이트 버튼** 클릭
+
+이 버튼은 기존처럼 설정 파일만 갱신합니다. 펌웨어와 히터 테스트 확장을 다시
+적용하려면 위 SSH 설치 명령을 재실행하세요.
 
 ---
 
@@ -106,9 +115,7 @@ bash <(curl -sSL https://raw.githubusercontent.com/LUGOWARE/lugoware_printer_cfg
 
 비밀번호 입력: biqu
 
-```bash
-sudo reboot
-```
+새 스크립트는 Klipper 서비스를 다시 시작하므로 운영체제 재부팅은 하지 않습니다.
 
 **업데이트 버튼이 보이지 않는 경우**  
 설치가 완료되지 않은 것입니다. 4단계 명령어를 다시 실행해 주세요.
