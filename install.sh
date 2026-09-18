@@ -52,9 +52,14 @@ echo ""
 COMMON_DIR=$(mktemp -d)
 trap 'rm -rf -- "$COMMON_DIR"' EXIT
 git clone --depth 1 --branch main "$REPO_URL" "$COMMON_DIR/repo"
-bash "$COMMON_DIR/repo/maintenance/apply.sh" --check
 export BACKUP_DIR="$HOME/lugoware_backups/$(date +%Y%m%d-%H%M%S)-$$"
-mkdir -p "$BACKUP_DIR"
+mkdir -m 700 -p "$BACKUP_DIR"
+sudo -v
+echo "설치 환경을 확인하고 있습니다..."
+if ! bash "$COMMON_DIR/repo/maintenance/apply.sh" --check >> "$BACKUP_DIR/install.log" 2>&1; then
+    echo "설치 환경 확인에 실패했습니다. 고객지원에 문의해 주세요. 기록: $BACKUP_DIR/install.log" >&2
+    exit 1
+fi
 cp -a "$CONFIG_DIR" "$BACKUP_DIR/config"
 sudo -v
 
@@ -245,7 +250,11 @@ print(f"  -> moonraker.conf 업데이트 완료 (브랜치: {branch})")
 PYEOF
 
 # 공통 시스템 설정 (재실행해도 cron 중복 없음)
-bash "$COMMON_DIR/repo/maintenance/apply.sh"
+echo "설정을 적용하고 있습니다. 완료될 때까지 전원을 유지해 주세요..."
+if ! bash "$COMMON_DIR/repo/maintenance/apply.sh" >> "$BACKUP_DIR/install.log" 2>&1; then
+    echo "설정 적용에 실패했습니다. 고객지원에 문의해 주세요. 기록: $BACKUP_DIR/install.log" >&2
+    exit 1
+fi
 
 echo ""
 echo "============================================"

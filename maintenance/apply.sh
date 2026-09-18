@@ -20,6 +20,7 @@ test -c "${FLASH_DEVICE:-/dev/ttyACM0}"
 python3 "$ASSET_DIR/verify_firmware.py" "$ASSET_DIR/../firmware"
 sudo -v
 systemctl cat KlipperScreen.service >/dev/null
+sudo python3 "$ASSET_DIR/logo_guard.py" check
 
 # Refuse to stop Klipper during a print, pause, or active heating.
 # A Klipper error state is allowed so firmware mismatch can be repaired.
@@ -61,6 +62,7 @@ trap 'echo "적용 실패: Klipper는 중지 상태입니다. 백업: $BACKUP_DI
 install -m 644 "$ASSET_DIR/multi_pin.py" "$KLIPPER_DIR/klippy/extras/multi_pin.py.lugoware-new"
 mv -f "$KLIPPER_DIR/klippy/extras/multi_pin.py.lugoware-new" "$KLIPPER_DIR/klippy/extras/multi_pin.py"
 sudo crontab "$BACKUP_DIR/root.crontab.new"
+sudo python3 "$ASSET_DIR/logo_guard.py" install
 bash "$ASSET_DIR/flash_firmware.sh"
 
 if [[ $was_active == 1 ]]; then
