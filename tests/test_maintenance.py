@@ -78,22 +78,24 @@ class MaintenanceTests(unittest.TestCase):
                     getattr(output, method).assert_called_once_with(
                         101., .7 if index == mode - 1 else 0.)
 
-    def test_switch_drains_scheduled_output_and_normal_can_resume(self):
+    def test_switch_selects_mode_and_normal_can_resume(self):
         pin = self.pin()
         pin.cmd_SET_MULTI_PIN_MODE(self.command(2))
         for output in pin.mcu_pins:
-            output.set_pwm.assert_called_once_with(100.001, 0.)
+            output.set_pwm.assert_not_called()
         self.assertEqual(pin.test_mode, 2)
         pin.cmd_SET_MULTI_PIN_MODE(self.command(0))
         pin.set_pwm(102., .4)
         for output in pin.mcu_pins:
             output.set_pwm.assert_called_with(102., .4)
 
-    def test_heating_rejects_switch_without_changing_mode(self):
+    def test_mode_command_matches_requested_behavior_and_message(self):
         pin = self.pin(target=200)
-        with self.assertRaisesRegex(ValueError, 'TURN_OFF_HEATERS'):
-            pin.cmd_SET_MULTI_PIN_MODE(self.command(1))
-        self.assertEqual(pin.test_mode, 0)
+        command = self.command(1)
+        pin.cmd_SET_MULTI_PIN_MODE(command)
+        self.assertEqual(pin.test_mode, 1)
+        command.respond_info.assert_called_once_with('Dual heater mode: HEATER 1 ONLY (PC5)')
+        pin.printer.lookup_object.assert_not_called()
         pin.mcu_pins[0].set_pwm.assert_not_called()
 
     def test_one_pin_rejected(self):
