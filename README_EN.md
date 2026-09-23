@@ -1,5 +1,7 @@
 # LUGOWARE Printer Config Auto-Update System
 
+The installer copies `extrude.py`, `nozzle_temperature.py`, and `tool_prepare.py` from `panels/ko` or `panels/en`, according to the selected language, into `~/KlipperScreen/panels`. Existing files are backed up in the installation backup's `panels` directory before replacement. The installer lists all three files and restarts KlipperScreen. Set `KLIPPERSCREEN_DIR` for a custom installation path. Panels are deployed by `install.sh`, not by the model configuration's post-merge hook.
+
 🌐 [한국어](README.md) | English
 
 This repository provides an automatic configuration update system for LUGOWARE FLEX4 3D printers.  

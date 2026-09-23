@@ -1,5 +1,7 @@
 # LUGOWARE 프린터 설정 자동 업데이트 시스템
 
+설치 시 선택한 언어에 맞춰 `panels/ko` 또는 `panels/en`의 `extrude.py`, `nozzle_temperature.py`, `tool_prepare.py`를 `~/KlipperScreen/panels`에 설치합니다. 기존 파일은 설치 백업 폴더의 `panels`에 보관한 뒤 덮어씁니다. 설치 결과에 파일 3개를 표시하고 KlipperScreen을 재시작합니다. 다른 설치 경로는 `KLIPPERSCREEN_DIR`로 지정할 수 있습니다. 패널 배포는 `install.sh` 실행 시 수행되며, 모델 설정의 post-merge 업데이트만으로는 변경되지 않습니다.
+
 🌐 [English](README_EN.md) | 한국어
 
 이 저장소는 LUGOWARE FLEX4 3D 프린터의 설정 파일을 자동으로 업데이트하기 위한 시스템입니다.  

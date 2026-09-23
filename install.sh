@@ -54,6 +54,9 @@ trap 'rm -rf -- "$COMMON_DIR"' EXIT
 git clone --depth 1 --branch main "$REPO_URL" "$COMMON_DIR/repo"
 export BACKUP_DIR="$HOME/lugoware_backups/$(date +%Y%m%d-%H%M%S)-$$"
 mkdir -m 700 -p "$BACKUP_DIR"
+PANEL_DIR="${KLIPPERSCREEN_DIR:-$HOME/KlipperScreen}/panels"
+python3 "$COMMON_DIR/repo/maintenance/install_panels.py" --language "$LANG_CODE" \
+    --target "$PANEL_DIR" --backup "$BACKUP_DIR/panels" --check
 sudo -v
 echo "설치 환경을 확인하고 있습니다..."
 if ! bash "$COMMON_DIR/repo/maintenance/apply.sh" --check >> "$BACKUP_DIR/install.log" 2>&1; then
@@ -249,12 +252,22 @@ open(path, 'w').write(content)
 print(f"  -> moonraker.conf 업데이트 완료 (브랜치: {branch})")
 PYEOF
 
+# 선택한 언어의 패널 3개 설치 (기존 파일 백업 후 덮어쓰기)
+echo "KlipperScreen 패널 설치 / Installing panels ($LANG_CODE)"
+python3 "$COMMON_DIR/repo/maintenance/install_panels.py" --language "$LANG_CODE" \
+    --target "$PANEL_DIR" --backup "$BACKUP_DIR/panels"
+
 # 공통 시스템 설정 (재실행해도 cron 중복 없음)
 echo "설정을 적용하고 있습니다. 완료될 때까지 전원을 유지해 주세요..."
 if ! LUGOWARE_SHOW_STATUS=1 bash "$COMMON_DIR/repo/maintenance/apply.sh" 3>&1 >> "$BACKUP_DIR/install.log" 2>&1; then
     echo "설정 적용에 실패했습니다. 고객지원에 문의해 주세요. 기록: $BACKUP_DIR/install.log" >&2
     exit 1
 fi
+
+sudo systemctl restart KlipperScreen
+systemctl is-active --quiet KlipperScreen
+echo "패널 3개 설치 완료 / Installed ($LANG_CODE): extrude.py, nozzle_temperature.py, tool_prepare.py"
+echo "패널 백업 / Panel backup: $BACKUP_DIR/panels"
 
 echo ""
 echo "============================================"
