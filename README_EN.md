@@ -1,5 +1,7 @@
 # LUGOWARE Printer Config Auto-Update System
 
+At the end of `flash.sh`, the `[update_manager KlipperScreen]` section in `~/printer_data/config/moonraker.conf` is commented out. The original file is backed up and Moonraker is restarted when changed. Other update manager sections are preserved.
+
 The installer copies `extrude.py`, `nozzle_temperature.py`, and `tool_prepare.py` from `panels/ko` or `panels/en`, according to the selected language, into `~/KlipperScreen/panels`. Existing files are backed up in the installation backup's `panels` directory before replacement. The installer lists all three files and restarts KlipperScreen. Set `KLIPPERSCREEN_DIR` for a custom installation path. Panels are deployed by `install.sh`, not by the model configuration's post-merge hook.
 
 🌐 [한국어](README.md) | English

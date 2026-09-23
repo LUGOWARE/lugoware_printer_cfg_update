@@ -1,5 +1,7 @@
 # LUGOWARE 프린터 설정 자동 업데이트 시스템
 
+`flash.sh`는 적용 완료 단계에서 `~/printer_data/config/moonraker.conf`의 `[update_manager KlipperScreen]` 항목 전체를 주석 처리합니다. 수정 전 파일을 설치 백업 폴더에 보관하고, 변경 시 Moonraker를 재시작합니다. 다른 업데이트 항목은 유지합니다.
+
 설치 시 선택한 언어에 맞춰 `panels/ko` 또는 `panels/en`의 `extrude.py`, `nozzle_temperature.py`, `tool_prepare.py`를 `~/KlipperScreen/panels`에 설치합니다. 기존 파일은 설치 백업 폴더의 `panels`에 보관한 뒤 덮어씁니다. 설치 결과에 파일 3개를 표시하고 KlipperScreen을 재시작합니다. 다른 설치 경로는 `KLIPPERSCREEN_DIR`로 지정할 수 있습니다. 패널 배포는 `install.sh` 실행 시 수행되며, 모델 설정의 post-merge 업데이트만으로는 변경되지 않습니다.
 
 🌐 [English](README_EN.md) | 한국어
