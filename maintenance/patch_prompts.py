@@ -9,7 +9,7 @@ import tempfile
 
 
 def replacement(text):
-    marker = re.compile(r'^(?P<i>[ \t]*)elif data\.startswith\("prompt_text"\):\r?$', re.MULTILINE)
+    marker = re.compile(r'''^(?P<i>[ \t]*)elif data\.startswith\((?P<q>['"])prompt_text(?P=q)\):\r?$''', re.MULTILINE)
     matches = list(marker.finditer(text))
     if len(matches) != 1:
         raise ValueError('ERROR: expected exactly one prompt_text block')
@@ -17,10 +17,11 @@ def replacement(text):
     indent = matches[0].group('i')
     nl = '\r\n' if '\r\n' in text else '\n'
     unit = '\t' if '\t' in indent else '    '
-    original = nl.join([
-        indent + 'elif data.startswith("prompt_text"):',
-        indent + unit + 'self.text = data.replace("prompt_text ", "")',
-        indent + unit + 'return', ''])
+    original = re.compile(
+        re.escape(matches[0].group(0).rstrip('\r') + nl + indent + unit)
+        + r'''self\.text = data\.replace\((?P<q1>['"])prompt_text (?P=q1), (?P<q2>['"])(?P=q2)\)'''
+        + re.escape(nl + indent + unit + 'return' + nl)
+    )
     patched = nl.join([
         indent + 'elif data.startswith("prompt_text"):',
         indent + unit + 'new_text = data.replace("prompt_text ", "", 1)',
@@ -32,9 +33,10 @@ def replacement(text):
     if text.startswith(patched, start):
         ast.parse(text)
         return text, False
-    if not text.startswith(original, start):
+    original_match = original.match(text, start)
+    if original_match is None:
         raise ValueError('ERROR: prompt_text block differs from expected code; no changes made')
-    result = text[:start] + patched + text[start + len(original):]
+    result = text[:start] + patched + text[original_match.end():]
     ast.parse(result)
     return result, True
 

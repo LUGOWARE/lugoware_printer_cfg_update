@@ -21,6 +21,20 @@ ORIGINAL = '''class Prompt:
 
 
 class PromptTests(unittest.TestCase):
+    def test_single_and_mixed_quotes(self):
+        for source in (ORIGINAL.replace('"', "'"),
+                       ORIGINAL.replace('startswith("prompt_text")', "startswith('prompt_text')")):
+            with self.subTest(source=source):
+                result, changed = module.replacement(source)
+                self.assertTrue(changed)
+                namespace = {}
+                exec(result, namespace)
+                prompt = namespace['Prompt']()
+                prompt.parse('prompt_text first')
+                prompt.parse('prompt_text second')
+                self.assertEqual(prompt.text, 'first\nsecond')
+                self.assertEqual(module.replacement(result), (result, False))
+
     def test_accumulates_and_preserves_button_and_reset(self):
         text, changed = module.replacement(ORIGINAL)
         self.assertTrue(changed)
