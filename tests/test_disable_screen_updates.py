@@ -9,6 +9,22 @@ spec.loader.exec_module(module)
 
 
 class DisableScreenUpdatesTests(unittest.TestCase):
+    def test_include_tree_three_components_and_backups(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            main = root / 'moonraker.conf'
+            included = root / 'updates.conf'
+            main.write_text('[include updates.conf]\n[update_manager klipper]\ntype: git_repo\n[update_manager lugoware_config]\ntype: git_repo\n')
+            included.write_text('[include moonraker.conf]\n[update_manager KlipperScreen]\ntype: git_repo\n[update_manager mainsail-config]\ntype: git_repo\n[update_manager mainsail]\ntype: web\n')
+            originals = {p: p.read_bytes() for p in (main, included)}
+            names = ('klipper', 'KlipperScreen', 'mainsail-config')
+            self.assertTrue(module.apply_tree(main, root / 'backup', names))
+            self.assertIn('#[update_manager klipper]', main.read_text())
+            self.assertIn('\n[update_manager lugoware_config]', main.read_text())
+            self.assertIn('#[update_manager mainsail-config]', included.read_text())
+            self.assertIn('\n[update_manager mainsail]', included.read_text())
+            self.assertEqual({p.read_bytes() for p in (root / 'backup').iterdir()}, set(originals.values()))
+            self.assertFalse(module.apply_tree(main, root / 'backup', names))
     def test_only_target_section_and_repeat(self):
         before = '[server]\nport: 7125\n\n[update_manager KlipperScreen]\ntype: git_repo\n# keep comment\npath: ~/KlipperScreen\n\n[update_manager klipper]\ntype: git_repo\n'
         after = module.comment_section(before)

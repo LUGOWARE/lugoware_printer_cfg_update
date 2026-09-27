@@ -2,7 +2,9 @@
 
 ## Repeat installation policy
 
-Hosts below v0.13.0 are backed up and upgraded to `f0892d82b0f1c1228454f09eb508eddde2250f4b`, including Python dependencies and the Linux/CB2 MCU. The known multi_pin customization is retained; other tracked modifications stop the upgrade. Hosts at v0.13.0 or later retain their version. Interrupted Linux MCU installations are recorded for resumption. This does not upgrade the OS.
+After successful installation, install.sh backs up and comments klipper, KlipperScreen and mainsail-config update sections in Moonraker configuration and active includes, then restarts Moonraker. Klipper is also a built-in auto-registered updater: commenting its configuration does not guarantee hiding it. Hiding that built-in entry requires inspecting the installed Moonraker implementation. The supplied M5P binary is unchanged; final READY is checked.
+
+Hosts below v0.13.0-770 are backed up and upgraded to `ce7002bedf37e938bb483572949f3703ac6476cb`, including Python dependencies and the Linux/CB2 MCU. The known multi_pin customization is retained; other tracked modifications stop the upgrade. Hosts at v0.13.0-770 or later retain their version. Interrupted Linux MCU installations are recorded for resumption. This does not upgrade the OS.
 
 A live READY M5P matching the distribution firmware skips flashing. Other working firmware on v0.13+ hosts is retained rather than downgraded; final READY is still required. Identical panels/configs, extension setup, cron, logo protection and prompts patches skip rewriting. Verification and service restarts still occur. The shared policy also applies to flash.sh. Legacy Bullseye build dependencies use a temporary official binary source list without changing system APT configuration.
 

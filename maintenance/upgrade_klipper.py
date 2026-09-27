@@ -7,7 +7,8 @@ import shutil
 import subprocess
 import tempfile
 
-BASELINE = 'f0892d82b0f1c1228454f09eb508eddde2250f4b'
+BASELINE = 'ce7002bedf37e938bb483572949f3703ac6476cb'
+MIN_VERSION = (0, 13, 0, 770)
 
 
 def release(version):
@@ -15,6 +16,14 @@ def release(version):
     if not match:
         raise ValueError('Cannot determine Klipper version: ' + version)
     return tuple(map(int, match.groups()))
+
+
+def version_key(version):
+    base = release(version)
+    match = re.fullmatch(r'v\d+\.\d+\.\d+(?:-(\d+)-g[0-9a-f]+)?(?:-dirty)?', version)
+    if not match:
+        raise ValueError('Cannot determine Klipper revision: ' + version)
+    return base + (int(match.group(1) or 0),)
 
 
 def run(*args, **kwargs):
@@ -28,7 +37,7 @@ def output(*args):
 def upgrade(folder, backup, check=False):
     version = output('git', '-C', str(folder), 'describe', '--always', '--tags', '--long', '--dirty')
     pending = folder / '.git/lugoware-linux-mcu-pending'
-    update_host = release(version) < (0, 13, 0)
+    update_host = version_key(version) < MIN_VERSION
     if not update_host and not pending.exists():
         print('[건너뜀] Klipper 본체: ' + version, flush=True)
         return

@@ -20,7 +20,7 @@ class UpgradePolicyTests(unittest.TestCase):
             upgrade.release('abcdef')
 
     def test_new_hosts_do_not_fetch_checkout_or_build(self):
-        for version in ('v0.13.0-1-gabc', 'v0.14.0-1-gabc'):
+        for version in ('v0.13.0-770-gabc', 'v0.13.0-771-gabc-dirty', 'v0.14.0-1-gabc'):
             with tempfile.TemporaryDirectory() as tmp, patch.object(upgrade, 'output', return_value=version), patch.object(upgrade, 'run') as run:
                 upgrade.upgrade(Path(tmp), Path(tmp) / 'backup')
                 run.assert_not_called()
@@ -41,10 +41,16 @@ class UpgradePolicyTests(unittest.TestCase):
             folder = Path(tmp)
             (folder / '.git').mkdir()
             (folder / '.git/lugoware-linux-mcu-pending').write_text('pending')
-            with patch.object(upgrade, 'output', side_effect=['v0.13.0-745-gabc', 'klippy/extras/multi_pin.py']) as output, patch.object(upgrade, 'run') as run:
+            with patch.object(upgrade, 'output', side_effect=['v0.13.0-770-gabc', 'klippy/extras/multi_pin.py']) as output, patch.object(upgrade, 'run') as run:
                 upgrade.upgrade(folder, folder / 'backup', check=True)
                 self.assertEqual(output.call_count, 2)
                 run.assert_not_called()
+
+    def test_revision_threshold(self):
+        for version in ('v0.12.0-249-ga19d64feb-dirty', 'v0.13.0', 'v0.13.0-745-gf0892d82b-dirty', 'v0.13.0-769-gabc'):
+            self.assertLess(upgrade.version_key(version), upgrade.MIN_VERSION)
+        for version in ('v0.13.0-770-gce7002be-dirty', 'v0.13.0-1000-gabc', 'v0.13.1', 'v0.14.0'):
+            self.assertGreaterEqual(upgrade.version_key(version), upgrade.MIN_VERSION)
 
     def test_live_firmware_policy(self):
         ready = {'state': 'ready', 'software_version': 'v0.13.0-745-gabc'}

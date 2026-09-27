@@ -283,6 +283,15 @@ systemctl is-active --quiet KlipperScreen
 echo "패널 3개 설치 완료 / Installed ($LANG_CODE): extrude.py, nozzle_temperature.py, tool_prepare.py"
 echo "패널 백업 / Panel backup: $BACKUP_DIR/panels"
 
+# Hide managed components only after all installation checks succeeded.
+echo 'Klipper / KlipperScreen / mainsail-config 업데이트 항목 주석 처리 중...'
+updates_result=$(python3 "$COMMON_DIR/repo/maintenance/disable_screen_updates.py" \
+    "$CONFIG_DIR/moonraker.conf" "$BACKUP_DIR/moonraker-update-sections" --installed-components)
+# Restart even if already commented: an earlier run may have stopped before reload.
+sudo systemctl restart moonraker
+systemctl is-active --quiet moonraker
+echo "[완료] 업데이트 항목 주석 처리 및 Moonraker 재시작 ($updates_result)"
+
 echo ""
 echo "============================================"
 echo "  설치 완료! 모델: $MODEL / 언어: $LANG_CODE"
