@@ -3,6 +3,13 @@ set -euo pipefail
 CONFIG_DIR="$HOME/printer_data/config"
 REPO_DIR="$HOME/lugoware_config"
 REPO_URL="https://github.com/LUGOWARE/lugoware_printer_cfg_update.git"
+copy_config() {
+    if cmp -s "$1" "$2"; then
+        echo "  [건너뜀] $(basename "$2"): 동일한 설정"
+    else
+        cp -f "$1" "$2"
+    fi
+}
 
 if [[ $EUID -eq 0 ]]; then
     echo "일반 SSH 사용자로 실행하세요 (sudo bash 사용 금지)." >&2
@@ -89,9 +96,13 @@ cat > "$REPO_DIR/.git/hooks/post-merge" << 'EOF'
 CONFIG_DIR="$HOME/printer_data/config"
 REPO_DIR="$HOME/lugoware_config"
 LANG_CODE=$(cat "$HOME/.lugoware_lang" 2>/dev/null || echo "ko")
-cp -f "$REPO_DIR/printer_base.cfg"              "$CONFIG_DIR/printer_base.cfg"
-cp -f "$REPO_DIR/crowsnest.conf"                "$CONFIG_DIR/crowsnest.conf"
-cp -f "$REPO_DIR/KlipperScreen_${LANG_CODE}.conf" "$CONFIG_DIR/KlipperScreen.conf"
+for name in printer_base.cfg crowsnest.conf "KlipperScreen_${LANG_CODE}.conf"; do
+    target="$name"
+    [[ $name == KlipperScreen_* ]] && target=KlipperScreen.conf
+    if ! cmp -s "$REPO_DIR/$name" "$CONFIG_DIR/$target"; then
+        cp -f "$REPO_DIR/$name" "$CONFIG_DIR/$target"
+    fi
+done
 echo "Config files updated from repo. (language: $LANG_CODE)"
 EOF
 chmod +x "$REPO_DIR/.git/hooks/post-merge"
@@ -224,9 +235,9 @@ fi
 
 # 5. 설정 파일 복사
 echo "[5/6] 설정 파일 복사 중..."
-cp -f "$REPO_DIR/printer_base.cfg"                    "$CONFIG_DIR/printer_base.cfg"
-cp -f "$REPO_DIR/crowsnest.conf"                      "$CONFIG_DIR/crowsnest.conf"
-cp -f "$REPO_DIR/KlipperScreen_${LANG_CODE}.conf"     "$CONFIG_DIR/KlipperScreen.conf"
+copy_config "$REPO_DIR/printer_base.cfg" "$CONFIG_DIR/printer_base.cfg"
+copy_config "$REPO_DIR/crowsnest.conf" "$CONFIG_DIR/crowsnest.conf"
+copy_config "$REPO_DIR/KlipperScreen_${LANG_CODE}.conf" "$CONFIG_DIR/KlipperScreen.conf"
 echo "  -> 복사 완료"
 
 # 6. moonraker.conf 업데이트
@@ -236,8 +247,8 @@ python3 - << PYEOF
 import re, os
 branch = os.environ.get('BRANCH_VAR', '$BRANCH_VAR')
 path = os.path.expanduser("~/printer_data/config/moonraker.conf")
-content = open(path).read()
-content = re.sub(r'\[update_manager lugoware_config\][\s\S]*?(?=\[|\Z)', '', content).rstrip()
+original = open(path).read()
+content = re.sub(r'\[update_manager lugoware_config\][\s\S]*?(?=\[|\Z)', '', original).rstrip()
 content += f"""
 
 [update_manager lugoware_config]
@@ -248,8 +259,11 @@ primary_branch: {branch}
 is_system_service: False
 managed_services: klipper
 """
-open(path, 'w').write(content)
-print(f"  -> moonraker.conf 업데이트 완료 (브랜치: {branch})")
+if content != original:
+    open(path, 'w').write(content)
+    print(f"  -> moonraker.conf 업데이트 완료 (브랜치: {branch})")
+else:
+    print('  [건너뜀] moonraker.conf: 동일한 설정')
 PYEOF
 
 # 선택한 언어의 패널 3개 설치 (기존 파일 백업 후 덮어쓰기)

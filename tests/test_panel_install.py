@@ -21,7 +21,9 @@ class PanelInstallTests(unittest.TestCase):
                 module.install(source, target, backup, check=True)
                 self.assertFalse(backup.exists())
                 module.install(source, target, backup)
+                times = {name: (target / name).stat().st_mtime_ns for name in module.FILES}
                 module.install(source, target, backup)
+                self.assertEqual(times, {name: (target / name).stat().st_mtime_ns for name in module.FILES})
                 self.assertEqual((backup / 'extrude.py').read_text(), '# original')
                 for name in module.FILES:
                     self.assertEqual((source / name).read_bytes(), (target / name).read_bytes())

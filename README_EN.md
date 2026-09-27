@@ -1,5 +1,11 @@
 # LUGOWARE Printer Config Auto-Update System
 
+## Repeat installation policy
+
+Hosts below v0.13.0 are backed up and upgraded to `f0892d82b0f1c1228454f09eb508eddde2250f4b`, including Python dependencies and the Linux/CB2 MCU. The known multi_pin customization is retained; other tracked modifications stop the upgrade. Hosts at v0.13.0 or later retain their version. Interrupted Linux MCU installations are recorded for resumption. This does not upgrade the OS.
+
+A live READY M5P matching the distribution firmware skips flashing. Other working firmware on v0.13+ hosts is retained rather than downgraded; final READY is still required. Identical panels/configs, extension setup, cron, logo protection and prompts patches skip rewriting. Verification and service restarts still occur. The shared policy also applies to flash.sh. Legacy Bullseye build dependencies use a temporary official binary source list without changing system APT configuration.
+
 At the end of `flash.sh`, the `[update_manager KlipperScreen]` section in `~/printer_data/config/moonraker.conf` is commented out. The original file is backed up and Moonraker is restarted when changed. Other update manager sections are preserved.
 
 The installer copies `extrude.py`, `nozzle_temperature.py`, and `tool_prepare.py` from `panels/ko` or `panels/en`, according to the selected language, into `~/KlipperScreen/panels`. Existing files are backed up in the installation backup's `panels` directory before replacement. The installer lists all three files and restarts KlipperScreen. Set `KLIPPERSCREEN_DIR` for a custom installation path. Panels are deployed by `install.sh`, not by the model configuration's post-merge hook.

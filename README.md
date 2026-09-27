@@ -1,5 +1,14 @@
 # LUGOWARE 프린터 설정 자동 업데이트 시스템
 
+## 재설치 및 버전 정책
+
+- v0.13.0 미만 Klipper는 기존 커밋·변경사항·설정·CB2 실행 파일을 백업하고 배포 기준 `f0892d82b0f1c1228454f09eb508eddde2250f4b`로 전환합니다. Python 의존성과 Linux(CB2) MCU도 빌드·설치합니다. 알려진 `multi_pin.py` 수정은 보존하며 다른 추적 파일 수정이 있으면 덮어쓰지 않고 중단합니다.
+- v0.13.0 이상은 본체 버전을 유지합니다. 중단된 Linux MCU 설치가 기록돼 있으면 이어서 진행합니다. 전체 OS 업그레이드는 하지 않습니다.
+- READY 상태에서 실제 M5P 버전이 배포본과 같으면 업로드를 건너뜁니다. v0.13 이상에서 이미 정상 연결된 다른 M5P 펌웨어도 보존하고 최종 READY를 확인합니다. READY를 확인하지 못한 경우에는 자동 생략하지 않습니다.
+- 동일한 패널·설정, 히터 확장과 자동 복원 구성, cron, 로고 보호, prompts 패치는 다시 설치하지 않습니다. 파일 비교 및 실행 상태 검증은 계속 수행하며 서비스 재시작은 발생할 수 있습니다.
+- Bullseye 구형 이미지의 비활성 binary 저장소/폐기된 backports 문제를 피하도록 본체 업그레이드의 빌드 패키지는 임시 공식 binary 저장소 목록을 사용합니다. 기존 APT 설정 파일은 변경하지 않습니다.
+- 위 동작은 공통 유지보수 단계에 연결되어 `flash.sh`에도 적용됩니다. 실기기 설치 결과는 완료 시 READY 검증으로 확인해야 합니다.
+
 `flash.sh`는 적용 완료 단계에서 `~/printer_data/config/moonraker.conf`의 `[update_manager KlipperScreen]` 항목 전체를 주석 처리합니다. 수정 전 파일을 설치 백업 폴더에 보관하고, 변경 시 Moonraker를 재시작합니다. 다른 업데이트 항목은 유지합니다.
 
 설치 시 선택한 언어에 맞춰 `panels/ko` 또는 `panels/en`의 `extrude.py`, `nozzle_temperature.py`, `tool_prepare.py`를 `~/KlipperScreen/panels`에 설치합니다. 기존 파일은 설치 백업 폴더의 `panels`에 보관한 뒤 덮어씁니다. 설치 결과에 파일 3개를 표시하고 KlipperScreen을 재시작합니다. 다른 설치 경로는 `KLIPPERSCREEN_DIR`로 지정할 수 있습니다. 패널 배포는 `install.sh` 실행 시 수행되며, 모델 설정의 post-merge 업데이트만으로는 변경되지 않습니다.

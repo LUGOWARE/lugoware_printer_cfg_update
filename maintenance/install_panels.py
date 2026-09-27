@@ -19,10 +19,15 @@ def install(source, target, backup, check=False):
     backup.mkdir(parents=True, exist_ok=True)
     for name in FILES:
         dest = target / name
+        if dest.exists() and dest.read_bytes() == (source / name).read_bytes():
+            continue
         if dest.exists() and not (backup / name).exists():
             shutil.copy2(dest, backup / name)
     for name in FILES:
         dest = target / name
+        if dest.exists() and dest.read_bytes() == (source / name).read_bytes():
+            print(f'  [SKIP] {name}: already installed', flush=True)
+            continue
         shutil.copyfile(source / name, dest)
         if dest.read_bytes() != (source / name).read_bytes():
             raise IOError(f'Panel verification failed: {name}')

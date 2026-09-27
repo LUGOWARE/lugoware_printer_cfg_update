@@ -33,10 +33,16 @@ sudo python3 "$ASSET_DIR/logo_guard.py" check
 # Refuse to stop Klipper during a print, pause, or active heating.
 # A Klipper error state is allowed so firmware mismatch can be repaired.
 python3 "$ASSET_DIR/check_idle.py"
+python3 "$ASSET_DIR/upgrade_klipper.py" --check
 python3 "$ASSET_DIR/patch_prompts.py" "${KLIPPERSCREEN_DIR:-$HOME/KlipperScreen}/ks_includes/widgets/prompts.py" --check
 if [[ ${1:-} == --check ]]; then
     exit 0
 fi
+
+firmware_action=$(python3 "$ASSET_DIR/firmware_action.py" "$ASSET_DIR/../firmware/firmware.bin")
+stage='Klipper 버전 업데이트'
+status '[확인] Klipper 버전 및 중단된 CB2 MCU 업데이트 확인'
+python3 "$ASSET_DIR/upgrade_klipper.py"
 
 mkdir -p "$BACKUP_DIR"
 cp -p "$KLIPPER_DIR/klippy/extras/multi_pin.py" "$BACKUP_DIR/multi_pin.py"
@@ -70,7 +76,11 @@ status '[진행] 히터 테스트 코드 설치 (실행 검증은 재시작 후 
 bash "$ASSET_DIR/setup_multi_pin.sh"
 stage='KlipperScreen 재시작 예약'
 status '[진행] KlipperScreen 재시작 예약 설정'
-sudo crontab "$BACKUP_DIR/root.crontab.new"
+if cmp -s "$BACKUP_DIR/root.crontab" "$BACKUP_DIR/root.crontab.new"; then
+    status '[건너뜀] KlipperScreen 재시작 예약: 이미 적용됨'
+else
+    sudo crontab "$BACKUP_DIR/root.crontab.new"
+fi
 sudo crontab -l > "$BACKUP_DIR/root.crontab.verified"
 cmp "$BACKUP_DIR/root.crontab.new" "$BACKUP_DIR/root.crontab.verified"
 systemctl is-active --quiet cron.service
@@ -78,20 +88,32 @@ systemctl is-enabled --quiet cron.service
 status '[확인 완료] KlipperScreen: 매일 0·6·12·18시 재시작 예약 및 cron 서비스 확인'
 stage='로고 보호'
 status '[진행] 로고 보호 설정 및 부팅 이미지 갱신'
-sudo python3 "$ASSET_DIR/logo_guard.py" install
+if sudo python3 "$ASSET_DIR/logo_guard.py" verify >/dev/null 2>&1; then
+    status '[건너뜀] 로고 보호: 이미 적용됨'
+else
+    sudo python3 "$ASSET_DIR/logo_guard.py" install
+fi
 sudo python3 "$ASSET_DIR/logo_guard.py" verify
 status '[확인 완료] 로고 보호: 백업 일치·자동 복원 등록·부팅 이미지 갱신 완료'
 stage='펌웨어 업로드'
-status '[진행] 펌웨어 업로드'
-bash "$ASSET_DIR/flash_firmware.sh"
+if [[ $firmware_action == flash ]]; then
+    status '[진행] 펌웨어 업로드'
+    bash "$ASSET_DIR/flash_firmware.sh"
+else
+    status "[건너뜀] M5P 펌웨어: 정상 연결 확인 ($firmware_action)"
+fi
 
 sudo systemctl start klipper
 # A previous failed attempt may have left the service stopped. Always start it
 # after flashing and verify the actual flashed MCU, not just the process state.
 stage='펌웨어 연결 및 버전 검증'
 status '[검증] Klipper 연결 및 실제 MCU 펌웨어 버전 확인'
-python3 "$ASSET_DIR/wait_ready.py" "$ASSET_DIR/../firmware/firmware.bin"
-status '[확인 완료] 펌웨어: MCU 버전 일치 및 Klipper READY'
+if [[ $firmware_action == keep ]]; then
+    python3 "$ASSET_DIR/wait_ready.py" --ready-only
+else
+    python3 "$ASSET_DIR/wait_ready.py" "$ASSET_DIR/../firmware/firmware.bin"
+fi
+status '[확인 완료] 펌웨어 정책 검증 및 Klipper READY'
 stage='히터 테스트 코드 실행 검증'
 python3 "$ASSET_DIR/verify_multi_pin.py" "$KLIPPER_DIR"
 status '[확인 완료] 히터 테스트: 파일 일치 및 SET_MULTI_PIN_MODE 명령 등록'
