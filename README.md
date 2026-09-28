@@ -133,7 +133,12 @@ Mainsail에서 **프린터 설정** → **업데이트 관리자** 패널에서
 별도로 수정한 코어 파일은 자동 병합하지 않습니다.
 Python 의존성 설치가 중단되면 다음 설치에서 재개합니다.
 설치 완료 시 KlipperScreen 업데이트 항목은 Moonraker에서 주석 처리되어 숨겨집니다.
-Moonraker와 시스템 전체 업데이트는 실행하지 않습니다.
+설치 순서는 Klipper → KlipperScreen → Moonraker → Mainsail → print_area_bed_mesh → sonar → 사용자 설정·패치입니다.
+Moonraker는 `v0.11.0-0` 미만이면 공식 커밋 `68db047aa9189248800904531f6354d8fd76d8eb`로 올리고,
+같거나 이후 버전이면 유지합니다. 구버전 Moonraker에는 숨김 코드 패치를 먼저 시도하지 않습니다.
+Klipper와 KlipperScreen 설정 항목은 먼저 주석 처리하고, 내장 Klipper 업데이트 항목은 Moonraker 업데이트 후 숨깁니다.
+Moonraker 업데이트에는 공식 설치 스크립트의 필수 의존성·서비스 갱신이 포함됩니다.
+시스템 전체 업데이트는 실행하지 않습니다.
 
 **업데이트 후 Klipper가 시작되지 않는 경우**  
 구버전 펌웨어는 클리퍼에 연결이 되지 않는 경우가 있습니다.  

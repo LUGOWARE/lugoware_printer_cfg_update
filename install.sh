@@ -62,19 +62,50 @@ git clone --depth 1 --branch main "$REPO_URL" "$COMMON_DIR/repo"
 export BACKUP_DIR="$HOME/lugoware_backups/$(date +%Y%m%d-%H%M%S)-$$"
 mkdir -m 700 -p "$BACKUP_DIR"
 MOONRAKER_UPDATER="${MOONRAKER_DIR:-$HOME/moonraker}/moonraker/components/update_manager/update_manager.py"
-python3 "$COMMON_DIR/repo/maintenance/hide_klipper_updater.py" \
-    "$MOONRAKER_UPDATER" "$BACKUP_DIR/update_manager.py" --check
 PANEL_DIR="${KLIPPERSCREEN_DIR:-$HOME/KlipperScreen}/panels"
 python3 "$COMMON_DIR/repo/maintenance/install_panels.py" --language "$LANG_CODE" \
     --target "$PANEL_DIR" --backup "$BACKUP_DIR/panels" --check
 sudo -v
 echo "설치 환경을 확인하고 있습니다..."
 python3 "$COMMON_DIR/repo/maintenance/upgrade_klipperscreen.py" --check
+python3 "$COMMON_DIR/repo/maintenance/check_idle.py"
+cp -a "$CONFIG_DIR" "$BACKUP_DIR/config"
+
+echo '[업데이트 1/6] Klipper 버전 확인 및 업데이트'
+python3 -u "$COMMON_DIR/repo/maintenance/upgrade_klipper.py" 2>&1 | tee -a "$BACKUP_DIR/install.log"
+echo '[업데이트 2/6] KlipperScreen 버전 확인 및 업데이트'
+python3 -u "$COMMON_DIR/repo/maintenance/upgrade_klipperscreen.py" 2>&1 | tee -a "$BACKUP_DIR/install.log"
+# Comment configuration now; the built-in Klipper patch needs Moonraker >= 0.11.
+python3 "$COMMON_DIR/repo/maintenance/disable_screen_updates.py" \
+    "$CONFIG_DIR/moonraker.conf" "$BACKUP_DIR/moonraker-update-sections" --installed-components
+echo '[업데이트 3/6] Moonraker 최소 v0.11.0-0 확인 및 업데이트'
+python3 -u "$COMMON_DIR/repo/maintenance/upgrade_moonraker.py" 2>&1 | tee -a "$BACKUP_DIR/install.log"
+python3 "$COMMON_DIR/repo/maintenance/hide_klipper_updater.py" \
+    "$MOONRAKER_UPDATER" "$BACKUP_DIR/update_manager.py"
+sudo systemctl restart moonraker
+sudo systemctl start klipper
+# Klipper may report a firmware mismatch until the later firmware patch stage.
+python3 - <<'PY'
+import json, time, urllib.request
+for attempt in range(90):
+    try:
+        with urllib.request.urlopen('http://127.0.0.1:7125/printer/info', timeout=5) as response:
+            state = json.load(response)['result']['state']
+        if state in ('ready', 'error', 'shutdown'):
+            break
+    except Exception:
+        pass
+    time.sleep(2)
+else:
+    raise SystemExit('Klipper 연결 확인 실패: 로그를 확인하세요.')
+PY
+echo '[업데이트 4~6/6] Mainsail / print_area_bed_mesh / sonar (시스템 전체 업데이트 제외)'
+python3 -u "$COMMON_DIR/repo/maintenance/update_components.py" 2>&1 | tee -a "$BACKUP_DIR/install.log"
+echo '[업데이트 완료] 설정 파일 및 사용자 패치 적용 시작'
 if ! bash "$COMMON_DIR/repo/maintenance/apply.sh" --check >> "$BACKUP_DIR/install.log" 2>&1; then
     echo "설치 환경 확인에 실패했습니다. 고객지원에 문의해 주세요. 기록: $BACKUP_DIR/install.log" >&2
     exit 1
 fi
-cp -a "$CONFIG_DIR" "$BACKUP_DIR/config"
 sudo -v
 
 # 언어 설정 저장
@@ -270,10 +301,6 @@ else:
     print('  [건너뜀] moonraker.conf: 동일한 설정')
 PYEOF
 
-# Upgrade the screen first: checkout must never overwrite newly installed panels.
-echo '[확인] KlipperScreen 최소 버전: v0.4.7-191 (이상 버전 유지)'
-python3 -u "$COMMON_DIR/repo/maintenance/upgrade_klipperscreen.py" 2>&1 | tee -a "$BACKUP_DIR/install.log"
-
 # 선택한 언어의 패널 3개 설치 (기존 파일 백업 후 덮어쓰기)
 echo "KlipperScreen 패널 설치 / Installing panels ($LANG_CODE)"
 python3 "$COMMON_DIR/repo/maintenance/install_panels.py" --language "$LANG_CODE" \
@@ -291,9 +318,6 @@ systemctl is-active --quiet KlipperScreen
 echo "패널 3개 설치 완료 / Installed ($LANG_CODE): extrude.py, nozzle_temperature.py, tool_prepare.py"
 echo "패널 백업 / Panel backup: $BACKUP_DIR/panels"
 
-echo 'Mainsail / print_area_bed_mesh / sonar 업데이트 시작 (Moonraker·시스템 제외)'
-# tee keeps component progress visible and retains the complete installation log.
-python3 -u "$COMMON_DIR/repo/maintenance/update_components.py" 2>&1 | tee -a "$BACKUP_DIR/install.log"
 python3 "$COMMON_DIR/repo/maintenance/wait_ready.py" --ready-only
 python3 "$COMMON_DIR/repo/maintenance/verify_multi_pin.py" "$HOME/klipper"
 
