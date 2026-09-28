@@ -2,6 +2,8 @@
 
 ## 재설치 및 버전 정책
 
+최신 변경: Moonraker 자체는 자동 업데이트 대상에서 제외했습니다. 추가 업데이트는 시스템 패키지, Mainsail, print_area_bed_mesh, sonar 4개만 수행하며 이 단계에서 Moonraker 숨김 패치를 원복하지 않습니다. 아래 Moonraker 자체 업데이트 관련 내용은 이전 동작입니다.
+
 `install.sh`는 공통 설치 후 Moonraker API로 시스템 패키지 → Mainsail → print_area_bed_mesh → sonar → Moonraker 순서로 업데이트합니다. 각 항목의 현재 채널(stable/dev 등)에서 제공되는 최신 버전을 사용하며, 버전/커밋과 패키지 수를 새로 조회해 최신 항목은 건너뜁니다. 등록되지 않은 항목은 건너뜀으로 표시합니다. lugoware_config는 기존 모델 브랜치 git pull 단계에서 업데이트합니다. 전체 업데이트 API는 사용하지 않아 Klipper와 커스텀 KlipperScreen은 이 과정에 포함되지 않습니다.
 
 진행 단계, 이전/대상 버전, 대기, 완료/최신 상태를 터미널과 install.log에 표시합니다. Moonraker 소스의 알려진 LUGOWARE 숨김 패치만 백업 후 잠시 원복하고 업데이트 후 재적용합니다. 다른 사용자 수정은 강제 삭제하지 않습니다. 실패 시 전체 설치 완료로 표시하지 않으며, 최신 Moonraker 구조가 패치와 달라지면 확인이 필요합니다. 시스템이 재부팅을 요구하면 안내만 출력하며 자동 재부팅하지 않습니다. OS 배포판 업그레이드는 하지 않습니다.

@@ -12,7 +12,7 @@ import urllib.request
 from check_idle import main as check_idle
 from hide_klipper_updater import replacement, patch
 
-COMPONENTS = ('system', 'mainsail', 'print_area_bed_mesh', 'sonar', 'moonraker')
+COMPONENTS = ('system', 'mainsail', 'print_area_bed_mesh', 'sonar')
 
 
 def api(path, body=None):
@@ -98,47 +98,40 @@ def restore_known_patch(folder, backup):
 def main():
     backup = Path(os.environ['BACKUP_DIR']) / 'component-updates'
     backup.mkdir(parents=True, exist_ok=True)
-    folder = Path(os.environ.get('MOONRAKER_DIR', str(Path.home() / 'moonraker')))
     check_idle()
-    updater = restore_known_patch(folder, backup)
-    try:
-        for index, name in enumerate(COMPONENTS, 1):
-            print(f'[추가 업데이트 {index}/{len(COMPONENTS)}] {name}: 최신 상태 조회', flush=True)
-            status = wait_status()
-            if name not in status['version_info']:
-                print('[건너뜀] ' + name + ': 업데이트 관리자에 등록되지 않음', flush=True)
-                continue
-            status = refresh(name)
-            before = status['version_info'][name]
-            (backup / (name + '-before.json')).write_text(json.dumps(before, indent=2), encoding='utf-8')
-            if not needs_update(name, before):
-                print('[최신 상태] ' + name + ': ' + str(before.get('version', '0 packages')), flush=True)
-                continue
-            print('[업데이트] ' + name + ': ' + str(before.get('version', before.get('package_count'))) +
-                  ' → ' + str(before.get('remote_version', '최신 패키지')), flush=True)
-            endpoint = '/machine/update/' + name if name in ('system', 'moonraker') else '/machine/update/client'
-            body = {} if name in ('system', 'moonraker') else {'name': name}
-            try:
-                result = progress_request(name, endpoint, body)
-                if result != 'ok':
-                    raise RuntimeError(name + ': unexpected update response ' + str(result))
-            except urllib.error.HTTPError:
+    for index, name in enumerate(COMPONENTS, 1):
+        print(f'[추가 업데이트 {index}/{len(COMPONENTS)}] {name}: 최신 상태 조회', flush=True)
+        status = wait_status()
+        if name not in status['version_info']:
+            print('[건너뜀] ' + name + ': 업데이트 관리자에 등록되지 않음', flush=True)
+            continue
+        status = refresh(name)
+        before = status['version_info'][name]
+        (backup / (name + '-before.json')).write_text(json.dumps(before, indent=2), encoding='utf-8')
+        if not needs_update(name, before):
+            print('[최신 상태] ' + name + ': ' + str(before.get('version', '0 packages')), flush=True)
+            continue
+        print('[업데이트] ' + name + ': ' + str(before.get('version', before.get('package_count'))) +
+              ' → ' + str(before.get('remote_version', '최신 패키지')), flush=True)
+        endpoint = '/machine/update/' + name if name in ('system', 'moonraker') else '/machine/update/client'
+        body = {} if name in ('system', 'moonraker') else {'name': name}
+        try:
+            result = progress_request(name, endpoint, body)
+            if result != 'ok':
+                raise RuntimeError(name + ': unexpected update response ' + str(result))
+        except urllib.error.HTTPError:
+            raise
+        except (urllib.error.URLError, ConnectionError, TimeoutError) as exc:
+            # Moonraker can restart before its response reaches this client.
+            if name != 'moonraker':
                 raise
-            except (urllib.error.URLError, ConnectionError, TimeoutError) as exc:
-                # Moonraker can restart before its response reaches this client.
-                if name != 'moonraker':
-                    raise
-                print('[확인] Moonraker 재연결 후 업데이트 결과 확인: ' + str(exc), flush=True)
-            wait_status()
-            after = refresh(name)['version_info'][name]
-            (backup / (name + '-after.json')).write_text(json.dumps(after, indent=2), encoding='utf-8')
-            if needs_update(name, after):
-                raise RuntimeError(name + ': updates remain after installation; inspect moonraker.log')
-            print('[완료] ' + name + ': ' + str(after.get('version', '패키지 최신 상태')), flush=True)
-    finally:
-        # Even a failed update must not silently remove the managed UI policy.
-        patch(updater, backup / 'update_manager.after-update.py')
-        subprocess.run(['sudo', 'systemctl', 'restart', 'moonraker'], check=True)
+            print('[확인] Moonraker 재연결 후 업데이트 결과 확인: ' + str(exc), flush=True)
+        wait_status()
+        after = refresh(name)['version_info'][name]
+        (backup / (name + '-after.json')).write_text(json.dumps(after, indent=2), encoding='utf-8')
+        if needs_update(name, after):
+            raise RuntimeError(name + ': updates remain after installation; inspect moonraker.log')
+        print('[완료] ' + name + ': ' + str(after.get('version', '패키지 최신 상태')), flush=True)
     wait_status()
     if Path('/var/run/reboot-required').exists():
         print('[안내] 시스템 패키지가 재부팅을 요구합니다. 자동 재부팅하지 않습니다.', flush=True)

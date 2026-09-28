@@ -36,8 +36,8 @@ class ComponentTests(unittest.TestCase):
                  patch.object(module, 'progress_request', side_effect=request), \
                  patch.object(module, 'patch') as restore, patch.object(module.subprocess, 'run'):
                 module.main()
-                restore.assert_called_once()
-            self.assertEqual([c[0] for c in calls], ['system', 'print_area_bed_mesh', 'sonar', 'moonraker'])
+                restore.assert_not_called()
+            self.assertEqual([c[0] for c in calls], ['system', 'print_area_bed_mesh', 'sonar'])
             self.assertTrue(all(c[1] != '/machine/update/full' for c in calls))
 
     def test_failure_still_reapplies_patch(self):
@@ -47,7 +47,7 @@ class ComponentTests(unittest.TestCase):
              patch.object(module, 'patch') as restore, patch.object(module.subprocess, 'run'):
             with self.assertRaises(RuntimeError):
                 module.main()
-            restore.assert_called_once()
+            restore.assert_not_called()
 
     def test_unknown_modification_not_overwritten(self):
         with tempfile.TemporaryDirectory() as tmp:
