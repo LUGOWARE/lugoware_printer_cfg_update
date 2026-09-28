@@ -54,7 +54,8 @@ def upgrade(folder, backup, venv, check=False):
         run('git', '-C', str(folder), 'checkout', '--detach', BASELINE)
     print('[진행] KlipperScreen Python 의존성 설치', flush=True)
     run(str(python), '-m', 'pip', 'install', '-r', str(folder / 'scripts/KlipperScreen-requirements.txt'))
-    run(str(python), '-c', 'import gi, cairo, requests, websocket, jinja2, psutil, sdbus, sdbus_networkmanager; gi.require_version("Gtk", "3.0"); from gi.repository import Gtk')
+    # Distribution name is sdbus_networkmanager; its Python namespace differs.
+    run(str(python), '-c', 'import gi, cairo, requests, websocket, jinja2, psutil, sdbus; from sdbus_block.networkmanager import NetworkManager; gi.require_version("Gtk", "3.0"); from gi.repository import Gtk')
     pending.unlink()
     print('[확인 완료] KlipperScreen: ' + output('git', '-C', str(folder), 'describe', '--tags', '--long')
           + ' (사용자 패널·패치 적용 후 재시작)', flush=True)
