@@ -286,6 +286,12 @@ systemctl is-active --quiet KlipperScreen
 echo "패널 3개 설치 완료 / Installed ($LANG_CODE): extrude.py, nozzle_temperature.py, tool_prepare.py"
 echo "패널 백업 / Panel backup: $BACKUP_DIR/panels"
 
+echo 'Mainsail / Moonraker / print_area_bed_mesh / sonar / 시스템 업데이트 시작'
+# tee keeps component progress visible and retains the complete installation log.
+python3 -u "$COMMON_DIR/repo/maintenance/update_components.py" 2>&1 | tee -a "$BACKUP_DIR/install.log"
+python3 "$COMMON_DIR/repo/maintenance/wait_ready.py" --ready-only
+python3 "$COMMON_DIR/repo/maintenance/verify_multi_pin.py" "$HOME/klipper"
+
 # Hide managed components only after all installation checks succeeded.
 echo 'Klipper / KlipperScreen / mainsail-config 업데이트 항목 주석 처리 중...'
 python3 "$COMMON_DIR/repo/maintenance/hide_klipper_updater.py" \

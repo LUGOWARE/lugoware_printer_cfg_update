@@ -2,6 +2,10 @@
 
 ## 재설치 및 버전 정책
 
+`install.sh`는 공통 설치 후 Moonraker API로 시스템 패키지 → Mainsail → print_area_bed_mesh → sonar → Moonraker 순서로 업데이트합니다. 각 항목의 현재 채널(stable/dev 등)에서 제공되는 최신 버전을 사용하며, 버전/커밋과 패키지 수를 새로 조회해 최신 항목은 건너뜁니다. 등록되지 않은 항목은 건너뜀으로 표시합니다. lugoware_config는 기존 모델 브랜치 git pull 단계에서 업데이트합니다. 전체 업데이트 API는 사용하지 않아 Klipper와 커스텀 KlipperScreen은 이 과정에 포함되지 않습니다.
+
+진행 단계, 이전/대상 버전, 대기, 완료/최신 상태를 터미널과 install.log에 표시합니다. Moonraker 소스의 알려진 LUGOWARE 숨김 패치만 백업 후 잠시 원복하고 업데이트 후 재적용합니다. 다른 사용자 수정은 강제 삭제하지 않습니다. 실패 시 전체 설치 완료로 표시하지 않으며, 최신 Moonraker 구조가 패치와 달라지면 확인이 필요합니다. 시스템이 재부팅을 요구하면 안내만 출력하며 자동 재부팅하지 않습니다. OS 배포판 업그레이드는 하지 않습니다.
+
 `install.sh` 성공 후 Moonraker 설정과 활성 include 파일의 klipper / KlipperScreen / mainsail-config 업데이트 항목을 백업 후 주석 처리하고 Moonraker를 재시작합니다. Klipper 내장 자동 등록은 update_manager.py를 백업 후 패치해 차단합니다. 재연결 시 재등록도 차단하며 다른 업데이트 항목은 유지합니다. 설치 마지막에 Moonraker API로 세 항목의 숨김을 검증합니다. Moonraker 자체 업데이트로 코드 패치가 덮어써지면 설치기를 다시 실행해야 합니다. M5P 배포 바이너리는 이번 변경에서 교체하지 않으며 최종 READY를 검증합니다.
 
 - v0.13.0-770 미만 Klipper는 기존 커밋·변경사항·설정·CB2 실행 파일을 백업하고 배포 기준 `ce7002bedf37e938bb483572949f3703ac6476cb`로 전환합니다. Python 의존성과 Linux(CB2) MCU도 빌드·설치합니다. 알려진 `multi_pin.py` 수정은 보존하며 다른 추적 파일 수정이 있으면 덮어쓰지 않고 중단합니다.

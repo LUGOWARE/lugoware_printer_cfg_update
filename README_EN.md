@@ -2,6 +2,10 @@
 
 ## Repeat installation policy
 
+After maintenance, install.sh updates system packages, Mainsail, print_area_bed_mesh, sonar and finally Moonraker through individual Moonraker APIs. It uses the latest release/commit in each configured channel, skipping current or unregistered components with explicit messages. lugoware_config is updated by the existing model-branch pull. No full-update endpoint is used, preserving the Klipper baseline and custom screen.
+
+Stages, before/target versions, waiting messages and verification results are visible and logged. Only the recognized LUGOWARE Moonraker patch is temporarily restored to its Git original, backed up and reapplied after update. Unknown edits are never forcibly reset. Failures stop completion; unsupported future Moonraker source changes require inspection. System reboot requirements are reported without automatic reboot or OS distribution upgrades.
+
 After successful installation, install.sh backs up and comments klipper, KlipperScreen and mainsail-config update sections in Moonraker configuration and active includes, then restarts Moonraker. The built-in Klipper updater is disabled with a backed-up patch to update_manager.py, including reconnection registration paths. Other updaters remain available. The installer verifies all three entries are absent through the Moonraker API. A Moonraker source update may overwrite this patch; rerun the installer to restore it. The supplied M5P binary is unchanged; final READY is checked.
 
 Hosts below v0.13.0-770 are backed up and upgraded to `ce7002bedf37e938bb483572949f3703ac6476cb`, including Python dependencies and the Linux/CB2 MCU. The known multi_pin customization is retained; other tracked modifications stop the upgrade. Hosts at v0.13.0-770 or later retain their version. Interrupted Linux MCU installations are recorded for resumption. This does not upgrade the OS.
