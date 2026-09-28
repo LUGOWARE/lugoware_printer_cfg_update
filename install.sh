@@ -69,6 +69,7 @@ python3 "$COMMON_DIR/repo/maintenance/install_panels.py" --language "$LANG_CODE"
     --target "$PANEL_DIR" --backup "$BACKUP_DIR/panels" --check
 sudo -v
 echo "설치 환경을 확인하고 있습니다..."
+python3 "$COMMON_DIR/repo/maintenance/upgrade_klipperscreen.py" --check
 if ! bash "$COMMON_DIR/repo/maintenance/apply.sh" --check >> "$BACKUP_DIR/install.log" 2>&1; then
     echo "설치 환경 확인에 실패했습니다. 고객지원에 문의해 주세요. 기록: $BACKUP_DIR/install.log" >&2
     exit 1
@@ -268,6 +269,10 @@ if content != original:
 else:
     print('  [건너뜀] moonraker.conf: 동일한 설정')
 PYEOF
+
+# Upgrade the screen first: checkout must never overwrite newly installed panels.
+echo '[확인] KlipperScreen 최소 버전: v0.4.7-191 (이상 버전 유지)'
+python3 -u "$COMMON_DIR/repo/maintenance/upgrade_klipperscreen.py" 2>&1 | tee -a "$BACKUP_DIR/install.log"
 
 # 선택한 언어의 패널 3개 설치 (기존 파일 백업 후 덮어쓰기)
 echo "KlipperScreen 패널 설치 / Installing panels ($LANG_CODE)"
