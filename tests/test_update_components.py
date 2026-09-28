@@ -37,7 +37,9 @@ class ComponentTests(unittest.TestCase):
                  patch.object(module, 'patch') as restore, patch.object(module.subprocess, 'run'):
                 module.main()
                 restore.assert_not_called()
-            self.assertEqual([c[0] for c in calls], ['system', 'print_area_bed_mesh', 'sonar'])
+            self.assertEqual([c[0] for c in calls], ['print_area_bed_mesh', 'sonar'])
+            self.assertNotIn('system', module.COMPONENTS)
+            self.assertNotIn('moonraker', module.COMPONENTS)
             self.assertTrue(all(c[1] != '/machine/update/full' for c in calls))
 
     def test_failure_still_reapplies_patch(self):

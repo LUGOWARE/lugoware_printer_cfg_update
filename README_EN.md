@@ -2,6 +2,8 @@
 
 ## Repeat installation policy
 
+Current companion update targets are only Mainsail, print_area_bed_mesh and sonar. Moonraker and system package upgrades are excluded. Installing build dependencies for legacy Klipper upgrades remains a separate operation. System-update descriptions below refer to previous behavior.
+
 Current policy: Moonraker itself is excluded from automatic updates. Only system packages, Mainsail, print_area_bed_mesh and sonar are updated; the updater-hiding patch is not temporarily reverted in this stage. Descriptions below about upgrading Moonraker refer to the previous behavior.
 
 After maintenance, install.sh updates system packages, Mainsail, print_area_bed_mesh, sonar and finally Moonraker through individual Moonraker APIs. It uses the latest release/commit in each configured channel, skipping current or unregistered components with explicit messages. lugoware_config is updated by the existing model-branch pull. No full-update endpoint is used, preserving the Klipper baseline and custom screen.

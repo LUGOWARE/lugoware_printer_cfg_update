@@ -12,7 +12,7 @@ import urllib.request
 from check_idle import main as check_idle
 from hide_klipper_updater import replacement, patch
 
-COMPONENTS = ('system', 'mainsail', 'print_area_bed_mesh', 'sonar')
+COMPONENTS = ('mainsail', 'print_area_bed_mesh', 'sonar')
 
 
 def api(path, body=None):
