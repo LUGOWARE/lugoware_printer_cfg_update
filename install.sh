@@ -61,6 +61,9 @@ trap 'rm -rf -- "$COMMON_DIR"' EXIT
 git clone --depth 1 --branch main "$REPO_URL" "$COMMON_DIR/repo"
 export BACKUP_DIR="$HOME/lugoware_backups/$(date +%Y%m%d-%H%M%S)-$$"
 mkdir -m 700 -p "$BACKUP_DIR"
+MOONRAKER_UPDATER="${MOONRAKER_DIR:-$HOME/moonraker}/moonraker/components/update_manager/update_manager.py"
+python3 "$COMMON_DIR/repo/maintenance/hide_klipper_updater.py" \
+    "$MOONRAKER_UPDATER" "$BACKUP_DIR/update_manager.py" --check
 PANEL_DIR="${KLIPPERSCREEN_DIR:-$HOME/KlipperScreen}/panels"
 python3 "$COMMON_DIR/repo/maintenance/install_panels.py" --language "$LANG_CODE" \
     --target "$PANEL_DIR" --backup "$BACKUP_DIR/panels" --check
@@ -285,12 +288,32 @@ echo "패널 백업 / Panel backup: $BACKUP_DIR/panels"
 
 # Hide managed components only after all installation checks succeeded.
 echo 'Klipper / KlipperScreen / mainsail-config 업데이트 항목 주석 처리 중...'
+python3 "$COMMON_DIR/repo/maintenance/hide_klipper_updater.py" \
+    "$MOONRAKER_UPDATER" "$BACKUP_DIR/update_manager.py"
 updates_result=$(python3 "$COMMON_DIR/repo/maintenance/disable_screen_updates.py" \
     "$CONFIG_DIR/moonraker.conf" "$BACKUP_DIR/moonraker-update-sections" --installed-components)
 # Restart even if already commented: an earlier run may have stopped before reload.
 sudo systemctl restart moonraker
 systemctl is-active --quiet moonraker
 echo "[완료] 업데이트 항목 주석 처리 및 Moonraker 재시작 ($updates_result)"
+python3 - <<'PY'
+import json, time, urllib.request
+last = 'Moonraker is starting'
+for attempt in range(30):
+    try:
+        with urllib.request.urlopen('http://127.0.0.1:7125/machine/update/status', timeout=5) as response:
+            versions = json.load(response)['result']['version_info']
+        remaining = {'klipper', 'klipperscreen', 'mainsail-config'} & {name.casefold() for name in versions}
+        if not remaining:
+            print('[확인 완료] klipper / KlipperScreen / mainsail-config 업데이트 항목 숨김')
+            break
+        last = 'Update entries still present: ' + ', '.join(sorted(remaining))
+    except Exception as exc:
+        last = str(exc)
+    time.sleep(2)
+else:
+    raise SystemExit('업데이트 항목 숨김 확인 실패: ' + last)
+PY
 
 echo ""
 echo "============================================"

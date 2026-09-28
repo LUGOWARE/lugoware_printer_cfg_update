@@ -2,7 +2,7 @@
 
 ## 재설치 및 버전 정책
 
-`install.sh` 성공 후 Moonraker 설정과 활성 include 파일의 klipper / KlipperScreen / mainsail-config 업데이트 항목을 백업 후 주석 처리하고 Moonraker를 재시작합니다. 단, Klipper는 Moonraker 내장 자동 등록 항목이므로 설정 주석만으로 업데이트 창에서 사라지는 것은 보장되지 않습니다. 해당 내장 항목 숨김은 설치된 Moonraker 코드 확인 후 별도 처리가 필요합니다. M5P 배포 바이너리는 이번 변경에서 교체하지 않으며 최종 READY를 검증합니다.
+`install.sh` 성공 후 Moonraker 설정과 활성 include 파일의 klipper / KlipperScreen / mainsail-config 업데이트 항목을 백업 후 주석 처리하고 Moonraker를 재시작합니다. Klipper 내장 자동 등록은 update_manager.py를 백업 후 패치해 차단합니다. 재연결 시 재등록도 차단하며 다른 업데이트 항목은 유지합니다. 설치 마지막에 Moonraker API로 세 항목의 숨김을 검증합니다. Moonraker 자체 업데이트로 코드 패치가 덮어써지면 설치기를 다시 실행해야 합니다. M5P 배포 바이너리는 이번 변경에서 교체하지 않으며 최종 READY를 검증합니다.
 
 - v0.13.0-770 미만 Klipper는 기존 커밋·변경사항·설정·CB2 실행 파일을 백업하고 배포 기준 `ce7002bedf37e938bb483572949f3703ac6476cb`로 전환합니다. Python 의존성과 Linux(CB2) MCU도 빌드·설치합니다. 알려진 `multi_pin.py` 수정은 보존하며 다른 추적 파일 수정이 있으면 덮어쓰지 않고 중단합니다.
 - v0.13.0-770 이상은 본체 버전을 유지합니다. 중단된 Linux MCU 설치가 기록돼 있으면 이어서 진행합니다. 전체 OS 업그레이드는 하지 않습니다.
