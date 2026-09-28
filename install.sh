@@ -82,6 +82,8 @@ echo '[업데이트 3/6] Moonraker 최소 v0.11.0-0 확인 및 업데이트'
 python3 -u "$COMMON_DIR/repo/maintenance/upgrade_moonraker.py" 2>&1 | tee -a "$BACKUP_DIR/install.log"
 python3 "$COMMON_DIR/repo/maintenance/hide_klipper_updater.py" \
     "$MOONRAKER_UPDATER" "$BACKUP_DIR/update_manager.py"
+echo '[확인] sonar 서비스 재시작 권한'
+python3 "$COMMON_DIR/repo/maintenance/allow_sonar_service.py" 2>&1 | tee -a "$BACKUP_DIR/install.log"
 sudo systemctl restart moonraker
 sudo systemctl start klipper
 # Klipper may report a firmware mismatch until the later firmware patch stage.
