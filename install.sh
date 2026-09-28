@@ -68,6 +68,8 @@ python3 "$COMMON_DIR/repo/maintenance/install_panels.py" --language "$LANG_CODE"
 sudo -v
 echo "설치 환경을 확인하고 있습니다..."
 python3 "$COMMON_DIR/repo/maintenance/upgrade_klipperscreen.py" --check
+echo '[확인] 이전 설치에서 중단된 Moonraker 복구'
+python3 "$COMMON_DIR/repo/maintenance/upgrade_moonraker.py" --recover-only 2>&1 | tee -a "$BACKUP_DIR/install.log"
 python3 "$COMMON_DIR/repo/maintenance/check_idle.py"
 cp -a "$CONFIG_DIR" "$BACKUP_DIR/config"
 

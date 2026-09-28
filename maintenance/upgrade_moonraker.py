@@ -1,5 +1,6 @@
 """Bring old Moonraker installations to v0.11.0 before applying patches."""
 import os
+import argparse
 from pathlib import Path
 import shutil
 import subprocess
@@ -64,6 +65,8 @@ def upgrade(folder, backup):
     if old:
         run('git', '-C', str(folder), 'checkout', '--detach', BASELINE)
     print('[진행] Moonraker 공식 의존성·서비스 설치', flush=True)
+    run('sudo', 'python3', str(Path(__file__).with_name('repair_apt_sources.py')), str(backup / 'apt-sources'))
+    # The official installer runs apt-get update after the source repair.
     run('bash', str(folder / 'scripts/install-moonraker.sh'))
     wait_server()
     pending.unlink()
@@ -71,5 +74,21 @@ def upgrade(folder, backup):
 
 
 if __name__ == '__main__':
-    upgrade(Path(os.environ.get('MOONRAKER_DIR', str(Path.home() / 'moonraker'))),
-            Path(os.environ['BACKUP_DIR']) / 'moonraker-upgrade')
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--recover-only', action='store_true')
+    args = parser.parse_args()
+    folder = Path(os.environ.get('MOONRAKER_DIR', str(Path.home() / 'moonraker')))
+    marker = Path(output('git', '-C', str(folder), 'rev-parse', '--absolute-git-dir')) / 'lugoware-moonraker-pending'
+    if not args.recover_only or marker.exists():
+        upgrade(folder, Path(os.environ['BACKUP_DIR']) / 'moonraker-upgrade')
+        if args.recover_only:
+            run('sudo', 'systemctl', 'start', 'klipper')
+            for attempt in range(90):
+                try:
+                    if api('/printer/info')['state'] in ('ready', 'error', 'shutdown'):
+                        break
+                except Exception:
+                    pass
+                time.sleep(2)
+            else:
+                raise SystemExit('Moonraker 복구 후 Klipper 연결 확인 실패')
