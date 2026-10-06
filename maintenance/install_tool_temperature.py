@@ -22,12 +22,15 @@ def menu_patch(text):
         header = '[menu __print ' + name + ']'
         pattern = re.compile(r'^' + re.escape(header) + r'[^\n]*\n(?:(?!^\[|^#~#).*(?:\n|$))*', re.M)
         match = pattern.search(text)
+        options = {'enable': 'True', 'panel': 'tool_temperature'} if name == 'temperature' else {'enable': 'False'}
+        section = match.group() if match else header + '\n'
+        for key, value in options.items():
+            setting = r'^\s*' + key + r'\s*[:=].*$'
+            section = re.sub(setting, key + ': ' + value, section, flags=re.M) if re.search(setting, section, re.M) else section.rstrip() + '\n' + key + ': ' + value + '\n'
         if match:
-            section = match.group()
-            section = re.sub(r'^\s*enable\s*[:=].*$', 'enable: False', section, flags=re.M) if re.search(r'^\s*enable\s*[:=]', section, re.M) else section.rstrip() + '\nenable: False\n'
             text = text[:match.start()] + section + text[match.end():]
         else:
-            text = header + '\nenable: False\n\n' + text
+            text = section + '\n' + text
     return text
 
 

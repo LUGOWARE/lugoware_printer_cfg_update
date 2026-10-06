@@ -14,7 +14,14 @@ class IntegrationTests(unittest.TestCase):
         self.assertEqual(menu_patch(result), result)
         self.assertIn('[menu __main camera]\nenable: True', result)
         self.assertTrue(result.endswith('#~# language = ko\n'))
-        self.assertEqual(result.count('enable: False'), 3)
+        self.assertEqual(result.count('enable: False'), 2)
+        self.assertIn('panel: tool_temperature', result)
+
+    def test_previously_hidden_temperature_is_enabled(self):
+        source = '[menu __print temperature]\nenable: False\npanel: temperature\n'
+        result = menu_patch(source)
+        self.assertIn('enable: True\npanel: tool_temperature', result)
+        self.assertEqual(menu_patch(result), result)
 
     def test_install_backup_and_repeat(self):
         with tempfile.TemporaryDirectory() as tmp:
