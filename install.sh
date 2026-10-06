@@ -142,6 +142,9 @@ for name in printer_base.cfg crowsnest.conf "KlipperScreen_${LANG_CODE}.conf"; d
         cp -f "$REPO_DIR/$name" "$CONFIG_DIR/$target"
     fi
 done
+if [[ -f "$HOME/.local/share/lugoware/install_tool_temperature.py" ]]; then
+    python3 "$HOME/.local/share/lugoware/install_tool_temperature.py" --config-only || exit 1
+fi
 echo "Config files updated from repo. (language: $LANG_CODE)"
 EOF
 chmod +x "$REPO_DIR/.git/hooks/post-merge"
@@ -310,6 +313,11 @@ echo "KlipperScreen 패널 설치 / Installing panels ($LANG_CODE)"
 python3 "$COMMON_DIR/repo/maintenance/install_panels.py" --language "$LANG_CODE" \
     --target "$PANEL_DIR" --backup "$BACKUP_DIR/panels"
 
+echo '[진행] 툴별 출력 온도 및 출력 더보기 메뉴 설치'
+python3 "$COMMON_DIR/repo/maintenance/install_tool_temperature.py"
+mkdir -p "$HOME/.local/share/lugoware"
+cp "$COMMON_DIR/repo/maintenance/install_tool_temperature.py" "$HOME/.local/share/lugoware/"
+
 # 공통 시스템 설정 (재실행해도 cron 중복 없음)
 echo "설정을 적용하고 있습니다. 완료될 때까지 전원을 유지해 주세요..."
 if ! LUGOWARE_SHOW_STATUS=1 bash "$COMMON_DIR/repo/maintenance/apply.sh" 3>&1 >> "$BACKUP_DIR/install.log" 2>&1; then
@@ -319,14 +327,14 @@ fi
 
 sudo systemctl restart KlipperScreen
 systemctl is-active --quiet KlipperScreen
-echo "패널 3개 설치 완료 / Installed ($LANG_CODE): extrude.py, nozzle_temperature.py, tool_prepare.py"
+echo "패널 4개 설치 완료 / Installed ($LANG_CODE): extrude.py, nozzle_temperature.py, tool_prepare.py, tool_temperature.py"
 echo "패널 백업 / Panel backup: $BACKUP_DIR/panels"
 
 python3 "$COMMON_DIR/repo/maintenance/wait_ready.py" --ready-only
 python3 "$COMMON_DIR/repo/maintenance/verify_multi_pin.py" "$HOME/klipper"
 
 # Hide managed components only after all installation checks succeeded.
-echo 'Klipper / KlipperScreen / mainsail-config 업데이트 항목 주석 처리 중...'
+echo 'Klipper / KlipperScreen / mainsail-config / Moonraker 업데이트 항목 주석 처리 중...'
 python3 "$COMMON_DIR/repo/maintenance/hide_klipper_updater.py" \
     "$MOONRAKER_UPDATER" "$BACKUP_DIR/update_manager.py"
 updates_result=$(python3 "$COMMON_DIR/repo/maintenance/disable_screen_updates.py" \
@@ -342,9 +350,9 @@ for attempt in range(30):
     try:
         with urllib.request.urlopen('http://127.0.0.1:7125/machine/update/status', timeout=5) as response:
             versions = json.load(response)['result']['version_info']
-        remaining = {'klipper', 'klipperscreen', 'mainsail-config'} & {name.casefold() for name in versions}
+        remaining = {'klipper', 'klipperscreen', 'mainsail-config', 'moonraker'} & {name.casefold() for name in versions}
         if not remaining:
-            print('[확인 완료] klipper / KlipperScreen / mainsail-config 업데이트 항목 숨김')
+            print('[확인 완료] klipper / KlipperScreen / mainsail-config / Moonraker 업데이트 항목 숨김')
             break
         last = 'Update entries still present: ' + ', '.join(sorted(remaining))
     except Exception as exc:

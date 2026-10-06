@@ -164,3 +164,14 @@ Mainsail의 printer_base.cfg에서 [stepper_x] 목록의 dir_pin: PB1을 !PB1 �
 
 **기타 문의**  
 LUGOWARE 고객지원으로 연락해 주세요.
+
+
+## 툴별 출력 온도와 Moonraker 관리
+
+공식 install.sh는 출력 화면의 노즐 온도 버튼을 T1~T4 전용 패널에 연결합니다. Orca G-code의 filament_settings_id에서 저장된 프로필 이름을 표시하고, 툴별로 수정한 온도는 이번 출력의 툴체인지 이후에도 유지합니다. 종료·취소·새 출력·Klipper 재시작 시 초기화됩니다. 한글/영문 패널 모두 기본 KlipperScreen 키패드와 입력 커서 자동 이동을 사용합니다.
+
+G-code에 프로필 이름이 없으면 소재 종류로 대체하며, 읽을 정보가 없으면 Unknown으로 표시합니다. 기존 도킹의 일시적 추가 예열은 유지하므로 수정 온도 상한은 extruder max_temp보다 40℃ 낮습니다. 별도 SET_HEATER_TEMPERATURE 명령은 재정의하지 않습니다.
+
+출력 중 더보기의 온도·카메라·핀 항목은 숨깁니다. 설정 파일과 패널은 설치 백업에 보관됩니다. 이후 모델 설정 업데이트 시에도 메뉴 숨김을 다시 적용합니다.
+
+Moonraker 구버전은 검증된 v0.11.0-0 커밋(68db047aa9189248800904531f6354d8fd76d8eb)으로 업데이트하며, 이미 해당 버전 이상이면 유지합니다. 최신 버전을 무조건 받거나 상위 버전을 다운그레이드하지 않습니다. 설치 후 Moonraker는 Klipper·KlipperScreen·mainsail-config와 함께 업데이트 관리자에서 숨겨집니다. 이 정책은 install.sh를 다시 실행한 기기에 적용됩니다.

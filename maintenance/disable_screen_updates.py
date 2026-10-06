@@ -64,7 +64,7 @@ if __name__ == '__main__':
     parser.add_argument('--installed-components', action='store_true')
     args = parser.parse_args()
     if args.installed_components:
-        changed = apply_tree(args.config, args.backup, ('klipper', 'KlipperScreen', 'mainsail-config'))
+        changed = apply_tree(args.config, args.backup, ('klipper', 'KlipperScreen', 'mainsail-config', 'moonraker'))
     else:
         changed = apply(args.config, args.backup)
     print('changed' if changed else 'unchanged')

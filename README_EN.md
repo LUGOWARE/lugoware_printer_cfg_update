@@ -142,3 +142,10 @@ In Mainsail, open `printer_base.cfg`, find `[stepper_x]` and change `dir_pin: PB
 
 **Other inquiries**  
 Please contact LUGOWARE customer support.
+
+
+## Per-tool print temperatures
+
+The installer adds a four-tool temperature panel to the printing screen nozzle button. Orca filament profile names are read from G-code filament_settings_id metadata, falling back to material type. Overrides persist across tool changes for the current print and reset on end, cancel, new print, or Klipper restart. The stock keypad is used. Docking heat boosts remain in place; override limits reserve 40 C of heater headroom. Custom SET_HEATER_TEMPERATURE commands are not intercepted.
+
+Printing-menu temperature, camera, and pins entries are hidden. Moonraker older than v0.11.0-0 is upgraded to pinned commit 68db047aa9189248800904531f6354d8fd76d8eb; newer versions are preserved. Its updater entry is hidden after installation alongside Klipper, KlipperScreen, and mainsail-config. Existing devices receive this change by running install.sh again.

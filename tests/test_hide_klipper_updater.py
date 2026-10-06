@@ -37,9 +37,16 @@ class HideUpdaterTests(unittest.TestCase):
         obj.klippy_identified_evt.set.assert_called_once()
         asyncio.run(obj._update_klipper_repo(5, True))
         obj.register_updater('klipper', 6)
+        obj.register_updater('moonraker', 8)
         obj.register_updater('other', 7)
-        self.assertEqual(obj.updaters, dict(moonraker=2, lugoware_config=3, other=7))
+        self.assertEqual(obj.updaters, dict(lugoware_config=3, other=7))
         self.assertEqual(module.replacement(result), (result, False))
+
+    def test_existing_klipper_only_patch_migrates(self):
+        old, _ = module.legacy_replacement(SOURCE)
+        updated, changed = module.replacement(old)
+        self.assertTrue(changed)
+        self.assertEqual(updated, module.replacement(SOURCE)[0])
 
     def test_backup_preflight_and_repeat(self):
         with tempfile.TemporaryDirectory() as tmp:

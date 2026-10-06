@@ -9,7 +9,7 @@ import tempfile
 MARKER = '# LUGOWARE: built-in Klipper updater disabled'
 
 
-def replacement(text):
+def legacy_replacement(text):
     tree = ast.parse(text)
     classes = [n for n in tree.body if isinstance(n, ast.ClassDef) and n.name == 'UpdateManager']
     if len(classes) != 1:
@@ -36,6 +36,40 @@ def replacement(text):
     additions.append((methods['_update_klipper_repo'].body[0].lineno - 1, [MARKER, 'return']))
     additions.append((methods['register_updater'].body[0].lineno - 1,
                       [MARKER, "if name == 'klipper':", '    return']))
+    for index, body in sorted(additions, reverse=True):
+        lines[index:index] = ['        ' + line + nl for line in body]
+    result = ''.join(lines)
+    compile(result, '<patched update_manager>', 'exec')
+    return result, True
+
+
+def replacement(text):
+    result, changed = legacy_replacement(text)
+    marker = '# LUGOWARE: built-in Moonraker updater disabled'
+    if marker in result:
+        if result.count(marker) not in (2, 3):
+            raise ValueError('Incomplete Moonraker updater patch')
+        return result, changed
+    tree = ast.parse(result)
+    cls = next(n for n in tree.body if isinstance(n, ast.ClassDef) and n.name == 'UpdateManager')
+    methods = {n.name: n for n in cls.body if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef))}
+    lines = result.splitlines(keepends=True)
+    nl = '\r\n' if '\r\n' in result else '\n'
+    # Full-update assumes Moonraker always exists; guard that block as well.
+    full = methods.get('_handle_full_update_request')
+    if full is not None:
+        starts = [n for n in ast.walk(full) if isinstance(n, ast.Assign)
+                  and any(isinstance(t, ast.Name) and t.id == 'moon_updater' for t in n.targets)]
+        ends = [n for n in ast.walk(full) if isinstance(n, ast.If)
+                and 'moon_updater.restart_service' in ast.unparse(n)]
+        if len(starts) != 1 or len(ends) != 1 or starts[0].lineno >= ends[0].end_lineno:
+            raise ValueError('Unsupported Moonraker full-update structure')
+        start, end = starts[0].lineno - 1, ends[0].end_lineno
+        indent = ' ' * starts[0].col_offset
+        lines[start:end] = [indent + marker + nl, indent + "if 'moonraker' in self.updaters:" + nl] + ['    ' + line for line in lines[start:end]]
+    additions = [(methods['__init__'].end_lineno, [marker, "self.updaters.pop('moonraker', None)"]),
+                 (methods['register_updater'].body[0].lineno - 1,
+                  [marker, "if name == 'moonraker':", '    return'])]
     for index, body in sorted(additions, reverse=True):
         lines[index:index] = ['        ' + line + nl for line in body]
     result = ''.join(lines)

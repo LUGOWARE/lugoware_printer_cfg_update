@@ -10,7 +10,7 @@ import urllib.error
 import urllib.request
 
 from check_idle import main as check_idle
-from hide_klipper_updater import replacement, patch
+from hide_klipper_updater import replacement, legacy_replacement, patch
 
 COMPONENTS = ('mainsail', 'print_area_bed_mesh', 'sonar')
 
@@ -88,7 +88,11 @@ def restore_known_patch(folder, backup):
     if current == original:
         return path
     expected, _ = replacement(original.decode('utf-8'))
-    if current != expected.encode('utf-8'):
+    try:
+        legacy, _ = legacy_replacement(original.decode('utf-8'))
+    except ValueError:
+        legacy = ''
+    if current not in (expected.encode('utf-8'), legacy.encode('utf-8')):
         raise RuntimeError('Moonraker contains an unknown updater modification; retained without overwriting')
     shutil.copy2(path, backup / 'update_manager.before-update.py')
     path.write_bytes(original)
