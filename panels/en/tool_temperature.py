@@ -73,7 +73,7 @@ class Panel(ScreenPanel):
         self.state = status.get('lugo_tool_temperature', {})
         active = self.state.get('active', False)
         heater = status.get('extruder', {})
-        message = (('This print only · ' if active else 'Available during printing · ') +
+        message = (('' if active else 'Available during printing · ') +
                    f"{heater.get('temperature', 0):.1f} / {heater.get('target', 0):.0f} °C")
         if active and self.selected is not None:
             message = f'T{self.selected + 1} print temperature'
