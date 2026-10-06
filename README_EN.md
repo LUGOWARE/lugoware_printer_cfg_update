@@ -151,3 +151,5 @@ The installer adds a four-tool temperature panel to the printing screen nozzle b
 The printing-menu temperature entry opens the unified tool temperature panel; camera and pins entries are hidden. Moonraker older than v0.11.0-0 is upgraded to pinned commit 68db047aa9189248800904531f6354d8fd76d8eb; newer versions are preserved. Its updater entry is hidden after installation alongside Klipper, KlipperScreen, and mainsail-config. Existing devices receive this change by running install.sh again.
 
 Both nozzle and bed buttons on the print screen open the tool-temperature panel. Bed current/target temperatures and standard M140 editing are included. Executable START_PRINT INITIAL_TOOL, CHANGE_TOOL NEXT_TOOL and T0-T3 selections are scanned across the file; unused tools are disabled and labelled Unused. Tool selections hidden inside custom macros become visible when CHANGE_TOOL actually executes.
+
+The main-screen title resolves the current local IP on entry (IP — when unavailable). The Pressure Advance button is removed from both extrusion panel languages.

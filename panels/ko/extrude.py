@@ -103,9 +103,6 @@ class Panel(ScreenPanel):
             self.labels["current_extruder"].connect(
                 "clicked", self.load_menu, "extruders", _("Extruders")
             )
-        if not self._screen.vertical_mode:
-            xbox.add(self.buttons["pressure"])
-            i += 1
         if (
             self._printer.get_config_section("firmware_retraction")
             and not self._screen.vertical_mode
@@ -192,10 +189,10 @@ class Panel(ScreenPanel):
             grid.attach(self.buttons["retract"], 2, 1, 2, 1)
             grid.attach(self.buttons["motor_off"], 0, 2, 4, 1)
             settings_box = Gtk.Box(homogeneous=True)
-            settings_box.add(self.buttons["pressure"])
             if self._printer.get_config_section("firmware_retraction"):
                 settings_box.add(self.buttons["retraction"])
-            grid.attach(settings_box, 0, 3, 4, 1)
+            if settings_box.get_children():
+                grid.attach(settings_box, 0, 3, 4, 1)
             grid.attach(distbox, 0, 4, 4, 1)
             grid.attach(speedbox, 0, 5, 4, 1)
             grid.attach(sensors, 0, 6, 4, 1)

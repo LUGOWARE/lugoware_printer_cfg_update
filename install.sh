@@ -315,6 +315,8 @@ python3 "$COMMON_DIR/repo/maintenance/install_panels.py" --language "$LANG_CODE"
 
 echo '[진행] 툴별 출력 온도 및 출력 더보기 메뉴 설치'
 python3 "$COMMON_DIR/repo/maintenance/install_tool_temperature.py"
+echo "[진행] 메인 화면 IP 표시 / 압출 모서리 제어 버튼 제거"
+python3 "$COMMON_DIR/repo/maintenance/patch_screen_identity.py"
 mkdir -p "$HOME/.local/share/lugoware"
 cp "$COMMON_DIR/repo/maintenance/install_tool_temperature.py" "$HOME/.local/share/lugoware/"
 
