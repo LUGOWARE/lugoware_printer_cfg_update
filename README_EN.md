@@ -153,3 +153,5 @@ The printing-menu temperature entry opens the unified tool temperature panel; ca
 Both nozzle and bed buttons on the print screen open the tool-temperature panel. Bed current/target temperatures and standard M140 editing are included. Executable START_PRINT INITIAL_TOOL, CHANGE_TOOL NEXT_TOOL and T0-T3 selections are scanned across the file; unused tools are disabled and labelled Unused. Tool selections hidden inside custom macros become visible when CHANGE_TOOL actually executes.
 
 The main-screen title resolves the current local IP on entry (IP — when unavailable). The Pressure Advance button is removed from both extrusion panel languages.
+
+The extrusion panel uses volumetric flow (MVS, mm³/s). Defaults reset on entry: 1.75mm=10, 2.85mm=5, actual filament travel=15mm. Arrows adjust by one; a check mark identifies the selected diameter. Extrude/retract buttons are at the bottom. Legacy distance/speed presets are not used.
