@@ -11,7 +11,10 @@ def job_patch(text):
     new = '{"panel": "tool_temperature"}'
     if old not in text and new not in text:
         raise ValueError('Unsupported job_status.py: nozzle button not found')
-    return text.replace(old, new)
+    text = text.replace(old, new)
+    # Keep other auxiliary heaters on the stock temperature panel.
+    bed = '{"panel": "tool_temperature" if dev == "heater_bed" else "temperature", "extra": dev}'
+    return text.replace('{"panel": "temperature", "extra": dev}', bed)
 
 
 def menu_patch(text):

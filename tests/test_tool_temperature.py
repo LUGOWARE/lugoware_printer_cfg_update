@@ -5,7 +5,7 @@ import tempfile
 import unittest
 from pathlib import Path
 from types import SimpleNamespace
-from lugo_tool_temperature import ToolTemperature, metadata
+from lugo_tool_temperature import ToolTemperature, metadata, used_tools
 from install_tool_temperature import job_patch
 
 
@@ -37,7 +37,8 @@ class Tests(unittest.TestCase):
         heater = SimpleNamespace(min_temp=0, max_temp=300)
         self.objects = {'extruder': SimpleNamespace(get_heater=lambda: heater),
                         'heaters': SimpleNamespace(set_temperature=lambda h, t, w: self.calls.append(('heater', t)))}
-        self.obj.printer = SimpleNamespace(lookup_object=lambda n, default=None: self.objects.get(n, default))
+        self.obj.printer = SimpleNamespace(lookup_object=lambda n, default=None: self.objects.get(n, default),
+                                          get_reactor=lambda: SimpleNamespace(pause=lambda t: None, monotonic=lambda: 0))
         self.obj.original = {n: lambda cmd: self.calls.append((cmd.name, dict(cmd.params)))
                              for n in ('M104', 'M109', 'CHANGE_TOOL', 'END_PRINT', 'CANCEL_PRINT')}
 
@@ -128,6 +129,30 @@ class Tests(unittest.TestCase):
             self.objects['virtual_sdcard'] = SimpleNamespace(file_path=lambda: str(p))
             self.obj.begin()
             self.assertEqual(self.obj.materials, names)
+
+    def test_scan_only_executable_commands_preserves_tool_numbers(self):
+        with tempfile.TemporaryDirectory() as temp:
+            path = Path(temp) / 'print.gcode'
+            path.write_text('; CHANGE_TOOL NEXT_TOOL=1\n; change_filament_gcode = CHANGE_TOOL NEXT_TOOL=3\n'
+                            'START_PRINT INITIAL_TOOL=0 EXTRUDER_TEMP=210\n' + 'G1 X10\n' * 50000 +
+                            'CHANGE_TOOL NEXT_TOOL=2 TEMP=240 ; T1\n')
+            self.assertEqual(used_tools(path), [0, 2])
+
+    def test_unused_status_and_edit_rejection(self):
+        self.obj.used = [0, 2]
+        self.obj.materials = ['A', 'B', 'C', 'D']
+        self.obj.base = [200, 210, 220, 230]
+        status = self.obj.get_status(0)
+        self.assertEqual(status['materials'], ['A', '', 'C', ''])
+        self.assertEqual(status['temperatures'], [200, None, 220, None])
+        with self.assertRaises(ValueError):
+            self.obj.set_temperature(Command('LUGO_SET_TOOL_TEMP', {'TOOL': 1, 'TEMP': 210}))
+
+    def test_bed_navigation_patch_is_selective_and_repeatable(self):
+        source = 'nozzle = {"panel": "temperature", "extra": extruder}\nbed = {"panel": "temperature", "extra": dev}\n'
+        result = job_patch(source)
+        self.assertIn('if dev == "heater_bed" else "temperature"', result)
+        self.assertEqual(job_patch(result), result)
 
 
 if __name__ == '__main__': unittest.main()

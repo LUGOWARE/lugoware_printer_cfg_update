@@ -32,6 +32,14 @@ class Panel(ScreenPanel):
             grid.attach(material, 1, tool, 1, 1)
             grid.attach(button, 2, tool, 1, 1)
             self.rows.append((material, button))
+        grid.attach(Gtk.Label(label='Bed'), 0, 4, 1, 1)
+        self.bed_current = Gtk.Label(label='—', hexpand=True)
+        self.bed_button = self._gtk.Button(label='—', style='color2')
+        self.bed_button.set_sensitive(False)
+        self.bed_button.connect('clicked', self.edit, 'bed')
+        grid.attach(self.bed_current, 1, 4, 1, 1)
+        grid.attach(self.bed_button, 2, 4, 1, 1)
+        self.bed_target = 0
         scroll = Gtk.ScrolledWindow()
         scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
         scroll.add(grid)
@@ -61,7 +69,7 @@ class Panel(ScreenPanel):
             return True
         self.pending = now
         self._screen._ws.send_method('printer.objects.query', {'objects': {
-            'lugo_tool_temperature': None, 'extruder': ['temperature', 'target']}},
+            'lugo_tool_temperature': None, 'extruder': ['temperature', 'target'], 'heater_bed': ['temperature', 'target']}},
             self.received, self.generation)
         return True
 
@@ -76,14 +84,15 @@ class Panel(ScreenPanel):
         message = (('' if active else 'Available during printing · ') +
                    f"{heater.get('temperature', 0):.1f} / {heater.get('target', 0):.0f} °C")
         if active and self.selected is not None:
-            message = f'T{self.selected + 1} print temperature'
+            message = 'Bed temperature' if self.selected == 'bed' else f'T{self.selected + 1} print temperature'
         if not self.state:
             message = 'Check tool temperature extension connection.'
         if self.status.get_text() != message:
             self.status.set_text(message)
         for tool, (material, button) in enumerate(self.rows):
+            used = self.state.get('used', [None] * 4)[tool]
             name = self.state.get('materials', ['Unknown'] * 4)[tool]
-            name = 'Unknown' if name == 'Unknown' else name
+            name = 'Unused' if used is False else ('Unknown' if name == 'Unknown' else name)
             if material.get_text() != name:
                 material.set_text(name)
             value = self.state.get('temperatures', [None] * 4)[tool]
@@ -91,16 +100,27 @@ class Panel(ScreenPanel):
             label = '—' if value is None else f'{value:g} °C' + (' *' if override is not None else '')
             if button.get_label() != label:
                 button.set_label(label)
-            if button.get_sensitive() != active:
-                button.set_sensitive(active)
-        if not active and self.selected is not None:
+            enabled = active and used is not False
+            if button.get_sensitive() != enabled:
+                button.set_sensitive(enabled)
+        bed = status.get('heater_bed', {})
+        self.bed_target = bed.get('target', 0)
+        current = f"{bed.get('temperature', 0):.1f} °C" if bed else '—'
+        target = f"{self.bed_target:g} °C" if bed else '—'
+        if self.bed_current.get_text() != current:
+            self.bed_current.set_text(current)
+        if self.bed_button.get_label() != target:
+            self.bed_button.set_label(target)
+        if self.bed_button.get_sensitive() != bool(bed):
+            self.bed_button.set_sensitive(bool(bed))
+        if not active and self.selected is not None and self.selected != 'bed':
             self.close()
 
     def edit(self, widget, tool):
         self.selected = tool
-        value = self.state.get('temperatures', [None] * 4)[tool]
+        value = self.bed_target if tool == 'bed' else self.state.get('temperatures', [None] * 4)[tool]
         self.entry.set_text('' if value is None else f'{value:g}')
-        self.status.set_text(f'T{tool + 1} print temperature')
+        self.status.set_text('Bed temperature' if tool == 'bed' else f'T{tool + 1} print temperature')
         self.pad.set_no_show_all(False)
         self.pad.show_all()
         # set_text() leaves the cursor at the start; backspace there is a no-op.
@@ -117,13 +137,13 @@ class Panel(ScreenPanel):
     def save(self, value):
         try:
             value = float(value)
-            if not math.isfinite(value) or value <= 0 or self.selected is None:
+            if not math.isfinite(value) or value < 0 or (value == 0 and self.selected != 'bed') or self.selected is None:
                 raise ValueError()
         except ValueError:
             self._screen.show_popup_message('Enter a valid temperature.')
             return
-        self._screen._ws.send_method('printer.gcode.script', {'script':
-            f'LUGO_SET_TOOL_TEMP TOOL={self.selected} TEMP={value:g}'}, self.saved)
+        script = f'M140 S{value:g}' if self.selected == 'bed' else f'LUGO_SET_TOOL_TEMP TOOL={self.selected} TEMP={value:g}'
+        self._screen._ws.send_method('printer.gcode.script', {'script': script}, self.saved)
         self.close()
 
     def saved(self, response, *args):

@@ -23,6 +23,32 @@ def metadata(path):
     return values
 
 
+def used_tools(path, yield_scan=None):
+    """Find executed tool selections, not the slicer's registered profile list."""
+    if not path:
+        return None
+    used = set()
+    command = re.compile(rb'^\s*(?:N\d+\s+)?(START_PRINT|CHANGE_TOOL|T[0-3])(?=\s|\*|$)', re.I)
+    with open(path, 'rb') as stream:
+        for count, line in enumerate(stream):
+            code = line.split(b';', 1)[0]
+            match = command.match(code)
+            if match:
+                name = match[1].upper()
+                if name.startswith(b'T'):
+                    used.add(int(name[1:]))
+                else:
+                    key = b'INITIAL_TOOL' if name == b'START_PRINT' else b'NEXT_TOOL'
+                    param = re.search(rb'\b' + key + rb'\s*=\s*([0-3])(?=\s|\*|$)', code, re.I)
+                    if param:
+                        used.add(int(param[1]))
+                    elif name == b'START_PRINT':
+                        used.add(0)
+            if yield_scan and count % 4096 == 4095:
+                yield_scan()
+    return sorted(used)
+
+
 class ToolTemperature:
     def __init__(self, config):
         self.printer = config.get_printer()
@@ -39,6 +65,7 @@ class ToolTemperature:
         self.materials = ['Unknown'] * 4
         self.base = [None] * 4
         self.overrides = [None] * 4
+        self.used = None
 
     def connect(self):
         for name in ('START_PRINT', 'CHANGE_TOOL', 'END_PRINT', 'CANCEL_PRINT', 'M104', 'M109'):
@@ -65,6 +92,9 @@ class ToolTemperature:
         sd = self.printer.lookup_object('virtual_sdcard', None)
         try:
             data = metadata(sd.file_path() if sd else None)
+            reactor = self.printer.get_reactor()
+            self.used = used_tools(sd.file_path() if sd else None,
+                                   lambda: reactor.pause(reactor.monotonic()))
             for i, name in enumerate(data.get('filament_settings_id', data.get('lugo_tool_materials', data.get('filament_type', [])))[:4]):
                 self.materials[i] = name or 'Unknown'
             for i, value in enumerate(data.get('nozzle_temperature', [])[:4]):
@@ -78,6 +108,8 @@ class ToolTemperature:
         if name == 'START_PRINT':
             self.begin()
             initial = cmd.get_int('INITIAL_TOOL', minval=0, maxval=3) if 'INITIAL_TOOL' in cmd.get_command_parameters() else 0
+            if self.used is not None and initial not in self.used:
+                self.used.append(initial)
             if 'EXTRUDER_TEMP' in cmd.get_command_parameters():
                 self.base[initial] = cmd.get_float('EXTRUDER_TEMP')
         if name in ('END_PRINT', 'CANCEL_PRINT'):
@@ -85,6 +117,8 @@ class ToolTemperature:
             self.reset()
         if name == 'CHANGE_TOOL' and self.active:
             tool = cmd.get_int('NEXT_TOOL', minval=0, maxval=3)
+            if self.used is not None and tool not in self.used:
+                self.used.append(tool)
             self.base[tool] = cmd.get_float('TEMP', minval=0)
             if self.overrides[tool] is not None:
                 cmd = self.replaced(cmd, 'TEMP', self.overrides[tool])
@@ -117,6 +151,8 @@ class ToolTemperature:
         if not self.active:
             raise cmd.error('No active print temperature session')
         tool = cmd.get_int('TOOL', minval=0, maxval=3)
+        if self.used is not None and tool not in self.used:
+            raise cmd.error('This tool is not used in the current print')
         heater = self.printer.lookup_object('extruder').get_heater()
         # Existing LUGOWARE docking adds up to 40 C.
         maximum = heater.max_temp - 40
@@ -132,9 +168,12 @@ class ToolTemperature:
         stats = self.printer.lookup_object('print_stats', None)
         if self.active and stats and stats.get_status(eventtime)['state'] in ('complete', 'cancelled', 'error'):
             self.reset()
-        return {'active': self.active, 'materials': list(self.materials),
+        used = [None if self.used is None else i in self.used for i in range(4)]
+        return {'active': self.active, 'used': used,
+                'materials': [name if used[i] is not False else '' for i, name in enumerate(self.materials)],
                 'base': list(self.base), 'overrides': list(self.overrides),
-                'temperatures': [o if o is not None else b for o, b in zip(self.overrides, self.base)]}
+                'temperatures': [(o if o is not None else b) if used[i] is not False else None
+                                 for i, (o, b) in enumerate(zip(self.overrides, self.base))]}
 
 
 def load_config(config):
