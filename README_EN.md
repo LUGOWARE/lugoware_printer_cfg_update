@@ -1,82 +1,47 @@
-## Screen language integration
+# LUGOWARE Printer Configuration Auto-Update System
 
-Menu captions use bounded line counts and shrink long text by at most 25%; titles retain a single-line height. Remaining overflow uses ellipsis with the full text in a tooltip. Preparation extrusion buttons retain equal minimum touch heights. The installer checks and installs `fonts-noto-core` and `fonts-noto-cjk` for multilingual glyph coverage without a system-wide upgrade. Initial font installation requires network access. The product name `KlipperScreen` remains unchanged.
+## 2026-10-12 M5P Screen and Print Control Update
 
-Installation preserves the last saved KlipperScreen language and user settings without a language prompt. Settings → Language changes stock screens and custom panels together. Additional UI strings have offline catalogs for all 32 currently supported locales. Stock UI uses official KlipperScreen translations; missing upstream translations can still appear in English. Material profile names, filenames and G-code remain unchanged.
+Existing machines must also run `install.sh` again to install this shared code. It applies to all M, L, and W models and provides shared panels that follow the selected screen language. The model configuration update button alone does not download new panels or Python extensions. After installation, model configuration updates use the saved patcher to reapply the preparation and cancellation macros.
 
-Rerun install.sh to install multilingual panels on existing machines. Subsequent model configuration updates preserve the saved language too. See [translations/README.md](translations/README.md).
+The installer installs four shared panels from `panels/common` and backs up the existing files. Translations follow the KlipperScreen language setting. Panel updates require running `install.sh`.
 
-# LUGOWARE Printer Config Auto-Update System
+🌐 English | [한국어](README.md)
 
-## 2026-10-12 M5P screen and print controls
+This repository provides a system for automatically updating configuration files for LUGOWARE FLEX4 3D printers.\
+You can download the latest configuration with a single button in Mainsail.
 
-Rerun install.sh on existing machines to install the common code for FLEX4 M/L/W, in the selected KlipperScreen language. The model configuration update button alone does not download new panels or extensions. After installation, its hook reapplies the preparation and cancellation macro patches.
-
-- Print-screen nozzle/bed shortcuts open the standard temperature panel. Settings → Tool temperature control uses 1°C arrows with 50 ms feedback and displays only used tools.
-- Dedicated APIs accept nozzle and bed edits during startup. Bed controls stay disabled until the startup heater command sets its target; startup temperature waits follow edits.
-- Selected extrusion diameter is highlighted blue; motor disable is blocked while printing or paused.
-- Cross-station parking/priming requires confirmation that the destination is empty. Occupancy is checked by the operator, not detected automatically.
-- KlipperScreen cancellation exits heater waits and parks the mounted tool after a safe toolchange boundary. Mesh cancellation finishes the current probe sample, lifts Z and discards partial results. This is not emergency stop; the Mainsail cancellation route is unchanged.
-- No cancellation-success popup or automatic extrusion-screen transition. Only MCU clock mismatch popups are suppressed; other errors and logs remain.
-
-Validation: 167 Python tests, all three model macro patches and repeat installs against KlipperScreen v0.4.7-191, Jinja and shell syntax checks. Physical tool motion/probing still requires machine verification. Firmware binaries are unchanged.
-
-## Repeat installation policy
-
-Current companion update targets are only Mainsail, print_area_bed_mesh and sonar. Moonraker and system package upgrades are excluded. Installing build dependencies for legacy Klipper upgrades remains a separate operation. System-update descriptions below refer to previous behavior.
-
-Current policy: Moonraker itself is excluded from automatic updates. Only system packages, Mainsail, print_area_bed_mesh and sonar are updated; the updater-hiding patch is not temporarily reverted in this stage. Descriptions below about upgrading Moonraker refer to the previous behavior.
-
-After maintenance, install.sh updates system packages, Mainsail, print_area_bed_mesh, sonar and finally Moonraker through individual Moonraker APIs. It uses the latest release/commit in each configured channel, skipping current or unregistered components with explicit messages. lugoware_config is updated by the existing model-branch pull. No full-update endpoint is used, preserving the Klipper baseline and custom screen.
-
-Stages, before/target versions, waiting messages and verification results are visible and logged. Only the recognized LUGOWARE Moonraker patch is temporarily restored to its Git original, backed up and reapplied after update. Unknown edits are never forcibly reset. Failures stop completion; unsupported future Moonraker source changes require inspection. System reboot requirements are reported without automatic reboot or OS distribution upgrades.
-
-After successful installation, install.sh backs up and comments klipper, KlipperScreen and mainsail-config update sections in Moonraker configuration and active includes, then restarts Moonraker. The built-in Klipper updater is disabled with a backed-up patch to update_manager.py, including reconnection registration paths. Other updaters remain available. The installer verifies all three entries are absent through the Moonraker API. A Moonraker source update may overwrite this patch; rerun the installer to restore it. The supplied M5P binary is unchanged; final READY is checked.
-
-Hosts below v0.13.0-770 are backed up and upgraded to `ce7002bedf37e938bb483572949f3703ac6476cb`, including Python dependencies and the Linux/CB2 MCU. The known multi_pin customization is retained; other tracked modifications stop the upgrade. Hosts at v0.13.0-770 or later retain their version. Interrupted Linux MCU installations are recorded for resumption. This does not upgrade the OS.
-
-A live READY M5P matching the distribution firmware skips flashing. Other working firmware on v0.13+ hosts is retained rather than downgraded; final READY is still required. Identical panels/configs, extension setup, cron, logo protection and prompts patches skip rewriting. Verification and service restarts still occur. The shared policy also applies to flash.sh. Legacy Bullseye build dependencies use a temporary official binary source list without changing system APT configuration.
-
-At the end of `flash.sh`, the `[update_manager KlipperScreen]` section in `~/printer_data/config/moonraker.conf` is commented out. The original file is backed up and Moonraker is restarted when changed. Other update manager sections are preserved.
-
-The installer deploys four shared panels from `panels/common`, backs up existing files, and binds their translations to the screen language setting. Panel updates require running `install.sh`.
-
-🌐 [한국어](README.md) | English
-
-This repository provides an automatic configuration update system for LUGOWARE FLEX4 3D printers.  
-Get the latest settings with a single button click in Mainsail.
-
-> **Supported Models**  
+> **Supported models**\
 > - **FLEX4 M**
 > - **FLEX4 L**
 > - **FLEX4 W**
 
 ---
 
-## Initial Installation (One-time Setup)
+## Initial Installation (Once Only)
 
 ### Step 1 — Install MobaXterm
 
-1. Go to [https://mobaxterm.mobatek.net/download.html](https://mobaxterm.mobatek.net/download.html)
-2. Download **MobaXterm Home Edition** → **Installer edition**
-3. Install and launch
+1. Visit [https://mobaxterm.mobatek.net/download.html](https://mobaxterm.mobatek.net/download.html).
+2. Download **MobaXterm Home Edition** → **Installer edition**.
+3. Install and launch it.
 
-### Step 2 — Find Your Printer IP
+### Step 2 — Find the Printer's IP Address
 
-Check the printer IP on the top-left of the Mainsail web UI or on the KlipperScreen display.  
+Find the printer's IP address in the upper-left corner of the Mainsail web interface or on the KlipperScreen display.\
 Example: `192.168.0.39`
 
 ### Step 3 — Connect via SSH
 
-1. Launch MobaXterm
-2. Click **Session** at the top
-3. Select **SSH**
+1. Launch MobaXterm.
+2. Click **Session** at the top.
+3. Select **SSH**.
 4. Enter the following:
-   - Remote host: `Printer IP` (e.g. `192.168.0.39`)
+   - Remote host: `Printer IP` (for example, `192.168.0.39`)
    - Username: `biqu`
    - Port: `22`
-5. Click **OK**
-6. Enter password: `biqu`
+5. Click **OK**.
+6. Enter the password: `biqu`.
 
 ### Step 4 — Run the Installation Command
 
@@ -86,88 +51,78 @@ After connecting via SSH, **copy and paste (right-click)** the command below and
 bash <(curl -sSL https://raw.githubusercontent.com/LUGOWARE/lugoware_printer_cfg_update/main/install.sh)
 ```
 
-The installer will prompt you to select your printer model:
+A menu will appear asking you to select your printer model:
 
 ```
-프린터 모델을 선택하세요 / Select printer model:
+Select printer model:
   1) FLEX4 M
   2) FLEX4 L
   3) FLEX4 W
 
-번호 입력 (1/2/3):
+Enter number (1/2/3):
 
 ```
 
-Enter the number for your printer model, then press Enter. Installation will complete automatically.
+Enter the number corresponding to your printer model and press Enter. Installation will complete automatically.
 
-Once you see the completion message, restart **Klipper** and **Moonraker** in Mainsail.
+Run the command as your regular SSH user and enter your sudo password when prompted.
+Proceed while the printer is not in use.
 
----
-
-## How to Update (After Installation)
-
-In Mainsail, go to **Printer Settings** → **Update Manager** panel  
-Click the **Update** button next to **lugoware_config**
+When the completion message appears, restart **Klipper** and **Moonraker** in Mainsail.
 
 ---
 
-## Files That Get Updated
+## Subsequent Updates (After Installation)
+
+In Mainsail, go to **Machine** → **Update Manager**, then\
+click the **Update button** for **lugoware_config**.
+
+---
+
+## Files That Are Updated
 
 | File | Description |
 |------|-------------|
-| `printer_base.cfg` | Base printer config (motion, heaters, macros, etc.) |
-| `crowsnest.conf` | Webcam settings |
-| `KlipperScreen.conf` | Touchscreen settings |
+| `printer_base.cfg` | Base printer configuration (motion, heaters, macros, etc.) |
+| `crowsnest.conf` | Webcam configuration |
+| `KlipperScreen.conf` | Touchscreen configuration |
 
-## Files That Are NOT Updated (Personal Settings Protected)
+## Files That Are Not Updated (Protecting Your Settings)
 
 | File | Description |
 |------|-------------|
-| `printer.cfg` | Printer-specific settings (MCU serial, SAVE_CONFIG) |
+| `printer.cfg` | Printer-specific settings (including the MCU serial and SAVE_CONFIG) |
 | `printer_custom.cfg` | Personal tuning values (pressure advance, etc.) |
-| `moonraker.conf` | Moonraker server settings |
-| `mainsail.cfg` | Mainsail UI settings |
+| `moonraker.conf` | Moonraker server configuration |
+| `mainsail.cfg` | Mainsail UI configuration |
 
 ---
 
 ## Troubleshooting
 
-**Klipper won't start after update**  
-Older firmware versions may fail to connect to Klipper.  
-Connect via SSH and run the following command to fix it:
+**Klipper does not start after an update**\
+Older firmware may fail to connect to Klipper.\
+Connect via SSH and run the following command to resolve this:
 
 ```bash
 bash <(curl -sSL https://raw.githubusercontent.com/LUGOWARE/lugoware_printer_cfg_update/main/flash.sh)
 ```
 
-Password: biqu
+Enter the password: `biqu`.
 
-```bash
-sudo reboot
-```
+The new script restarts the Klipper service without rebooting the operating system.
 
-**Update button is not visible**  
-Installation may not have completed. Run the Step 4 command again.
+**The Update button is not visible**\
+Installation has not completed. Run the command in Step 4 again.
 
-**X-axis motor moves in the wrong direction after firmware update**  
-Early production units were designed with the motor direction reversed. After applying the latest firmware, the motor may run backwards.  
-In Mainsail, open `printer_base.cfg`, find `[stepper_x]` and change `dir_pin: PB1` to `dir_pin: !PB1`, then save and restart.  
+**The X-axis motor moves in the opposite direction after a firmware update**\
+Early machines were designed with the opposite motor direction, so installing the latest firmware may cause the motor to turn in reverse.\
+In Mainsail, open `printer_base.cfg` and change `dir_pin: PB1` to `dir_pin: !PB1` in the `[stepper_x]` section, then save and restart.\
 <img width="817" height="222" alt="image" src="https://github.com/user-attachments/assets/bf1903b1-2865-4c0d-a740-3951755f05b6" />
 
 ---
 
-**Other inquiries**  
+**Other Questions**\
 Please contact LUGOWARE customer support.
 
-
-## Per-tool print temperatures
-
-The installer adds a four-tool temperature panel to the printing screen nozzle button. Orca filament profile names are read from G-code filament_settings_id metadata, falling back to material type. Overrides persist across tool changes for the current print and reset on end, cancel, new print, or Klipper restart. The stock keypad is used. Docking heat boosts remain in place; override limits reserve 40 C of heater headroom. Custom SET_HEATER_TEMPERATURE commands are not intercepted.
-
-The printing-menu temperature entry opens the unified tool temperature panel; camera and pins entries are hidden. Moonraker older than v0.11.0-0 is upgraded to pinned commit 68db047aa9189248800904531f6354d8fd76d8eb; newer versions are preserved. Its updater entry is hidden after installation alongside Klipper, KlipperScreen, and mainsail-config. Existing devices receive this change by running install.sh again.
-
-Both nozzle and bed buttons on the print screen open the tool-temperature panel. Bed current/target temperatures and standard M140 editing are included. Executable START_PRINT INITIAL_TOOL, CHANGE_TOOL NEXT_TOOL and T0-T3 selections are scanned across the file; unused tools are disabled and labelled Unused. Tool selections hidden inside custom macros become visible when CHANGE_TOOL actually executes.
-
-The main-screen title resolves the current local IP on entry (IP — when unavailable). The Pressure Advance button is removed from both extrusion panel languages.
-
-The extrusion panel uses volumetric flow (MVS, mm³/s). Defaults reset on entry: 1.75mm=10, 2.85mm=5, actual filament travel=15mm. Arrows adjust by one; a check mark identifies the selected diameter. Extrude/retract buttons are at the bottom. Legacy distance/speed presets are not used.
+The extrusion panel uses MVS (mm³/s). Defaults are 10 for 1.75 mm filament, 5 for 2.85 mm filament, and 15 mm of actual filament travel. These values reset when you enter the menu. The arrows adjust values in increments of 1. A check mark identifies the selected diameter, and the Extrude and Retract buttons are at the bottom. The previous distance and speed presets are not used.
