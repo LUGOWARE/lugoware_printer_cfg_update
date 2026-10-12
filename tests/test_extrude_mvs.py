@@ -7,7 +7,7 @@ import unittest
 
 class MvsTests(unittest.TestCase):
     def test_languages_flow_distance_and_state_restoration(self):
-        for lang in ('ko', 'en'):
+        for lang in ('common',):
             source = (Path(__file__).resolve().parents[1] / 'panels' / lang / 'extrude.py').read_text(encoding='utf-8')
             tree = ast.parse(source)
             func = next(n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name == 'extrusion_script')

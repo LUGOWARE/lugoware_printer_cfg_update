@@ -21,14 +21,16 @@ def panel_patch(text):
         sent = self._screen._ws.send_method(
             "printer.lugo_fast_cancel.request", {}, self._fast_cancel_response)
         if sent is False:
-            self._fast_cancel_response({"error": {"message": "Cancel request failed"}})
+            self._fast_cancel_response({"error": {"message": _("Cancel request failed")}})
 
     def _fast_cancel_response(self, response, *args):
         if "error" in response:
             self._screen._lugo_cancel_pending = False
             self.enable_button("cancel")
-            self._screen.show_popup_message(str(response["error"].get("message", "Cancel failed")))
+            self._screen.show_popup_message(str(response["error"].get("message", _("Cancel failed"))))
 ''')
+    text = text.replace('"message": "Cancel request failed"', '"message": _("Cancel request failed")')
+    text = text.replace('get("message", "Cancel failed")', 'get("message", _("Cancel failed"))')
     if '_lugo_cancel_pending' not in text:
         raise ValueError('Incomplete cancellation panel patch')
     return text

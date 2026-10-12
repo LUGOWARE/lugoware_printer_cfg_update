@@ -36,7 +36,7 @@ class Panel(TemperaturePanel):
     def activate(self):
         super().activate()
         if not self.devices:
-            self._screen.show_popup_message("사용 가능한 노즐 히터가 없습니다.")
+            self._screen.show_popup_message(_('No nozzle heaters available.'))
             return
         self.labels["devices"].set_valign(Gtk.Align.CENTER)
         self.labels["devices"].set_halign(Gtk.Align.FILL)

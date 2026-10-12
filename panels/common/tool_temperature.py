@@ -77,7 +77,7 @@ class TemperatureControl(Gtk.Box):
 
 class Panel(ScreenPanel):
     def __init__(self, screen, title, **kwargs):
-        super().__init__(screen, title or 'Tool temperatures')
+        super().__init__(screen, title or _('Tool temperatures'))
         self.timer = None
         self.generation = 0
         self.pending = 0
@@ -90,7 +90,7 @@ class Panel(ScreenPanel):
         self.layout = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
         self.layout.set_margin_start(4)
         self.layout.set_margin_end(4)
-        self.status = Gtk.Label(label='Checking printer status…')
+        self.status = Gtk.Label(label=_('Checking printer status…'))
         self.status.set_line_wrap(True)
         self.layout.pack_start(self.status, False, False, 0)
         grid = Gtk.Grid(column_spacing=6, row_spacing=6, row_homogeneous=True)
@@ -105,7 +105,7 @@ class Panel(ScreenPanel):
             grid.attach(material, 1, tool, 1, 1)
             grid.attach(button, 2, tool, 1, 1)
             self.rows.append((material, button))
-        grid.attach(Gtk.Label(label='Bed'), 0, 4, 1, 1)
+        grid.attach(Gtk.Label(label=_('Bed')), 0, 4, 1, 1)
         self.bed_current = Gtk.Label(label='—', hexpand=True)
         self.bed_button = TemperatureControl(self._gtk, self.adjust_temperature, 'bed')
         self.bed_button.set_sensitive(False)
@@ -155,7 +155,7 @@ class Panel(ScreenPanel):
         if self.sending and now - self.sent_at >= 5:
             logging.warning('Tool temperature response timed out; refreshing printer state')
             self.reset_request()
-            self.status.set_text('Temperature response delayed; refreshing status.')
+            self.status.set_text(_('Temperature response delayed; refreshing status.'))
         if self.pending and now - self.pending < 5:
             return True
         self.pending = now
@@ -173,16 +173,16 @@ class Panel(ScreenPanel):
         self.state = status.get('lugo_tool_temperature', {})
         active = self.state.get('active', False)
         heater = status.get('extruder', {})
-        message = (('' if active else 'Available during printing · ') +
+        message = (('' if active else _('Available during printing · ')) +
                    f"{heater.get('temperature', 0):.1f} / {heater.get('target', 0):.0f} °C")
         if not self.state:
-            message = 'Check tool temperature extension connection.'
+            message = _('Check tool temperature extension connection.')
         if self.status.get_text() != message:
             self.status.set_text(message)
         for tool, (material, button) in enumerate(self.rows):
             used = self.state.get('used', [None] * 4)[tool]
             name = self.state.get('materials', ['Unknown'] * 4)[tool]
-            name = 'Unused' if used is False else ('Unknown' if name == 'Unknown' else name)
+            name = _('Unused') if used is False else (_('Unknown') if name == 'Unknown' else name)
             if material.get_text() != name:
                 material.set_text(name)
             value = self.state.get('temperatures', [None] * 4)[tool]
@@ -197,7 +197,7 @@ class Panel(ScreenPanel):
         self.bed_target = bed.get('target', 0)
         current = f"{bed.get('temperature', 0):.1f} °C" if bed else '—'
         bed_enabled = bool(bed) and self.state.get('bed_ready', False)
-        target = f"{self.bed_target:g} °C" if bed_enabled else 'Preparing' if active else '—'
+        target = f"{self.bed_target:g} °C" if bed_enabled else _('Preparing') if active else '—'
         if self.bed_current.get_text() != current:
             self.bed_current.set_text(current)
         if self.bed_button.get_label() != target:
@@ -232,7 +232,7 @@ class Panel(ScreenPanel):
                     'printer.lugo_tool_temperature.set_bed',
                     {'temperature': value}, self.saved, serial)
             elif tool == 'bed' and self.state.get('active'):
-                self.saved({'error': {'message': 'Update the bed temperature extension and restart Klipper.'}}, serial=serial)
+                self.saved({'error': {'message': _('Update the bed temperature extension and restart Klipper.')}}, serial=serial)
                 return
             elif tool != 'bed' and self.state.get('live_api'):
                 sent = self._screen._ws.send_method(
@@ -241,9 +241,9 @@ class Panel(ScreenPanel):
             else:
                 sent = self._screen._ws.send_method('printer.gcode.script', {'script': script}, self.saved, serial)
             if sent is False:
-                self.saved({'error': {'message': 'Failed to send command'}}, serial=serial)
+                self.saved({'error': {'message': _('Failed to send command')}}, serial=serial)
         except Exception:
-            self.saved({'error': {'message': 'Check printer connection.'}}, serial=serial)
+            self.saved({'error': {'message': _('Check printer connection.')}}, serial=serial)
 
     def saved(self, response, method=None, params=None, serial=None):
         if serial != self.request_serial:
@@ -252,6 +252,6 @@ class Panel(ScreenPanel):
         self.last_status = 0
         self.sending = False
         if 'error' in response:
-            self._screen.show_popup_message(str(response['error'].get('message', 'Temperature change failed')))
+            self._screen.show_popup_message(str(response['error'].get('message', _('Temperature change failed'))))
         if self.timer is not None:
             self.query()

@@ -1,4 +1,4 @@
-"""Install the selected language panels, retaining the previous files."""
+"""Install shared multilingual panels, retaining the previous files."""
 import argparse
 from pathlib import Path
 import shutil
@@ -36,10 +36,10 @@ def install(source, target, backup, check=False):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--language', choices=('ko', 'en'), required=True)
+    parser.add_argument('--language', help='Legacy option; panels now use the screen language')
     parser.add_argument('--target', type=Path, required=True)
     parser.add_argument('--backup', type=Path, required=True)
     parser.add_argument('--check', action='store_true')
     args = parser.parse_args()
-    source = Path(__file__).resolve().parents[1] / 'panels' / args.language
+    source = Path(__file__).resolve().parents[1] / 'panels' / 'common'
     install(source, args.target, args.backup, args.check)

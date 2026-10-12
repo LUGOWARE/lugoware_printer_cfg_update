@@ -11,7 +11,7 @@ spec.loader.exec_module(module)
 
 class PanelInstallTests(unittest.TestCase):
     def test_both_languages_replace_and_backup(self):
-        for lang in ('ko', 'en'):
+        for lang in ('common',):
             with self.subTest(lang=lang), tempfile.TemporaryDirectory() as tmp:
                 target = Path(tmp) / 'panels'
                 target.mkdir()

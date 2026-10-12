@@ -22,9 +22,7 @@ def menu_patch(text):
         header = '[menu __print ' + name + ']'
         pattern = re.compile(r'^' + re.escape(header) + r'[^\n]*\n(?:(?!^\[|^#~#).*(?:\n|$))*', re.M)
         match = pattern.search(text)
-        language_file = Path.home() / '.lugoware_lang'
-        language = language_file.read_text().strip() if language_file.exists() else 'ko'
-        title = 'Tool temperature control' if language == 'en' else '툴별 온도 제어'
+        title = "{{ _('Tool temperature control') }}"
         options = {'enable': 'True', 'panel': 'tool_temperature', 'name': title} if name == 'temperature' else {'enable': 'False'}
         section = match.group() if match else header + '\n'
         for key, value in options.items():

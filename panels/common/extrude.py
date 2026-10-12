@@ -18,7 +18,7 @@ class Panel(ScreenPanel):
     _diameter_provider = None
 
     def __init__(self, screen, title):
-        super().__init__(screen, title or '압출')
+        super().__init__(screen, title or _('Extrude'))
         self.diameter = 1.75
         self.flows = {1.75: 10, 2.85: 5}
         self.distance = 15
@@ -53,12 +53,12 @@ class Panel(ScreenPanel):
         cover.set_above_child(True)
         cover.add(self.nozzle)
         top.attach(cover, 0, 0, 1, 1)
-        temp = self._gtk.Button('heat-up', '온도', 'color2')
+        temp = self._gtk.Button('heat-up', _('Temperature'), 'color2')
         temp.connect('clicked', self.menu_item_clicked, {'panel': 'nozzle_temperature'})
         top.attach(temp, 1, 0, 1, 1)
         extrusion_actions = Gtk.Grid(column_homogeneous=True, column_spacing=4,
                                      hexpand=True, vexpand=True)
-        for column, (icon, title, direction) in enumerate((('extrude', '압출', 1), ('retract', '퇴출', -1))):
+        for column, (icon, title, direction) in enumerate((('extrude', _('Extrude'), 1), ('retract', _('Retract'), -1))):
             button = self._gtk.Button(icon, title, 'color3')
             button.connect('clicked', self.move, direction)
             extrusion_actions.attach(button, column, 0, 1, 1)
@@ -72,7 +72,7 @@ class Panel(ScreenPanel):
             self.diameter_buttons[diameter] = button
             button.get_style_context().add_class('lugo-diameter')
             choices.attach(button, column, 0, 1, 1)
-        motor = self._gtk.Button('motor-off', '모터 끄기', 'color3', scale=0.6,
+        motor = self._gtk.Button('motor-off', _('Motor off'), 'color3', scale=0.6,
                                  position=Gtk.PositionType.TOP)
         motor.connect('clicked', self.motor_off)
         choices.attach(motor, 2, 0, 1, 1)
@@ -82,7 +82,7 @@ class Panel(ScreenPanel):
         adjust = Gtk.Grid(column_homogeneous=True, row_homogeneous=False,
                           column_spacing=4, row_spacing=4, hexpand=True, vexpand=True)
         self.values = {}
-        for col, (key, caption) in enumerate((('flow', 'MVS (mm³/s)'), ('distance', '거리 (mm)'))):
+        for col, (key, caption) in enumerate((('flow', 'MVS (mm³/s)'), ('distance', _('Distance (mm)')))):
             heading = Gtk.Label(label=caption, vexpand=False)
             heading.set_margin_top(6)
             heading.set_margin_bottom(2)
@@ -160,15 +160,15 @@ class Panel(ScreenPanel):
         try:
             sent = self._screen._ws.send_method('printer.gcode.script', {'script': script}, self.done)
             if sent is False:
-                self.done({'error': {'message': '명령 전송 실패'}})
+                self.done({'error': {'message': _('Failed to send command')}})
         except Exception:
-            self.done({'error': {'message': '프린터 연결을 확인하세요.'}})
+            self.done({'error': {'message': _('Check printer connection.')}})
 
     def done(self, response, *args):
         self.busy = False
         self.update_state()
         if 'error' in response:
-            self._screen.show_popup_message(response['error'].get('message', '명령 실행 실패'))
+            self._screen.show_popup_message(response['error'].get('message', _('Command failed')))
 
     def move(self, widget, direction):
         self.send(extrusion_script(self.diameter, self.flows[self.diameter], self.distance, direction))
@@ -180,6 +180,6 @@ class Panel(ScreenPanel):
 
     def motor_off(self, widget):
         if not self.motor_allowed():
-            self._screen.show_popup_message('출력 중 또는 일시정지 중에는 모터를 끌 수 없습니다.')
+            self._screen.show_popup_message(_('Motors cannot be disabled while printing or paused.'))
             return
         self.send('M84')

@@ -4,11 +4,11 @@ from pathlib import Path
 from types import SimpleNamespace as Obj
 import unittest
 
-tree = ast.parse((Path(__file__).resolve().parents[1] / 'panels/ko/tool_temperature.py').read_text(encoding='utf-8'))
+tree = ast.parse((Path(__file__).resolve().parents[1] / 'panels/common/tool_temperature.py').read_text(encoding='utf-8'))
 panel = next(n for n in tree.body if isinstance(n, ast.ClassDef) and n.name == 'Panel')
 methods = [n for n in panel.body if isinstance(n, ast.FunctionDef) and n.name in ('reset_request', 'query', 'activate', 'deactivate', 'saved', 'adjust_temperature')]
 clock = Obj(monotonic=lambda: 100.)
-namespace = {'time': clock, 'logging': logging, 'GLib': Obj(timeout_add_seconds=lambda *a: 1, source_remove=lambda *a: None)}
+namespace = {'_': lambda s: s, 'time': clock, 'logging': logging, 'GLib': Obj(timeout_add_seconds=lambda *a: 1, source_remove=lambda *a: None)}
 cls = ast.ClassDef(name='Panel', bases=[], keywords=[], body=methods, decorator_list=[])
 exec(compile(ast.fix_missing_locations(ast.Module(body=[cls], type_ignores=[])), 'recovery', 'exec'), namespace)
 

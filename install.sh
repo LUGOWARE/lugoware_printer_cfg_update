@@ -38,22 +38,7 @@ echo ""
 echo "선택된 모델: $MODEL (브랜치: $BRANCH)"
 echo ""
 
-# 언어 선택
-echo "언어를 선택하세요 / Select language:"
-echo "  1) 한국어"
-echo "  2) English"
-echo ""
-read -p "번호 입력 / Enter number (1/2): " lang_choice </dev/tty
-
-case $lang_choice in
-    1) LANG_CODE="ko" ;;
-    2) LANG_CODE="en" ;;
-    *) echo "잘못된 입력입니다. 1 또는 2를 선택해 주세요."; exit 1 ;;
-esac
-
-echo ""
-echo "선택된 언어 / Selected language: $LANG_CODE"
-echo ""
+echo "화면 언어는 KlipperScreen에서 마지막으로 선택한 설정을 유지합니다."
 
 # 공통 기능은 모델 브랜치와 별도로 main에서 같은 커밋으로 가져옵니다.
 COMMON_DIR=$(mktemp -d)
@@ -63,8 +48,7 @@ export BACKUP_DIR="$HOME/lugoware_backups/$(date +%Y%m%d-%H%M%S)-$$"
 mkdir -m 700 -p "$BACKUP_DIR"
 MOONRAKER_UPDATER="${MOONRAKER_DIR:-$HOME/moonraker}/moonraker/components/update_manager/update_manager.py"
 PANEL_DIR="${KLIPPERSCREEN_DIR:-$HOME/KlipperScreen}/panels"
-python3 "$COMMON_DIR/repo/maintenance/install_panels.py" --language "$LANG_CODE" \
-    --target "$PANEL_DIR" --backup "$BACKUP_DIR/panels" --check
+python3 "$COMMON_DIR/repo/maintenance/install_panels.py" --target "$PANEL_DIR" --backup "$BACKUP_DIR/panels" --check
 sudo -v
 echo "설치 환경을 확인하고 있습니다..."
 python3 "$COMMON_DIR/repo/maintenance/upgrade_klipperscreen.py" --check
@@ -77,6 +61,7 @@ echo '[업데이트 1/6] Klipper 버전 확인 및 업데이트'
 python3 -u "$COMMON_DIR/repo/maintenance/upgrade_klipper.py" 2>&1 | tee -a "$BACKUP_DIR/install.log"
 echo '[업데이트 2/6] KlipperScreen 버전 확인 및 업데이트'
 python3 -u "$COMMON_DIR/repo/maintenance/upgrade_klipperscreen.py" 2>&1 | tee -a "$BACKUP_DIR/install.log"
+python3 "$COMMON_DIR/repo/maintenance/install_i18n.py" --check
 # Comment configuration now; the built-in Klipper patch needs Moonraker >= 0.11.
 python3 "$COMMON_DIR/repo/maintenance/disable_screen_updates.py" \
     "$CONFIG_DIR/moonraker.conf" "$BACKUP_DIR/moonraker-update-sections" --installed-components
@@ -112,8 +97,6 @@ if ! bash "$COMMON_DIR/repo/maintenance/apply.sh" --check >> "$BACKUP_DIR/instal
 fi
 sudo -v
 
-# 언어 설정 저장
-echo "$LANG_CODE" > "$HOME/.lugoware_lang"
 
 # 1. 레포 클론 or 업데이트
 if [ -d "$REPO_DIR/.git" ]; then
@@ -134,21 +117,22 @@ cat > "$REPO_DIR/.git/hooks/post-merge" << 'EOF'
 #!/bin/bash
 CONFIG_DIR="$HOME/printer_data/config"
 REPO_DIR="$HOME/lugoware_config"
-LANG_CODE=$(cat "$HOME/.lugoware_lang" 2>/dev/null || echo "ko")
-for name in printer_base.cfg crowsnest.conf "KlipperScreen_${LANG_CODE}.conf"; do
+for name in printer_base.cfg crowsnest.conf; do
     target="$name"
-    [[ $name == KlipperScreen_* ]] && target=KlipperScreen.conf
     if ! cmp -s "$REPO_DIR/$name" "$CONFIG_DIR/$target"; then
         cp -f "$REPO_DIR/$name" "$CONFIG_DIR/$target"
     fi
 done
+if [[ -f "$HOME/.local/share/lugoware/install_screen_config.py" ]]; then
+    python3 "$HOME/.local/share/lugoware/install_screen_config.py" "$REPO_DIR/KlipperScreen_en.conf" "$CONFIG_DIR/KlipperScreen.conf" "$HOME/lugoware_backups/post-merge-screen.conf" || exit 1
+fi
 if [[ -f "$HOME/.local/share/lugoware/install_tool_temperature.py" ]]; then
     python3 "$HOME/.local/share/lugoware/install_tool_temperature.py" --config-only || exit 1
 fi
 if [[ -f "$HOME/.local/share/lugoware/install_print_controls.py" ]]; then
     python3 "$HOME/.local/share/lugoware/install_print_controls.py" --config-only || exit 1
 fi
-echo "Config files updated from repo. (language: $LANG_CODE)"
+echo "Config files updated from repo. Screen language preserved."
 EOF
 chmod +x "$REPO_DIR/.git/hooks/post-merge"
 
@@ -282,7 +266,8 @@ fi
 echo "[5/6] 설정 파일 복사 중..."
 copy_config "$REPO_DIR/printer_base.cfg" "$CONFIG_DIR/printer_base.cfg"
 copy_config "$REPO_DIR/crowsnest.conf" "$CONFIG_DIR/crowsnest.conf"
-copy_config "$REPO_DIR/KlipperScreen_${LANG_CODE}.conf" "$CONFIG_DIR/KlipperScreen.conf"
+python3 "$COMMON_DIR/repo/maintenance/install_screen_config.py" \
+    "$REPO_DIR/KlipperScreen_en.conf" "$CONFIG_DIR/KlipperScreen.conf" "$BACKUP_DIR/KlipperScreen.conf"
 echo "  -> 복사 완료"
 
 # 6. moonraker.conf 업데이트
@@ -311,10 +296,10 @@ else:
     print('  [건너뜀] moonraker.conf: 동일한 설정')
 PYEOF
 
-# 선택한 언어의 패널 3개 설치 (기존 파일 백업 후 덮어쓰기)
-echo "KlipperScreen 패널 설치 / Installing panels ($LANG_CODE)"
-python3 "$COMMON_DIR/repo/maintenance/install_panels.py" --language "$LANG_CODE" \
-    --target "$PANEL_DIR" --backup "$BACKUP_DIR/panels"
+# 공통 다국어 패널 설치 (기존 파일 백업 후 덮어쓰기)
+echo "KlipperScreen 다국어 패널 설치 / Installing multilingual panels"
+python3 "$COMMON_DIR/repo/maintenance/install_i18n.py"
+python3 "$COMMON_DIR/repo/maintenance/install_panels.py" --target "$PANEL_DIR" --backup "$BACKUP_DIR/panels"
 
 echo '[진행] 툴별 출력 온도 및 출력 더보기 메뉴 설치'
 python3 "$COMMON_DIR/repo/maintenance/install_tool_temperature.py"
@@ -323,7 +308,7 @@ python3 "$COMMON_DIR/repo/maintenance/install_print_controls.py"
 echo "[진행] 메인 화면 IP 표시 / 압출 모서리 제어 버튼 제거"
 python3 "$COMMON_DIR/repo/maintenance/patch_screen_identity.py"
 mkdir -p "$HOME/.local/share/lugoware"
-cp "$COMMON_DIR/repo/maintenance/install_tool_temperature.py" "$HOME/.local/share/lugoware/"
+cp "$COMMON_DIR/repo/maintenance/install_tool_temperature.py" "$COMMON_DIR/repo/maintenance/install_screen_config.py" "$HOME/.local/share/lugoware/"
 cp "$COMMON_DIR/repo/maintenance/install_print_controls.py" "$COMMON_DIR/repo/maintenance/patch_print_controls.py" "$HOME/.local/share/lugoware/"
 
 # 공통 시스템 설정 (재실행해도 cron 중복 없음)
@@ -335,7 +320,7 @@ fi
 
 sudo systemctl restart KlipperScreen
 systemctl is-active --quiet KlipperScreen
-echo "패널 4개 설치 완료 / Installed ($LANG_CODE): extrude.py, nozzle_temperature.py, tool_prepare.py, tool_temperature.py"
+echo "패널 4개 설치 완료 / Installed: extrude.py, nozzle_temperature.py, tool_prepare.py, tool_temperature.py"
 echo "패널 백업 / Panel backup: $BACKUP_DIR/panels"
 
 python3 "$COMMON_DIR/repo/maintenance/wait_ready.py" --ready-only
@@ -372,7 +357,7 @@ PY
 
 echo ""
 echo "============================================"
-echo "  설치 완료! 모델: $MODEL / 언어: $LANG_CODE"
+echo "  설치 완료! 모델: $MODEL / 화면 언어: 기존 설정 유지"
 echo "============================================"
 echo ""
 echo "  이후 업데이트: Mainsail > 업데이트 매니저 > lugoware_config 업데이트 버튼"

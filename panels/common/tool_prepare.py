@@ -17,7 +17,7 @@ class Panel(ScreenPanel):
     _tool_provider = None
 
     def __init__(self, screen, title):
-        super().__init__(screen, title or "준비")
+        super().__init__(screen, title or _('Prepare'))
         self.selected_tool = None
         self._timer = None
         self._active = False
@@ -74,9 +74,9 @@ class Panel(ScreenPanel):
                                column_spacing=0, row_spacing=0, vexpand=True)
         for tool in range(4):
             for line, (key, text, style, diameter) in enumerate((
-                ("dock", "도킹", "color1", None),
-                ("park", "파킹", "color2", None),
-                ("prime", "프라임", "color3", None),
+                ("dock", _('Dock'), "color1", None),
+                ("park", _('Park'), "color2", None),
+                ("prime", _('Prime'), "color3", None),
             )):
                 button = self._gtk.Button(style=style)
                 label = Gtk.Label()
@@ -91,14 +91,14 @@ class Panel(ScreenPanel):
         actions.attach(tool_actions, 0, 0, 4, 3)
         self.nozzle_button = self._gtk.Button("extruder", "— / — ℃", "color1", scale=0.8)
         actions.attach(self._readonly(self.nozzle_button), 0, 3, 2, 1)
-        temperature_button = self._gtk.Button("heat-up", "온도", "color2", scale=0.8)
+        temperature_button = self._gtk.Button("heat-up", _('Temperature'), "color2", scale=0.8)
         temperature_button.connect("clicked", self._open_nozzle_temperature)
         actions.attach(temperature_button, 2, 3, 2, 1)
         for col, diameter in ((0, 1.75), (2, 2.85)):
-            button = self._gtk.Button(label=f"{diameter}mm 압출", style="color4")
+            button = self._gtk.Button(label=_('{v0}mm Extrude').format(v0=diameter), style="color4")
             button.connect("clicked", self._extrude_current, diameter)
             actions.attach(button, col, 4, 2, 1)
-        motor = self._gtk.Button("motor-off", "모터 전원 끄기", "color2", scale=0.8,
+        motor = self._gtk.Button("motor-off", _('Motors Off'), "color2", scale=0.8,
                                  position=Gtk.PositionType.TOP)
         motor.connect("clicked", self._action_clicked, "motor_off", None, None)
         self.buttons["motor_off"] = motor
@@ -113,7 +113,7 @@ class Panel(ScreenPanel):
         viewport.add(layout)
         self.content.add(viewport)
         self._indicate_tool(None)
-        self._unknown("상태 조회 대기")
+        self._unknown(_('Waiting for status'))
 
     def _open_nozzle_temperature(self, widget):
         self.menu_item_clicked(widget, {"panel": "nozzle_temperature"})
@@ -137,7 +137,7 @@ class Panel(ScreenPanel):
             if line.strip():
                 lines.append(line.strip())
         if len(lines) > 4:
-            lines = lines[:3] + ["상세 내용은 로그 확인"]
+            lines = lines[:3] + [_('See log for details')]
         return "\n".join(lines)
 
     def _notify(self, message):
@@ -169,7 +169,7 @@ class Panel(ScreenPanel):
             else:
                 context.remove_class("horizontal_togglebuttons_active")
                 context.remove_class("lugo-selected")
-        self.labels["selected"].set_text(f"동작 툴: T{tool + 1}" if tool is not None else "동작 툴: —")
+        self.labels["selected"].set_text(_('Active tool: T{v0}').format(v0=tool + 1) if tool is not None else _('Active tool: —'))
 
     def _update_indicator(self):
         state = self._status.get("gcode_macro TOOL_STATE", {})
@@ -184,9 +184,7 @@ class Panel(ScreenPanel):
     def _confirm_transfer(self, action, tool, diameter, source):
         if self._confirm_dialog is not None:
             return
-        label = Gtk.Label(label=(f'T{source + 1} 헤드를 T{tool + 1} 위치로 이동합니다.\n'
-                                 '이동할 위치가 비어있는지 확인해주세요.\n'
-                                 '이동 후에는 해당 자리 번호로 관리됩니다.'))
+        label = Gtk.Label(label=(_('Move the T{v0} head to station T{v1}.\nCheck that the destination station is empty.\nAfter moving, the head uses the destination tool number.').format(v0=source + 1, v1=tool + 1)))
         label.set_line_wrap(True)
         label.set_justify(Gtk.Justification.CENTER)
         label.set_xalign(0.5)
@@ -196,9 +194,9 @@ class Panel(ScreenPanel):
         label.set_halign(Gtk.Align.FILL)
         label.set_valign(Gtk.Align.FILL)
         self._confirm_dialog = self._gtk.Dialog(
-            '빈 자리 확인',
-            [{'name': '확인', 'response': Gtk.ResponseType.YES},
-             {'name': '취소', 'response': Gtk.ResponseType.NO}], label,
+            _('Confirm empty station'),
+            [{'name': _('Confirm'), 'response': Gtk.ResponseType.YES},
+             {'name': _('Cancel'), 'response': Gtk.ResponseType.NO}], label,
             self._transfer_response, action, tool, diameter, source)
 
     def _transfer_response(self, dialog, response, action, tool, diameter, source):
@@ -217,7 +215,7 @@ class Panel(ScreenPanel):
             return
         status = response.get('result', {}).get('status', {})
         if status.get('gcode_macro TOOL_STATE', {}).get('active_tool') != source:
-            self._notify('장착 상태가 변경됐습니다. 다시 확인하세요.')
+            self._notify(_('Mounted tool changed. Check again.'))
             return
         self._status = status
         self._status_time = time.monotonic()
@@ -225,10 +223,10 @@ class Panel(ScreenPanel):
 
     def _action_clicked(self, widget, action, tool, diameter, confirmed_from=None):
         if self._action_pending and action != "motor_off":
-            self._notify("동작 중입니다.\n잠시 기다려주세요.")
+            self._notify(_('Action in progress.\nPlease wait.'))
             return
         if not self._active or time.monotonic() - self._status_time > 5:
-            self._notify("상태 확인 불가\n연결을 확인하세요.")
+            self._notify(_('Status unavailable.\nCheck the connection.'))
             return
         mounted = self._status.get('gcode_macro TOOL_STATE', {}).get('active_tool')
         cross = action in ('park', 'prime') and mounted in range(4) and tool in range(4) and mounted != tool
@@ -237,7 +235,7 @@ class Panel(ScreenPanel):
             self._notify(warning)
             return
         if not self._printer.get_config_section("gcode_macro PREPARE_ACTION"):
-            self._notify("준비 매크로 설치 후\nKlipper를 재시작하세요.")
+            self._notify(_('Install preparation macros,\nthen restart Klipper.'))
             return
         if cross and confirmed_from != mounted:
             self._confirm_transfer(action, tool, diameter, int(mounted))
@@ -254,15 +252,15 @@ class Panel(ScreenPanel):
             sent = self._screen._ws.send_method("printer.gcode.script", {"script": script}, self._action_done)
             if sent is False:
                 self._action_pending = False
-                self._unknown("연결 확인 필요")
-                self._notify("명령을 전송하지 못했습니다.")
+                self._unknown(_('Check the connection'))
+                self._notify(_('Failed to send command.'))
             elif action in ("dock", "prime", "park"):
                 self._display_pending_tool = tool
                 self._indicate_tool(tool)
         except Exception:
             logging.exception("Preparation command send failed")
-            self._unknown("명령 결과 확인 필요")
-            self._notify("결과 확인 불가\n장비를 확인하세요.")
+            self._unknown(_('Check command result'))
+            self._notify(_('Result unavailable.\nCheck the printer.'))
 
     def _action_done(self, response, method, params):
         completed = self._sent_action
@@ -270,7 +268,7 @@ class Panel(ScreenPanel):
         self._action_pending = False
         self._generation += 1
         self._pending = False
-        self._unknown("상태 갱신 대기")
+        self._unknown(_('Waiting for status update'))
         if "error" in response:
             error = response["error"]
             text = error.get("message", str(error)) if isinstance(error, dict) else str(error)
@@ -291,51 +289,51 @@ class Panel(ScreenPanel):
     @staticmethod
     def action_warning(status, action, tool, allow_cross=False):
         if status.get("webhooks", {}).get("state") != "ready":
-            return "프린터 준비 상태를 확인하세요."
+            return _('Check that the printer is ready.')
         if status.get("print_stats", {}).get("state") in ("printing", "paused"):
-            return "출력 중에는\n사용할 수 없습니다."
+            return _('Unavailable while printing\nor paused.')
         if action == "motor_off":
             if status.get("idle_timeout", {}).get("state") not in ("Ready", "Idle"):
-                return "이동이 멈춘 뒤\n해제하세요."
+                return _('Wait for motion to stop\nbefore disabling motors.')
             return None
         state = status.get("gcode_macro TOOL_STATE", {})
         if state.get("changing"):
-            return "툴 이동 중입니다.\n잠시 기다려주세요."
+            return _('Tool is moving.\nPlease wait.')
         if status.get("gcode_macro PREPARE_STATE", {}).get("busy"):
-            return "준비 동작 미완료\n장비를 확인하세요."
+            return _('Preparation incomplete.\nCheck the printer.')
         mounted = state.get("active_tool")
         detected = status.get("filament_switch_sensor toolhead_sensor", {}).get("filament_detected")
         manual = mounted == -1 and detected is True and action in ("park", "prime")
         if (type(mounted) not in (int, float) or mounted not in (-1, 0, 1, 2, 3)
                 or (detected is not (mounted != -1) and not manual)):
-            return "장착 상태 확인 불가\n헤드·센서를 확인하세요."
+            return _('Mount status unknown.\nCheck the tool and sensor.')
         if mounted != -1:
             if action in ("park", "prime") and (tool == mounted or (allow_cross and tool in range(4))):
                 return None
             if action.startswith("extrude") and tool == mounted:
                 return None
-            return f"T{int(mounted) + 1} 도킹 상태\n먼저 T{int(mounted) + 1}을 파킹하세요."
+            return _('T{v0} is docked.\nPark T{v1} first.').format(v0=int(mounted) + 1, v1=int(mounted) + 1)
         if action == "park" and not manual:
-            return "도킹된 툴이 없습니다."
+            return _('No tool is docked.')
         return None
 
     def _render_mount(self):
         state = self._status.get("gcode_macro TOOL_STATE", {})
         sensor = self._status.get("filament_switch_sensor toolhead_sensor", {})
         if state.get("changing"):
-            text = "툴 교체 중"
+            text = _('Changing tools')
         elif state.get("active_tool") == self.selected_tool and sensor.get("filament_detected") is True:
-            text = "도킹됨"
+            text = _('Docked')
         elif state.get("is_parked") == 1 and state.get("parked_tool") == self.selected_tool and state.get("active_tool") != self.selected_tool:
-            text = "파킹됨"
+            text = _('Parked')
         else:
-            text = "확인 불가"
-        self.labels["mount"].set_text(f"장착 상태: {text}")
+            text = _('Unknown')
+        self.labels["mount"].set_text(_('Mount status: {v0}').format(v0=text))
 
     def activate(self):
         self.deactivate()
         self._active = True
-        self._unknown("상태 조회 중")
+        self._unknown(_('Checking status'))
         self._poll()
         self._timer = GLib.timeout_add_seconds(2, self._poll)
 
@@ -355,8 +353,8 @@ class Panel(ScreenPanel):
         self._status_time = 0
         self._display_pending_tool = None
         self._indicate_tool(None)
-        self.labels["mount"].set_text(f"장착 상태: {message}")
-        self.labels["temperature"].set_text("노즐 온도: — / — ℃")
+        self.labels["mount"].set_text(_('Mount status: {v0}').format(v0=message))
+        self.labels["temperature"].set_text(_('Nozzle temperature: — / — ℃'))
         self.nozzle_button.set_label("— / — ℃")
 
     def _poll(self):
@@ -370,11 +368,11 @@ class Panel(ScreenPanel):
         if not socket or not getattr(socket, "connected", False):
             self._generation += 1
             self._pending = False
-            self._unknown("프린터 연결 대기")
+            self._unknown(_('Waiting for printer connection'))
             return True
         if self._pending:
             if time.monotonic() - self._requested_at > 8:
-                self._unknown("응답 지연 · 상태 확인 불가")
+                self._unknown(_('Response delayed; status unavailable'))
             return True
 
         # Query rather than replacing KlipperScreen's shared subscription.
@@ -399,11 +397,11 @@ class Panel(ScreenPanel):
             )
             if sent is False:
                 self._pending = False
-                self._unknown("상태 조회 실패")
+                self._unknown(_('Status query failed'))
         except Exception:
             logging.exception("Preparation status query failed")
             self._pending = False
-            self._unknown("상태 조회 실패")
+            self._unknown(_('Status query failed'))
         return True
 
     def _status_received(self, response, method, params, generation):
@@ -412,7 +410,7 @@ class Panel(ScreenPanel):
         self._pending = False
         status = response.get("result", {}).get("status", {})
         if "error" in response or status.get("webhooks", {}).get("state") != "ready":
-            self._unknown("프린터 준비 상태 확인 필요")
+            self._unknown(_('Check printer readiness'))
             return False
         self._status = status
         self._status_time = time.monotonic()
@@ -421,12 +419,12 @@ class Panel(ScreenPanel):
         heater = status.get("extruder", {})
         current = self._temperature(heater.get("temperature"))
         target = self._temperature(heater.get("target"))
-        self.labels["temperature"].set_text(f"노즐 온도: {current} / {target} ℃")
+        self.labels["temperature"].set_text(_('Nozzle temperature: {v0} / {v1} ℃').format(v0=current, v1=target))
         self.nozzle_button.set_label(f"{current} / {target} ℃")
         prep = status.get("gcode_macro PREPARE_STATE", {})
         error = bool(prep.get("error"))
         if error and not self._reported_error:
-            self._notify("노즐 감지 안 됨\n헤드 상태를 확인하세요.")
+            self._notify(_('No nozzle detected.\nCheck the toolhead.'))
         self._reported_error = error
         return False
 

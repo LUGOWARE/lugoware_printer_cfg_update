@@ -1,8 +1,14 @@
+## Screen language integration
+
+Installation preserves the last saved KlipperScreen language and user settings without a language prompt. Settings → Language changes stock screens and custom panels together. Additional UI strings have offline catalogs for all 32 currently supported locales. Stock UI uses official KlipperScreen translations; missing upstream translations can still appear in English. Material profile names, filenames and G-code remain unchanged.
+
+Rerun install.sh to install multilingual panels on existing machines. Subsequent model configuration updates preserve the saved language too. See [translations/README.md](translations/README.md).
+
 # LUGOWARE Printer Config Auto-Update System
 
 ## 2026-10-12 M5P screen and print controls
 
-Rerun install.sh on existing machines to install the common code for FLEX4 M/L/W, in Korean or English. The model configuration update button alone does not download new panels or extensions. After installation, its hook reapplies the preparation and cancellation macro patches.
+Rerun install.sh on existing machines to install the common code for FLEX4 M/L/W, in the selected KlipperScreen language. The model configuration update button alone does not download new panels or extensions. After installation, its hook reapplies the preparation and cancellation macro patches.
 
 - Print-screen nozzle/bed shortcuts open the standard temperature panel. Settings → Tool temperature control uses 1°C arrows with 50 ms feedback and displays only used tools.
 - Dedicated APIs accept nozzle and bed edits during startup. Bed controls stay disabled until the startup heater command sets its target; startup temperature waits follow edits.
@@ -31,7 +37,7 @@ A live READY M5P matching the distribution firmware skips flashing. Other workin
 
 At the end of `flash.sh`, the `[update_manager KlipperScreen]` section in `~/printer_data/config/moonraker.conf` is commented out. The original file is backed up and Moonraker is restarted when changed. Other update manager sections are preserved.
 
-The installer copies `extrude.py`, `nozzle_temperature.py`, and `tool_prepare.py` from `panels/ko` or `panels/en`, according to the selected language, into `~/KlipperScreen/panels`. Existing files are backed up in the installation backup's `panels` directory before replacement. The installer lists all three files and restarts KlipperScreen. Set `KLIPPERSCREEN_DIR` for a custom installation path. Panels are deployed by `install.sh`, not by the model configuration's post-merge hook.
+The installer deploys four shared panels from `panels/common`, backs up existing files, and binds their translations to the screen language setting. Panel updates require running `install.sh`.
 
 🌐 [한국어](README.md) | English
 
@@ -78,7 +84,7 @@ After connecting via SSH, **copy and paste (right-click)** the command below and
 bash <(curl -sSL https://raw.githubusercontent.com/LUGOWARE/lugoware_printer_cfg_update/main/install.sh)
 ```
 
-The installer will prompt you to select your printer model and language:
+The installer will prompt you to select your printer model:
 
 ```
 프린터 모델을 선택하세요 / Select printer model:
@@ -88,14 +94,9 @@ The installer will prompt you to select your printer model and language:
 
 번호 입력 (1/2/3):
 
-언어를 선택하세요 / Select language:
-  1) 한국어
-  2) English
-
-번호 입력 / Enter number (1/2):
 ```
 
-Enter the number for your printer model and preferred language, then press Enter. Installation will complete automatically.
+Enter the number for your printer model, then press Enter. Installation will complete automatically.
 
 Once you see the completion message, restart **Klipper** and **Moonraker** in Mainsail.
 
