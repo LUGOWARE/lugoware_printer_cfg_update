@@ -49,13 +49,17 @@ def _fit_caption(label, allocation):
 
 
 def fit_title(label):
-    # A translated title must never increase the shared title bar height.
+    # The shared title is reused across panels. Never retain a smaller caption
+    # scale after a long title or a transient narrow allocation during navigation.
     label.set_line_wrap(False)
     label.set_lines(1)
     label.set_width_chars(1)
     label.set_max_width_chars(20)
     label.set_ellipsize(Pango.EllipsizeMode.END)
-    _connect_fit(label)
+    attrs = label.get_attributes()
+    attrs = attrs.copy() if attrs else Pango.AttrList()
+    attrs.change(Pango.attr_scale_new(1.0))
+    label.set_attributes(attrs)
 
 
 def _connect_fit(label):
