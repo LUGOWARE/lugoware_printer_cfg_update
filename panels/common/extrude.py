@@ -39,13 +39,13 @@ class Panel(ScreenPanel):
             Panel._diameter_provider = provider
             Gtk.StyleContext.add_provider_for_screen(
                 self.content.get_screen(), provider, Gtk.STYLE_PROVIDER_PRIORITY_USER + 1)
-        # One shared grid distributes height without gaps between nested boxes.
-        layout = Gtk.Grid(column_homogeneous=True, row_homogeneous=True,
+        # Independent rows: one wrapped caption must not enlarge every row.
+        layout = Gtk.Grid(column_homogeneous=True, row_homogeneous=False,
                           column_spacing=4, row_spacing=4, hexpand=True, vexpand=True)
         layout.set_margin_start(4)
         layout.set_margin_end(4)
         top = Gtk.Grid(column_homogeneous=True, row_homogeneous=True,
-                       column_spacing=4, row_spacing=4, hexpand=True, vexpand=True)
+                       column_spacing=4, row_spacing=4, hexpand=True, vexpand=False)
         self.nozzle = self._gtk.Button('extruder', '— / — °C', 'color1')
         self.nozzle.set_can_focus(False)
         cover = Gtk.EventBox()
@@ -57,15 +57,15 @@ class Panel(ScreenPanel):
         temp.connect('clicked', self.menu_item_clicked, {'panel': 'nozzle_temperature'})
         top.attach(temp, 1, 0, 1, 1)
         extrusion_actions = Gtk.Grid(column_homogeneous=True, column_spacing=4,
-                                     hexpand=True, vexpand=True)
+                                     hexpand=True, vexpand=False)
         for column, (icon, title, direction) in enumerate((('extrude', _('Extrude'), 1), ('retract', _('Retract'), -1))):
             button = self._gtk.Button(icon, title, 'color3')
             button.connect('clicked', self.move, direction)
             extrusion_actions.attach(button, column, 0, 1, 1)
             self.actions.append(button)
-        layout.attach(top, 0, 0, 2, 2)
+        layout.attach(top, 0, 0, 2, 1)
         choices = Gtk.Grid(column_homogeneous=True, column_spacing=4,
-                           hexpand=True, vexpand=True)
+                           hexpand=True, vexpand=False)
         for column, diameter in enumerate((1.75, 2.85)):
             button = self._gtk.Button(label=f'{diameter} mm', style='color2')
             button.connect('clicked', self.select_diameter, diameter)
@@ -78,7 +78,7 @@ class Panel(ScreenPanel):
         choices.attach(motor, 2, 0, 1, 1)
         self.actions.append(motor)
         self.motor_button = motor
-        layout.attach(choices, 0, 2, 2, 2)
+        layout.attach(choices, 0, 1, 2, 1)
         adjust = Gtk.Grid(column_homogeneous=True, row_homogeneous=False,
                           column_spacing=4, row_spacing=4, hexpand=True, vexpand=True)
         self.values = {}
@@ -98,9 +98,15 @@ class Panel(ScreenPanel):
             down = self._gtk.Button(label='▼', style='color1')
             down.connect('clicked', self.adjust, key, -1)
             adjust.attach(down, col, 3, 1, 1)
-        layout.attach(adjust, 0, 4, 2, 4)
-        layout.attach(extrusion_actions, 0, 8, 2, 2)
-        self.content.add(layout)
+        layout.attach(adjust, 0, 2, 2, 1)
+        layout.attach(extrusion_actions, 0, 3, 2, 1)
+        # Constrain the panel's minimum height so the shared navigation stays visible.
+        # Small displays / unusually large fonts can scroll inside this area only.
+        viewport = Gtk.ScrolledWindow(hexpand=True, vexpand=True)
+        viewport.set_overlay_scrolling(False)
+        viewport.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+        viewport.add(layout)
+        self.content.add(viewport)
         self.render()
 
     def render(self):
