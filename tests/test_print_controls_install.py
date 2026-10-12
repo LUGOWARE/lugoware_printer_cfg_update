@@ -36,6 +36,10 @@ class Tests(unittest.TestCase):
         compile(result,'screen.py','exec')
         self.assertEqual(screen_patch(result),result)
         self.assertTrue(re.fullmatch(MHZ_PATTERN,"Klipper: MCU 'CB2' configured for 50MHz but running at 46MHz!"))
+        self.assertTrue(re.fullmatch(MHZ_PATTERN,"Klipper: MCU 'CB2' configured for 50Mhz but running at 46Mhz!"))
+        self.assertTrue(re.fullmatch(MHZ_PATTERN,"Klipper: MCU 'CB2' configured for 50mhz but running at 46mhz!"))
+        legacy = result.replace(repr(MHZ_PATTERN), repr(MHZ_PATTERN[4:]))
+        self.assertEqual(screen_patch(legacy), result)
         self.assertFalse(re.fullmatch(MHZ_PATTERN,"MCU 'CB2' shutdown: Timer too close"))
         self.assertFalse(re.fullmatch(MHZ_PATTERN,"MCU 'CB2' configured for 50MHz but running at 46MHz! Other error"))
 

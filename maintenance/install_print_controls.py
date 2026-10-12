@@ -34,7 +34,7 @@ def panel_patch(text):
     return text
 
 
-MHZ_PATTERN = r"(?:Klipper:\s*)?(?://\s*)?MCU '[^'\n]+' configured for \d+(?:\.\d+)?MHz but running at \d+(?:\.\d+)?MHz!"
+MHZ_PATTERN = r"(?i)(?:Klipper:\s*)?(?://\s*)?MCU '[^'\n]+' configured for \d+(?:\.\d+)?MHz but running at \d+(?:\.\d+)?MHz!"
 
 
 def screen_patch(text):
@@ -43,6 +43,11 @@ def screen_patch(text):
     text = replace_once(text, '    def state_ready(self, wait=True):\n',
                         '    def state_ready(self, wait=True):\n        self._lugo_cancel_pending = False\n')
     marker = '        # LUGO: suppress only MCU clock mismatch popups.'
+    if marker in text:
+        # Upgrade the original case-sensitive filter on already-patched screens.
+        text = text.replace(repr(MHZ_PATTERN[4:]), repr(MHZ_PATTERN))
+        if repr(MHZ_PATTERN) not in text:
+            raise ValueError('Unrecognized existing MCU clock popup filter')
     if marker not in text:
         anchor = '    def show_popup_message(self, message, level=3, from_ws=False):\n'
         text = replace_once(text, anchor, anchor + marker + '\n        import re\n'
