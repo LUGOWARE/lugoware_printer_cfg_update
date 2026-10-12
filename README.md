@@ -100,24 +100,6 @@ Mainsail에서 **프린터 설정** → **업데이트 관리자** 패널에서
 
 ## 문제 해결
 
-### KlipperScreen 설치 버전 정책
-
-`install.sh`는 KlipperScreen이 `v0.4.7-191` 미만이면 공식 커밋
-`3f08a9f782f3232a205c8004f4c5a681637e2b42`로 업데이트합니다.
-같거나 이후 버전은 유지합니다. 버전을 판별할 수 없으면 덮어쓰지 않고 중단합니다.
-기존 소스와 변경 내역은 설치 백업 폴더의 `klipperscreen-upgrade`에 저장합니다.
-기존 Git 추적 파일의 수정은 stash에 보관하고 공식 소스로 교체하며,
-공통 다국어 패널 4개와 prompts 패치는 업데이트 후 다시 적용합니다.
-별도로 수정한 코어 파일은 자동 병합하지 않습니다.
-Python 의존성 설치가 중단되면 다음 설치에서 재개합니다.
-설치 완료 시 KlipperScreen 업데이트 항목은 Moonraker에서 주석 처리되어 숨겨집니다.
-설치 순서는 Klipper → KlipperScreen → Moonraker → Mainsail → print_area_bed_mesh → sonar → 사용자 설정·패치입니다.
-Moonraker는 `v0.11.0-0` 미만이면 공식 커밋 `68db047aa9189248800904531f6354d8fd76d8eb`로 올리고,
-같거나 이후 버전이면 유지합니다. 구버전 Moonraker에는 숨김 코드 패치를 먼저 시도하지 않습니다.
-Klipper와 KlipperScreen 설정 항목은 먼저 주석 처리하고, 내장 Klipper 업데이트 항목은 Moonraker 업데이트 후 숨깁니다.
-Moonraker 업데이트에는 공식 설치 스크립트의 필수 의존성·서비스 갱신이 포함됩니다.
-시스템 전체 업데이트는 실행하지 않습니다.
-
 **업데이트 후 Klipper가 시작되지 않는 경우**  
 구버전 펌웨어는 클리퍼에 연결이 되지 않는 경우가 있습니다.  
 SSH에 접속하여 아래 명령어를 입력하면 해결됩니다.
