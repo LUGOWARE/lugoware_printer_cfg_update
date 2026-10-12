@@ -11,7 +11,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'maintenance'))
 from lugo_i18n import Translations, translate_prompt, preheat_label
 from install_screen_config import merge, SAVED
-from install_i18n import patch_config, patch_screen, patch_prompts, patch_temperature, patch_gtk, patch_title
+from install_i18n import patch_config, patch_screen, patch_prompts, patch_temperature, patch_gtk, patch_title, patch_network
 
 
 class I18nTests(unittest.TestCase):
@@ -111,6 +111,17 @@ class I18nTests(unittest.TestCase):
         self.assertNotIn('wrap_label(self.titlelbl', updated)
         self.assertEqual(updated.count('fit_title(self.titlelbl)'), 1)
         self.assertEqual(patch_title(updated), updated)
+
+    def test_network_selector_patch_is_scoped_and_repeatable(self):
+        original = ('            self.labels["interface"] = Gtk.ComboBoxText()\n'
+                    '            self.labels["interface"].connect("changed", self.iface_changed)\n'
+                    '        eap_method = Gtk.ComboBoxText(hexpand=True)\n')
+        updated = patch_network(original)
+        self.assertIn('InterfaceSelector()', updated)
+        self.assertIn('eap_method = Gtk.ComboBoxText(hexpand=True)', updated)
+        self.assertIn('connect("changed", self.iface_changed)', updated)
+        self.assertEqual(patch_network(updated), updated)
+        with self.assertRaises(ValueError): patch_network('unsupported network panel')
 
 
 if __name__ == '__main__': unittest.main()

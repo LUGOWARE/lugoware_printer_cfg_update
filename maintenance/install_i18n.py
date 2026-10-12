@@ -64,14 +64,23 @@ def patch_title(text):
     return insert(text, anchor, code+anchor)
 
 
+def patch_network(text):
+    anchor = '            self.labels["interface"] = Gtk.ComboBoxText()'
+    replacement = ('            from ks_includes.lugo_interface_selector import InterfaceSelector\n'
+                   '            self.labels["interface"] = InterfaceSelector()')
+    return insert(text, anchor, replacement)
+
+
 def install(screen, backup, check=False):
     root=Path(__file__).resolve().parents[1]
     pairs={'ks_includes/config.py':patch_config,'screen.py':patch_screen,
            'ks_includes/widgets/prompts.py':patch_prompts,'panels/temperature.py':patch_temperature,
-           'ks_includes/KlippyGtk.py':patch_gtk,'panels/base_panel.py':patch_title}
+           'ks_includes/KlippyGtk.py':patch_gtk,'panels/base_panel.py':patch_title,
+           'panels/network.py':patch_network}
     changes={screen/name:fn((screen/name).read_text(encoding='utf-8')) for name,fn in pairs.items()}
     changes[screen/'ks_includes/lugo_i18n.py']=Path(__file__).with_name('lugo_i18n.py').read_text(encoding='utf-8')
     changes[screen/'ks_includes/lugo_layout.py']=Path(__file__).with_name('lugo_layout.py').read_text(encoding='utf-8')
+    changes[screen/'ks_includes/lugo_interface_selector.py']=Path(__file__).with_name('lugo_interface_selector.py').read_text(encoding='utf-8')
     catalog_dir=root/'translations'
     for path in catalog_dir.glob('*.json'):
         text=path.read_text(encoding='utf-8'); json.loads(text)
