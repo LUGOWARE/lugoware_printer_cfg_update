@@ -18,7 +18,10 @@ class Tests(unittest.TestCase):
         self.assertIn('activate_gcode:\n    G4 P200',result)
         self.assertEqual(result.count('G1 X230'),4)
         self.assertEqual(result.count('G1 X256'),4)
-        self.assertEqual(result.count('LUGO_CANCEL_WAIT P1000'),4)
+        self.assertEqual(result.count('LUGO_CANCEL_WAIT P=1000'),4)
+        self.assertNotRegex(result, r'LUGO_CANCEL_WAIT\s+P(?![=])')
+        legacy = result.replace('LUGO_CANCEL_WAIT P=', 'LUGO_CANCEL_WAIT P')
+        self.assertEqual(macros(legacy), result)
 
     def test_config_before_save_and_repeat(self):
         source = '[lugo_tool_temperature]\n#*# <---------------------- SAVE_CONFIG ---------------------->\n#*# z_offset = 1\n'

@@ -19,7 +19,10 @@ def macros(text):
             if not any('TEMPERATURE_WAIT' in line for line in lines[:index]):
                 raise ValueError('Docking preheat layout changed')
             lines.insert(index, f'    LUGO_CANCEL_PHASE PHASE=docking TOOL={tool}')
-            lines = [re.sub(r'^(\s*)G4(?=\s|$)', r'\1LUGO_CANCEL_WAIT', line) for line in lines]
+            # Extended Klipper commands require KEY=value, unlike native G4 P...
+            # Also repair the already-installed legacy spelling on reinstall.
+            lines = [re.sub(r'^(\s*)(?:G4|LUGO_CANCEL_WAIT)\s+P\s*=?\s*(.+)$',
+                            r'\1LUGO_CANCEL_WAIT P=\2', line) for line in lines]
             lines.extend([f'    LUGO_CANCEL_PHASE PHASE=docked TOOL={tool}', ''])
             return '\n'.join(lines) + '\n'
         edit('DOCK_TOOL_' + str(tool), dock)
@@ -57,4 +60,3 @@ def prepare_macros(text):
     {% endif %}
 ''')
     return text[:start] + block + text[end:]
-
