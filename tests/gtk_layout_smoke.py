@@ -105,6 +105,14 @@ for path in sorted((root/'translations').glob('*.json')):
     assert len(buttons)==2
     assert min(b.get_allocated_height() for b in buttons)>=64
     assert buttons[0].get_allocated_height()==buttons[1].get_allocated_height()
+   if cls is ExtrudePanel:
+    widgets=list(descendants(panel.content))
+    arrows=[w for w in widgets if isinstance(w,Gtk.Button) and w.get_label() in ('▲','▼')]
+    assert len(arrows)==4
+    assert all(44<=w.get_allocated_height()<=60 for w in arrows)
+    assert all(not w.get_has_tooltip() for w in widgets if isinstance(w,Gtk.Label))
+    heights=[w.get_allocated_height() for w in (panel.nozzle,panel.motor_button,panel.actions[0])]
+    assert max(heights)-min(heights)<=2, heights
    if cls is MainFixture:
     adj=panel.menu_scroll.get_vadjustment()
     if adj.get_upper()>adj.get_page_size()+1:failures.append((lang,width,'main scroll',adj.get_upper(),adj.get_page_size()))

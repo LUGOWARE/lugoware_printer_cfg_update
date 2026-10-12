@@ -24,7 +24,8 @@ def _fit_caption(label, allocation):
     if getattr(label, '_lugo_fit_key', None) == key:
         return
     label._lugo_fit_key = key
-    label.set_tooltip_text(text)
+    # Touchscreen taps leave the pointer on a button; automatic tooltips linger.
+    label.set_has_tooltip(False)
     probe = label.create_pango_layout(text)
     probe.set_width(allocation.width * Pango.SCALE)
     probe.set_wrap(Pango.WrapMode.WORD_CHAR)

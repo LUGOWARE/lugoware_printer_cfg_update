@@ -45,7 +45,7 @@ class Panel(ScreenPanel):
         layout.set_margin_start(4)
         layout.set_margin_end(4)
         top = Gtk.Grid(column_homogeneous=True, row_homogeneous=True,
-                       column_spacing=4, row_spacing=4, hexpand=True, vexpand=False)
+                       column_spacing=4, row_spacing=4, hexpand=True, vexpand=True)
         self.nozzle = self._gtk.Button('extruder', '— / — °C', 'color1')
         self.nozzle.set_can_focus(False)
         cover = Gtk.EventBox()
@@ -57,7 +57,7 @@ class Panel(ScreenPanel):
         temp.connect('clicked', self.menu_item_clicked, {'panel': 'nozzle_temperature'})
         top.attach(temp, 1, 0, 1, 1)
         extrusion_actions = Gtk.Grid(column_homogeneous=True, column_spacing=4,
-                                     hexpand=True, vexpand=False)
+                                     hexpand=True, vexpand=True)
         for column, (icon, title, direction) in enumerate((('extrude', _('Extrude'), 1), ('retract', _('Retract'), -1))):
             button = self._gtk.Button(icon, title, 'color3')
             button.connect('clicked', self.move, direction)
@@ -65,7 +65,7 @@ class Panel(ScreenPanel):
             self.actions.append(button)
         layout.attach(top, 0, 0, 2, 1)
         choices = Gtk.Grid(column_homogeneous=True, column_spacing=4,
-                           hexpand=True, vexpand=False)
+                           hexpand=True, vexpand=True)
         for column, diameter in enumerate((1.75, 2.85)):
             button = self._gtk.Button(label=f'{diameter} mm', style='color2')
             button.connect('clicked', self.select_diameter, diameter)
@@ -79,8 +79,11 @@ class Panel(ScreenPanel):
         self.actions.append(motor)
         self.motor_button = motor
         layout.attach(choices, 0, 1, 2, 1)
+        self._row_sizes = Gtk.SizeGroup(mode=Gtk.SizeGroupMode.VERTICAL)
+        for row in (top, choices, extrusion_actions):
+            self._row_sizes.add_widget(row)
         adjust = Gtk.Grid(column_homogeneous=True, row_homogeneous=False,
-                          column_spacing=4, row_spacing=4, hexpand=True, vexpand=True)
+                          column_spacing=4, row_spacing=4, hexpand=True, vexpand=False)
         self.values = {}
         for col, (key, caption) in enumerate((('flow', 'MVS (mm³/s)'), ('distance', _('Distance (mm)')))):
             heading = Gtk.Label(label=caption, vexpand=False)
@@ -90,12 +93,17 @@ class Panel(ScreenPanel):
             heading.set_margin_bottom(2)
             adjust.attach(heading, col, 0, 1, 1)
             up = self._gtk.Button(label='▲', style='color1')
+            up.set_vexpand(False)
+            up.set_size_request(-1, 48)
             up.connect('clicked', self.adjust, key, 1)
             adjust.attach(up, col, 1, 1, 1)
-            value = Gtk.Label(vexpand=True)
+            value = Gtk.Label(vexpand=False)
+            value.set_size_request(-1, 64)
             self.values[key] = value
             adjust.attach(value, col, 2, 1, 1)
             down = self._gtk.Button(label='▼', style='color1')
+            down.set_vexpand(False)
+            down.set_size_request(-1, 48)
             down.connect('clicked', self.adjust, key, -1)
             adjust.attach(down, col, 3, 1, 1)
         layout.attach(adjust, 0, 2, 2, 1)
