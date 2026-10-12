@@ -1,6 +1,6 @@
 ## Screen language integration
 
-Menu captions and screen titles wrap and remain centered across languages. The installer checks and installs `fonts-noto-core` and `fonts-noto-cjk` for multilingual glyph coverage without a system-wide upgrade. Initial font installation requires network access. The product name `KlipperScreen` remains unchanged.
+Menu captions use bounded line counts and shrink long text by at most 25%; titles retain a single-line height. Remaining overflow uses ellipsis with the full text in a tooltip. Preparation extrusion buttons retain equal minimum touch heights. The installer checks and installs `fonts-noto-core` and `fonts-noto-cjk` for multilingual glyph coverage without a system-wide upgrade. Initial font installation requires network access. The product name `KlipperScreen` remains unchanged.
 
 Installation preserves the last saved KlipperScreen language and user settings without a language prompt. Settings → Language changes stock screens and custom panels together. Additional UI strings have offline catalogs for all 32 currently supported locales. Stock UI uses official KlipperScreen translations; missing upstream translations can still appear in English. Material profile names, filenames and G-code remain unchanged.
 

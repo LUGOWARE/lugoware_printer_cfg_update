@@ -97,6 +97,8 @@ class Panel(ScreenPanel):
         actions.attach(temperature_button, 2, 3, 2, 1)
         for col, diameter in ((0, 1.75), (2, 2.85)):
             button = self._gtk.Button(label=_('{v0}mm Extrude').format(v0=diameter), style="color4")
+            # Same touch height for both filament diameters, independent of text length.
+            button.set_size_request(-1, max(64, round(self._gtk.font_size * 4)))
             button.connect("clicked", self._extrude_current, diameter)
             actions.attach(button, col, 4, 2, 1)
         motor = self._gtk.Button("motor-off", _('Motors Off'), "color2", scale=0.8,
@@ -186,7 +188,7 @@ class Panel(ScreenPanel):
         if self._confirm_dialog is not None:
             return
         label = Gtk.Label(label=(_('Move the T{v0} head to station T{v1}.\nCheck that the destination station is empty.\nAfter moving, the head uses the destination tool number.').format(v0=source + 1, v1=tool + 1)))
-        wrap_label(label, 32)
+        wrap_label(label, 32, lines=-1)
         label.set_justify(Gtk.Justification.CENTER)
         label.set_xalign(0.5)
         label.set_yalign(0.5)

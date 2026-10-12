@@ -103,5 +103,14 @@ class I18nTests(unittest.TestCase):
         with self.assertRaises(ValueError): patch_gtk('unknown implementation')
         with self.assertRaises(ValueError): patch_title('unknown implementation')
 
+    def test_upgrade_unbounded_title_patch(self):
+        previous = ('        from ks_includes.lugo_layout import wrap_label\n'
+                    '        wrap_label(self.titlelbl, 20)\n\n'
+                    '        self.control["time"] = Gtk.Label(label="00:00")\n')
+        updated = patch_title(previous)
+        self.assertNotIn('wrap_label(self.titlelbl', updated)
+        self.assertEqual(updated.count('fit_title(self.titlelbl)'), 1)
+        self.assertEqual(patch_title(updated), updated)
+
 
 if __name__ == '__main__': unittest.main()

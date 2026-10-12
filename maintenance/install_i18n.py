@@ -54,8 +54,11 @@ def patch_gtk(text):
 
 def patch_title(text):
     anchor = '        self.control["time"] = Gtk.Label('
-    code = ('        from ks_includes.lugo_layout import wrap_label\n'
-            '        wrap_label(self.titlelbl, 20)\n\n')
+    old = ('        from ks_includes.lugo_layout import wrap_label\n'
+           '        wrap_label(self.titlelbl, 20)\n\n')
+    code = ('        from ks_includes.lugo_layout import fit_title\n'
+            '        fit_title(self.titlelbl)\n\n')
+    text = text.replace(old, code)
     if code in text:
         return text
     return insert(text, anchor, code+anchor)
