@@ -11,7 +11,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'maintenance'))
 from lugo_i18n import Translations, translate_prompt, preheat_label
 from install_screen_config import merge, SAVED
-from install_i18n import patch_config, patch_screen, patch_prompts, patch_temperature
+from install_i18n import patch_config, patch_screen, patch_prompts, patch_temperature, patch_gtk, patch_title
 
 
 class I18nTests(unittest.TestCase):
@@ -88,6 +88,20 @@ class I18nTests(unittest.TestCase):
         patched = patch_screen(source)
         patched = patched.replace(source, source+'        # another installer inserts its filter here\n')
         self.assertEqual(patch_screen(patched), patched)
+
+    def test_layout_patch_repeat_and_preserve_other_methods(self):
+        original = ('def format_label(widget, lines=2):\n    pass\n\n'
+                    'class KlippyGtk:\n    def keep(self):\n        return 42\n')
+        patched = patch_gtk(original)
+        self.assertIn('format_button(widget, lines)', patched)
+        self.assertIn('return 42', patched)
+        self.assertEqual(patch_gtk(patched), patched)
+        title = '        self.control["time"] = Gtk.Label(label="00:00")\n'
+        self.assertEqual(patch_title(patch_title(title)), patch_title(title))
+
+    def test_unrecognized_layout_stops_installation(self):
+        with self.assertRaises(ValueError): patch_gtk('unknown implementation')
+        with self.assertRaises(ValueError): patch_title('unknown implementation')
 
 
 if __name__ == '__main__': unittest.main()

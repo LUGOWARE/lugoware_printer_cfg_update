@@ -4,6 +4,7 @@ import json
 import os
 from pathlib import Path
 import shutil
+import re
 
 
 def insert(text, anchor, replacement):
@@ -37,12 +38,37 @@ def patch_temperature(text):
     return insert(text,'label=option,','label=preheat_label(option),')
 
 
+def patch_gtk(text):
+    if 'from ks_includes.lugo_layout import format_button' in text:
+        return text
+    pattern = r'(?ms)^def format_label\(widget, lines=2\):\n.*?(?=^class KlippyGtk:)'
+    replacement = ('def format_label(widget, lines=2):\n'
+                   '    from ks_includes.lugo_layout import format_button\n'
+                   '    format_button(widget, lines)\n\n\n')
+    result, count = re.subn(pattern, replacement, text)
+    if count != 1:
+        raise ValueError('Unsupported KlippyGtk label formatting')
+    # Keep intentional line breaks in translations.
+    return result.replace('label.replace("\\n", " ")', 'label')
+
+
+def patch_title(text):
+    anchor = '        self.control["time"] = Gtk.Label('
+    code = ('        from ks_includes.lugo_layout import wrap_label\n'
+            '        wrap_label(self.titlelbl, 20)\n\n')
+    if code in text:
+        return text
+    return insert(text, anchor, code+anchor)
+
+
 def install(screen, backup, check=False):
     root=Path(__file__).resolve().parents[1]
     pairs={'ks_includes/config.py':patch_config,'screen.py':patch_screen,
-           'ks_includes/widgets/prompts.py':patch_prompts,'panels/temperature.py':patch_temperature}
+           'ks_includes/widgets/prompts.py':patch_prompts,'panels/temperature.py':patch_temperature,
+           'ks_includes/KlippyGtk.py':patch_gtk,'panels/base_panel.py':patch_title}
     changes={screen/name:fn((screen/name).read_text(encoding='utf-8')) for name,fn in pairs.items()}
     changes[screen/'ks_includes/lugo_i18n.py']=Path(__file__).with_name('lugo_i18n.py').read_text(encoding='utf-8')
+    changes[screen/'ks_includes/lugo_layout.py']=Path(__file__).with_name('lugo_layout.py').read_text(encoding='utf-8')
     catalog_dir=root/'translations'
     for path in catalog_dir.glob('*.json'):
         text=path.read_text(encoding='utf-8'); json.loads(text)

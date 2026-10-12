@@ -4,6 +4,7 @@ import logging
 import time
 from gi.repository import Gtk, GLib, Pango
 from ks_includes.screen_panel import ScreenPanel
+from ks_includes.lugo_layout import wrap_label
 
 
 
@@ -91,21 +92,21 @@ class Panel(ScreenPanel):
         self.layout.set_margin_start(4)
         self.layout.set_margin_end(4)
         self.status = Gtk.Label(label=_('Checking printer status…'))
-        self.status.set_line_wrap(True)
+        wrap_label(self.status, 32)
         self.layout.pack_start(self.status, False, False, 0)
         grid = Gtk.Grid(column_spacing=6, row_spacing=6, row_homogeneous=True)
         for tool in range(4):
             grid.attach(Gtk.Label(label=f'T{tool + 1}'), 0, tool, 1, 1)
             material = Gtk.Label(label='—', hexpand=True)
-            material.set_line_wrap(True)
-            material.set_line_wrap_mode(Pango.WrapMode.WORD_CHAR)
-            material.set_max_width_chars(16)
+            wrap_label(material, 16)
             button = TemperatureControl(self._gtk, self.adjust_temperature, tool)
             button.set_sensitive(False)
             grid.attach(material, 1, tool, 1, 1)
             grid.attach(button, 2, tool, 1, 1)
             self.rows.append((material, button))
-        grid.attach(Gtk.Label(label=_('Bed')), 0, 4, 1, 1)
+        bed_label = Gtk.Label(label=_('Bed'))
+        wrap_label(bed_label, 6)
+        grid.attach(bed_label, 0, 4, 1, 1)
         self.bed_current = Gtk.Label(label='—', hexpand=True)
         self.bed_button = TemperatureControl(self._gtk, self.adjust_temperature, 'bed')
         self.bed_button.set_sensitive(False)

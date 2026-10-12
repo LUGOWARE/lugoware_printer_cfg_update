@@ -84,6 +84,8 @@ class Panel(ScreenPanel):
         self.values = {}
         for col, (key, caption) in enumerate((('flow', 'MVS (mm³/s)'), ('distance', _('Distance (mm)')))):
             heading = Gtk.Label(label=caption, vexpand=False)
+            from ks_includes.lugo_layout import wrap_label
+            wrap_label(heading, 14)
             heading.set_margin_top(6)
             heading.set_margin_bottom(2)
             adjust.attach(heading, col, 0, 1, 1)

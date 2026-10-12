@@ -11,6 +11,7 @@ gi.require_version("Gtk", "3.0")
 from gi.repository import GLib, Gtk
 
 from ks_includes.screen_panel import ScreenPanel
+from ks_includes.lugo_layout import wrap_label
 
 
 class Panel(ScreenPanel):
@@ -66,7 +67,7 @@ class Panel(ScreenPanel):
         # Retained internally for diagnostics, omitted from the requested layout.
         for name in ("selected", "mount", "temperature"):
             label = Gtk.Label(xalign=0)
-            label.set_line_wrap(True)
+            wrap_label(label, 32)
             self.labels[name] = label
         actions = Gtk.Grid(column_homogeneous=True, row_homogeneous=False,
                            column_spacing=0, row_spacing=0, vexpand=True)
@@ -80,7 +81,7 @@ class Panel(ScreenPanel):
             )):
                 button = self._gtk.Button(style=style)
                 label = Gtk.Label()
-                label.set_line_wrap(True)
+                wrap_label(label, 7)
                 label.set_justify(Gtk.Justification.CENTER)
                 size = "x-large"
                 label.set_markup(f'<span size="{size}">{text}</span>')
@@ -185,7 +186,7 @@ class Panel(ScreenPanel):
         if self._confirm_dialog is not None:
             return
         label = Gtk.Label(label=(_('Move the T{v0} head to station T{v1}.\nCheck that the destination station is empty.\nAfter moving, the head uses the destination tool number.').format(v0=source + 1, v1=tool + 1)))
-        label.set_line_wrap(True)
+        wrap_label(label, 32)
         label.set_justify(Gtk.Justification.CENTER)
         label.set_xalign(0.5)
         label.set_yalign(0.5)

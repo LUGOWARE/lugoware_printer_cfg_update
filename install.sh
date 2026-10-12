@@ -298,6 +298,7 @@ PYEOF
 
 # 공통 다국어 패널 설치 (기존 파일 백업 후 덮어쓰기)
 echo "KlipperScreen 다국어 패널 설치 / Installing multilingual panels"
+bash "$COMMON_DIR/repo/maintenance/install_fonts.sh"
 python3 "$COMMON_DIR/repo/maintenance/install_i18n.py"
 python3 "$COMMON_DIR/repo/maintenance/install_panels.py" --target "$PANEL_DIR" --backup "$BACKUP_DIR/panels"
 
