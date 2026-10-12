@@ -151,7 +151,9 @@ class Tests(unittest.TestCase):
     def test_bed_navigation_patch_is_selective_and_repeatable(self):
         source = 'nozzle = {"panel": "temperature", "extra": extruder}\nbed = {"panel": "temperature", "extra": dev}\n'
         result = job_patch(source)
-        self.assertIn('if dev == "heater_bed" else "temperature"', result)
+        self.assertEqual(result, source)
+        previous = source.replace('{"panel": "temperature", "extra": extruder}', '{"panel": "tool_temperature"}').replace('{"panel": "temperature", "extra": dev}', '{"panel": "tool_temperature" if dev == "heater_bed" else "temperature", "extra": dev}')
+        self.assertEqual(job_patch(previous), source)
         self.assertEqual(job_patch(result), result)
 
 

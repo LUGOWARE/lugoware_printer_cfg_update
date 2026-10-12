@@ -11,10 +11,10 @@ def job_patch(text):
     new = '{"panel": "tool_temperature"}'
     if old not in text and new not in text:
         raise ValueError('Unsupported job_status.py: nozzle button not found')
-    text = text.replace(old, new)
+    text = text.replace(new, old)
     # Keep other auxiliary heaters on the stock temperature panel.
     bed = '{"panel": "tool_temperature" if dev == "heater_bed" else "temperature", "extra": dev}'
-    return text.replace('{"panel": "temperature", "extra": dev}', bed)
+    return text.replace(bed, '{"panel": "temperature", "extra": dev}')
 
 
 def menu_patch(text):
@@ -22,7 +22,10 @@ def menu_patch(text):
         header = '[menu __print ' + name + ']'
         pattern = re.compile(r'^' + re.escape(header) + r'[^\n]*\n(?:(?!^\[|^#~#).*(?:\n|$))*', re.M)
         match = pattern.search(text)
-        options = {'enable': 'True', 'panel': 'tool_temperature'} if name == 'temperature' else {'enable': 'False'}
+        language_file = Path.home() / '.lugoware_lang'
+        language = language_file.read_text().strip() if language_file.exists() else 'ko'
+        title = 'Tool temperature control' if language == 'en' else '툴별 온도 제어'
+        options = {'enable': 'True', 'panel': 'tool_temperature', 'name': title} if name == 'temperature' else {'enable': 'False'}
         section = match.group() if match else header + '\n'
         for key, value in options.items():
             setting = r'^\s*' + key + r'\s*[:=].*$'

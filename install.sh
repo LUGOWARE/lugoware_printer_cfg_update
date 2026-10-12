@@ -145,6 +145,9 @@ done
 if [[ -f "$HOME/.local/share/lugoware/install_tool_temperature.py" ]]; then
     python3 "$HOME/.local/share/lugoware/install_tool_temperature.py" --config-only || exit 1
 fi
+if [[ -f "$HOME/.local/share/lugoware/install_print_controls.py" ]]; then
+    python3 "$HOME/.local/share/lugoware/install_print_controls.py" --config-only || exit 1
+fi
 echo "Config files updated from repo. (language: $LANG_CODE)"
 EOF
 chmod +x "$REPO_DIR/.git/hooks/post-merge"
@@ -315,10 +318,13 @@ python3 "$COMMON_DIR/repo/maintenance/install_panels.py" --language "$LANG_CODE"
 
 echo '[진행] 툴별 출력 온도 및 출력 더보기 메뉴 설치'
 python3 "$COMMON_DIR/repo/maintenance/install_tool_temperature.py"
+echo "[진행] 준비 화면 / 빠른 정상 취소 / 메쉬 중 취소 / MHz 팝업 숨김"
+python3 "$COMMON_DIR/repo/maintenance/install_print_controls.py"
 echo "[진행] 메인 화면 IP 표시 / 압출 모서리 제어 버튼 제거"
 python3 "$COMMON_DIR/repo/maintenance/patch_screen_identity.py"
 mkdir -p "$HOME/.local/share/lugoware"
 cp "$COMMON_DIR/repo/maintenance/install_tool_temperature.py" "$HOME/.local/share/lugoware/"
+cp "$COMMON_DIR/repo/maintenance/install_print_controls.py" "$COMMON_DIR/repo/maintenance/patch_print_controls.py" "$HOME/.local/share/lugoware/"
 
 # 공통 시스템 설정 (재실행해도 cron 중복 없음)
 echo "설정을 적용하고 있습니다. 완료될 때까지 전원을 유지해 주세요..."

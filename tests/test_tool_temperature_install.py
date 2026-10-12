@@ -38,4 +38,4 @@ class IntegrationTests(unittest.TestCase):
             install(cfg, screen, klipper, backup)
             self.assertEqual((backup / 'printer.cfg').read_text(), original)
             self.assertEqual((cfg / 'printer.cfg').read_text().count('[lugo_tool_temperature]'), 1)
-            self.assertIn('"tool_temperature"', (screen / 'panels/job_status.py').read_text())
+            self.assertIn('"temperature"', (screen / 'panels/job_status.py').read_text())

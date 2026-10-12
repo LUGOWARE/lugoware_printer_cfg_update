@@ -14,6 +14,8 @@ from ks_includes.screen_panel import ScreenPanel
 
 
 class Panel(ScreenPanel):
+    _tool_provider = None
+
     def __init__(self, screen, title):
         super().__init__(screen, title or "준비")
         self.selected_tool = None
@@ -31,6 +33,20 @@ class Panel(ScreenPanel):
         self._sent_action = None
         self._display_pending_tool = None
         self._reported_error = False
+        self._confirm_dialog = None
+        if Panel._tool_provider is None:
+            provider = Gtk.CssProvider()
+            provider.load_from_data(b'''
+                button.lugo-prepare-tool { border: 2px solid #505050;
+                    border-radius: 7px; background-image: none; box-shadow: none; }
+                button.lugo-prepare-tool.lugo-selected {
+                    background-color: #075d79; border-color: #65dcff; }
+                button.lugo-prepare-tool.lugo-selected label {
+                    color: #ffffff; font-weight: bold; }
+            ''')
+            Gtk.StyleContext.add_provider_for_screen(
+                self.content.get_screen(), provider, Gtk.STYLE_PROVIDER_PRIORITY_USER + 1)
+            Panel._tool_provider = provider
 
         layout = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
         layout.set_border_width(4)
@@ -42,6 +58,7 @@ class Panel(ScreenPanel):
             button.add(label)
             button.set_vexpand(False)
             button.get_style_context().add_class("horizontal_togglebuttons")
+            button.get_style_context().add_class("lugo-prepare-tool")
             row.attach(self._readonly(button), tool, 0, 1, 1)
             self.tool_buttons[tool] = button
         layout.pack_start(row, False, False, 0)
@@ -148,8 +165,10 @@ class Panel(ScreenPanel):
             context = button.get_style_context()
             if index == tool:
                 context.add_class("horizontal_togglebuttons_active")
+                context.add_class("lugo-selected")
             else:
                 context.remove_class("horizontal_togglebuttons_active")
+                context.remove_class("lugo-selected")
         self.labels["selected"].set_text(f"동작 툴: T{tool + 1}" if tool is not None else "동작 툴: —")
 
     def _update_indicator(self):
@@ -162,24 +181,73 @@ class Panel(ScreenPanel):
         tool = prep.get("last_tool") if prep.get("busy") else active
         self._indicate_tool(int(tool) if type(tool) in (int, float) and tool in range(4) else None)
 
-    def _action_clicked(self, widget, action, tool, diameter):
+    def _confirm_transfer(self, action, tool, diameter, source):
+        if self._confirm_dialog is not None:
+            return
+        label = Gtk.Label(label=(f'T{source + 1} 헤드를 T{tool + 1} 위치로 이동합니다.\n'
+                                 '이동할 위치가 비어있는지 확인해주세요.\n'
+                                 '이동 후에는 해당 자리 번호로 관리됩니다.'))
+        label.set_line_wrap(True)
+        label.set_justify(Gtk.Justification.CENTER)
+        label.set_xalign(0.5)
+        label.set_yalign(0.5)
+        label.set_hexpand(True)
+        label.set_vexpand(True)
+        label.set_halign(Gtk.Align.FILL)
+        label.set_valign(Gtk.Align.FILL)
+        self._confirm_dialog = self._gtk.Dialog(
+            '빈 자리 확인',
+            [{'name': '확인', 'response': Gtk.ResponseType.YES},
+             {'name': '취소', 'response': Gtk.ResponseType.NO}], label,
+            self._transfer_response, action, tool, diameter, source)
+
+    def _transfer_response(self, dialog, response, action, tool, diameter, source):
+        self._gtk.remove_dialog(dialog)
+        self._confirm_dialog = None
+        if response != Gtk.ResponseType.YES or not self._active:
+            return
+        self._screen._ws.send_method('printer.objects.query', {'objects': {
+            'webhooks': ['state'], 'print_stats': ['state'], 'idle_timeout': ['state'],
+            'gcode_macro TOOL_STATE': None, 'gcode_macro PREPARE_STATE': None,
+            'filament_switch_sensor toolhead_sensor': None}},
+            self._transfer_checked, action, tool, diameter, source, self._generation)
+
+    def _transfer_checked(self, response, method, params, action, tool, diameter, source, generation):
+        if not self._active or generation != self._generation:
+            return
+        status = response.get('result', {}).get('status', {})
+        if status.get('gcode_macro TOOL_STATE', {}).get('active_tool') != source:
+            self._notify('장착 상태가 변경됐습니다. 다시 확인하세요.')
+            return
+        self._status = status
+        self._status_time = time.monotonic()
+        self._action_clicked(None, action, tool, diameter, confirmed_from=source)
+
+    def _action_clicked(self, widget, action, tool, diameter, confirmed_from=None):
         if self._action_pending and action != "motor_off":
             self._notify("동작 중입니다.\n잠시 기다려주세요.")
             return
         if not self._active or time.monotonic() - self._status_time > 5:
             self._notify("상태 확인 불가\n연결을 확인하세요.")
             return
-        warning = self.action_warning(self._status, action, tool)
+        mounted = self._status.get('gcode_macro TOOL_STATE', {}).get('active_tool')
+        cross = action in ('park', 'prime') and mounted in range(4) and tool in range(4) and mounted != tool
+        warning = self.action_warning(self._status, action, tool, allow_cross=cross)
         if warning:
             self._notify(warning)
             return
         if not self._printer.get_config_section("gcode_macro PREPARE_ACTION"):
             self._notify("준비 매크로 설치 후\nKlipper를 재시작하세요.")
             return
+        if cross and confirmed_from != mounted:
+            self._confirm_transfer(action, tool, diameter, int(mounted))
+            return
         command = "EXTRUDE" if action.startswith("extrude") else action.upper()
         script = f"PREPARE_ACTION ACTION={command} TOOL={tool if tool is not None else -1}"
         if diameter is not None:
             script += f" DIAMETER={diameter}"
+        if cross:
+            script += f" CONFIRM_EMPTY=1 FROM_TOOL={int(mounted)}"
         self._action_pending = True
         self._sent_action = (action, tool)
         try:
@@ -188,7 +256,7 @@ class Panel(ScreenPanel):
                 self._action_pending = False
                 self._unknown("연결 확인 필요")
                 self._notify("명령을 전송하지 못했습니다.")
-            elif action in ("dock", "prime"):
+            elif action in ("dock", "prime", "park"):
                 self._display_pending_tool = tool
                 self._indicate_tool(tool)
         except Exception:
@@ -221,7 +289,7 @@ class Panel(ScreenPanel):
         return 10 * ratio, 5 * ratio
 
     @staticmethod
-    def action_warning(status, action, tool):
+    def action_warning(status, action, tool, allow_cross=False):
         if status.get("webhooks", {}).get("state") != "ready":
             return "프린터 준비 상태를 확인하세요."
         if status.get("print_stats", {}).get("state") in ("printing", "paused"):
@@ -242,7 +310,7 @@ class Panel(ScreenPanel):
                 or (detected is not (mounted != -1) and not manual)):
             return "장착 상태 확인 불가\n헤드·센서를 확인하세요."
         if mounted != -1:
-            if action in ("park", "prime") and tool == mounted:
+            if action in ("park", "prime") and (tool == mounted or (allow_cross and tool in range(4))):
                 return None
             if action.startswith("extrude") and tool == mounted:
                 return None
@@ -272,6 +340,9 @@ class Panel(ScreenPanel):
         self._timer = GLib.timeout_add_seconds(2, self._poll)
 
     def deactivate(self):
+        if self._confirm_dialog is not None:
+            self._gtk.remove_dialog(self._confirm_dialog)
+            self._confirm_dialog = None
         self._active = False
         self._generation += 1
         self._pending = False

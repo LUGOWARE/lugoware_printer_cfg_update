@@ -1,5 +1,18 @@
 # LUGOWARE Printer Config Auto-Update System
 
+## 2026-10-12 M5P screen and print controls
+
+Rerun install.sh on existing machines to install the common code for FLEX4 M/L/W, in Korean or English. The model configuration update button alone does not download new panels or extensions. After installation, its hook reapplies the preparation and cancellation macro patches.
+
+- Print-screen nozzle/bed shortcuts open the standard temperature panel. Settings → Tool temperature control uses 1°C arrows with 50 ms feedback and displays only used tools.
+- Dedicated APIs accept nozzle and bed edits during startup. Bed controls stay disabled until the startup heater command sets its target; startup temperature waits follow edits.
+- Selected extrusion diameter is highlighted blue; motor disable is blocked while printing or paused.
+- Cross-station parking/priming requires confirmation that the destination is empty. Occupancy is checked by the operator, not detected automatically.
+- KlipperScreen cancellation exits heater waits and parks the mounted tool after a safe toolchange boundary. Mesh cancellation finishes the current probe sample, lifts Z and discards partial results. This is not emergency stop; the Mainsail cancellation route is unchanged.
+- No cancellation-success popup or automatic extrusion-screen transition. Only MCU clock mismatch popups are suppressed; other errors and logs remain.
+
+Validation: 167 Python tests, all three model macro patches and repeat installs against KlipperScreen v0.4.7-191, Jinja and shell syntax checks. Physical tool motion/probing still requires machine verification. Firmware binaries are unchanged.
+
 ## Repeat installation policy
 
 Current companion update targets are only Mainsail, print_area_bed_mesh and sonar. Moonraker and system package upgrades are excluded. Installing build dependencies for legacy Klipper upgrades remains a separate operation. System-update descriptions below refer to previous behavior.

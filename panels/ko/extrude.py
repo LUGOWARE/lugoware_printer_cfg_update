@@ -15,6 +15,8 @@ def extrusion_script(diameter, flow, distance, direction):
 
 
 class Panel(ScreenPanel):
+    _diameter_provider = None
+
     def __init__(self, screen, title):
         super().__init__(screen, title or '압출')
         self.diameter = 1.75
@@ -23,9 +25,25 @@ class Panel(ScreenPanel):
         self.busy = False
         self.actions = []
         self.diameter_buttons = {}
+        self.content.get_style_context().add_class('lugo-extrusion')
+        provider = Gtk.CssProvider()
+        provider.load_from_data(b'''
+            .lugo-extrusion button { box-shadow: none; text-shadow: none; }
+            button.lugo-diameter { border: 3px solid #505050; border-radius: 8px;
+                background-image: none; background-color: #242424; }
+            button.lugo-diameter.lugo-selected { border-color: #65dcff;
+                background-color: #075d79; }
+            button.lugo-diameter.lugo-selected label { color: #ffffff; font-weight: bold; }
+        ''')
+        if Panel._diameter_provider is None:
+            Panel._diameter_provider = provider
+            Gtk.StyleContext.add_provider_for_screen(
+                self.content.get_screen(), provider, Gtk.STYLE_PROVIDER_PRIORITY_USER + 1)
         # One shared grid distributes height without gaps between nested boxes.
         layout = Gtk.Grid(column_homogeneous=True, row_homogeneous=True,
                           column_spacing=4, row_spacing=4, hexpand=True, vexpand=True)
+        layout.set_margin_start(4)
+        layout.set_margin_end(4)
         top = Gtk.Grid(column_homogeneous=True, row_homogeneous=True,
                        column_spacing=4, row_spacing=4, hexpand=True, vexpand=True)
         self.nozzle = self._gtk.Button('extruder', '— / — °C', 'color1')
@@ -52,12 +70,14 @@ class Panel(ScreenPanel):
             button = self._gtk.Button(label=f'{diameter} mm', style='color2')
             button.connect('clicked', self.select_diameter, diameter)
             self.diameter_buttons[diameter] = button
+            button.get_style_context().add_class('lugo-diameter')
             choices.attach(button, column, 0, 1, 1)
         motor = self._gtk.Button('motor-off', '모터 끄기', 'color3', scale=0.6,
                                  position=Gtk.PositionType.TOP)
         motor.connect('clicked', self.motor_off)
         choices.attach(motor, 2, 0, 1, 1)
         self.actions.append(motor)
+        self.motor_button = motor
         layout.attach(choices, 0, 2, 2, 2)
         adjust = Gtk.Grid(column_homogeneous=True, row_homogeneous=False,
                           column_spacing=4, row_spacing=4, hexpand=True, vexpand=True)
@@ -89,10 +109,12 @@ class Panel(ScreenPanel):
             if diameter == self.diameter:
                 button.set_label(f'✓ {diameter} mm')
                 context.add_class('button_active')
+                context.add_class('lugo-selected')
                 context.add_class('horizontal_togglebuttons_active')
             else:
                 button.set_label(f'{diameter} mm')
                 context.remove_class('button_active')
+                context.remove_class('lugo-selected')
                 context.remove_class('horizontal_togglebuttons_active')
 
     def select_diameter(self, widget, diameter):
@@ -118,6 +140,7 @@ class Panel(ScreenPanel):
         enabled = self._printer.state in ('ready', 'paused') and not self.busy
         for button in self.actions:
             button.set_sensitive(enabled)
+        self.motor_button.set_sensitive(not self.busy and self.motor_allowed())
         heater = self._printer.get_stat('toolhead', 'extruder') or 'extruder'
         current = self._printer.get_stat(heater, 'temperature') or 0
         target = self._printer.get_stat(heater, 'target') or 0
@@ -150,5 +173,13 @@ class Panel(ScreenPanel):
     def move(self, widget, direction):
         self.send(extrusion_script(self.diameter, self.flows[self.diameter], self.distance, direction))
 
+    def motor_allowed(self):
+        return (self._printer.state == 'ready'
+                and not self._printer.get_stat('pause_resume', 'is_paused')
+                and self._printer.get_stat('print_stats', 'state') not in ('printing', 'paused'))
+
     def motor_off(self, widget):
+        if not self.motor_allowed():
+            self._screen.show_popup_message('출력 중 또는 일시정지 중에는 모터를 끌 수 없습니다.')
+            return
         self.send('M84')
