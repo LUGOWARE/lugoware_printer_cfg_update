@@ -81,6 +81,11 @@ def install(screen, backup, check=False):
     changes[screen/'ks_includes/lugo_i18n.py']=Path(__file__).with_name('lugo_i18n.py').read_text(encoding='utf-8')
     changes[screen/'ks_includes/lugo_layout.py']=Path(__file__).with_name('lugo_layout.py').read_text(encoding='utf-8')
     changes[screen/'ks_includes/lugo_interface_selector.py']=Path(__file__).with_name('lugo_interface_selector.py').read_text(encoding='utf-8')
+    for name in ('printer_messages.py', 'message_rules.json'):
+        changes[screen/'ks_includes'/name]=Path(__file__).with_name(name).read_text(encoding='utf-8')
+    for path in Path(__file__).with_name('printer_locales').glob('*.json'):
+        text=path.read_text(encoding='utf-8'); json.loads(text)
+        changes[screen/'ks_includes/printer_locales'/path.name]=text
     catalog_dir=root/'translations'
     for path in catalog_dir.glob('*.json'):
         text=path.read_text(encoding='utf-8'); json.loads(text)

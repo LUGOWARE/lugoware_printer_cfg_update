@@ -103,8 +103,10 @@ if [ -d "$REPO_DIR/.git" ]; then
     echo "[1/6] 기존 레포 업데이트 중..."
     cd "$REPO_DIR"
     git fetch origin
-    git checkout "$BRANCH"
-    git pull --ff-only origin "$BRANCH"
+    # The previous hook may rewrite current macros with legacy commands.
+    # This installer applies the configuration after installing current helpers.
+    git -c core.hooksPath=/dev/null checkout "$BRANCH"
+    git -c core.hooksPath=/dev/null pull --ff-only origin "$BRANCH"
 else
     echo "[1/6] 레포 클론 중..."
     git clone -b "$BRANCH" "$REPO_URL" "$REPO_DIR"
@@ -310,7 +312,7 @@ echo "[진행] 메인 화면 IP 표시 / 압출 모서리 제어 버튼 제거"
 python3 "$COMMON_DIR/repo/maintenance/patch_screen_identity.py"
 mkdir -p "$HOME/.local/share/lugoware"
 cp "$COMMON_DIR/repo/maintenance/install_tool_temperature.py" "$COMMON_DIR/repo/maintenance/install_screen_config.py" "$HOME/.local/share/lugoware/"
-cp "$COMMON_DIR/repo/maintenance/install_print_controls.py" "$COMMON_DIR/repo/maintenance/patch_print_controls.py" "$HOME/.local/share/lugoware/"
+cp "$COMMON_DIR/repo/maintenance/install_print_controls.py" "$COMMON_DIR/repo/maintenance/patch_print_controls.py" "$COMMON_DIR/repo/maintenance/final_print_ui.py" "$HOME/.local/share/lugoware/"
 
 # 공통 시스템 설정 (재실행해도 cron 중복 없음)
 echo "설정을 적용하고 있습니다. 완료될 때까지 전원을 유지해 주세요..."

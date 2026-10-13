@@ -19,6 +19,11 @@ class Translations(gettext.NullTranslations):
             if path.is_file():
                 self.catalog = json.loads(path.read_text(encoding='utf-8'))
 
+        # Printer message catalogs follow the selected KlipperScreen locale.
+        extra = Path(__file__).with_name('printer_locales') / (language + '.json')
+        if re.fullmatch(r'[A-Za-z_]+', language or '') and extra.is_file():
+            self.catalog.update(json.loads(extra.read_text(encoding='utf-8')))
+
     def gettext(self, message):
         original = self.upstream.gettext(message)
         return original if original != message else self.catalog.get(message, original)
@@ -34,6 +39,13 @@ def with_translations(upstream, language):
 def translate_text(text):
     """Translate known UI payloads only; never alter G-code or user names."""
     tr = getattr(builtins, '_', lambda s: s)
+    try:
+        from ks_includes.printer_messages import translate_printer_message
+    except ModuleNotFoundError:
+        from printer_messages import translate_printer_message
+    translated = translate_printer_message(text, tr)
+    if translated is not None:
+        return translated
     aliases = {'히터 테스트 완료': 'Heater test complete', '확인': 'Confirm',
                '정상 작동': 'Normal operation', '가열 불량': 'Heating failure'}
     stripped = text.strip()

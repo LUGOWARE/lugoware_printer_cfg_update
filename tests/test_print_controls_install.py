@@ -8,26 +8,21 @@ from install_print_controls import config_patch, panel_patch, screen_patch, MHZ_
 
 
 class Tests(unittest.TestCase):
-    def test_macro_repeat_preserves_probe_and_moves(self):
-        source = '[probe]\nactivate_gcode:\n    G4 P200\n\n[gcode_macro START_PRINT]\ngcode:\n    G28\n'
+    def test_final_macros_are_preserved_and_legacy_is_rejected(self):
+        source = ''.join('[gcode_macro '+name+']\ngcode:\n    G1 X334\n' for name in
+                         ['CANCEL_PRINT','_FAST_CANCEL_MOTION','_FAST_CANCEL_RETURN','_FAST_CANCEL_FINALIZE','PAUSE','RESUME'])
         for tool in range(4):
-            source += f'\n[gcode_macro DOCK_TOOL_{tool}]\ngcode:\n    TEMPERATURE_WAIT SENSOR=extruder MINIMUM=200\n    G1 X230\n    G4 P1000\n'
-            source += f'\n[gcode_macro PARK_TOOL_{tool}]\ngcode:\n    G1 X256\n'
-        result = macros(source)
-        self.assertEqual(macros(result),result)
-        self.assertIn('activate_gcode:\n    G4 P200',result)
-        self.assertEqual(result.count('G1 X230'),4)
-        self.assertEqual(result.count('G1 X256'),4)
-        self.assertEqual(result.count('LUGO_CANCEL_WAIT P=1000'),4)
-        self.assertNotRegex(result, r'LUGO_CANCEL_WAIT\s+P(?![=])')
-        legacy = result.replace('LUGO_CANCEL_WAIT P=', 'LUGO_CANCEL_WAIT P')
-        self.assertEqual(macros(legacy), result)
+            source += f'    FAST_CANCEL_PRIME STATE=begin TOOL={tool}\n    FAST_CANCEL_PRIME STATE=end TOOL={tool} EXIT_X=366\n    FAST_CANCEL_PHASE PHASE=docked TOOL={tool}\n'
+        self.assertEqual(macros(source),source)
+        self.assertEqual(macros(macros(source)),source)
+        with self.assertRaises(ValueError): macros('[gcode_macro START_PRINT]\ngcode:\n    G28\n')
+        with self.assertRaises(ValueError): macros(source+'    LUGO_CANCEL_PHASE PHASE=normal\n')
 
     def test_config_before_save_and_repeat(self):
         source = '[lugo_tool_temperature]\n#*# <---------------------- SAVE_CONFIG ---------------------->\n#*# z_offset = 1\n'
         result = config_patch(source)
         self.assertEqual(config_patch(result),result)
-        self.assertLess(result.index('[lugo_fast_cancel]'),result.index('#*#'))
+        self.assertLess(result.index('[fast_cancel]'),result.index('#*#'))
         self.assertTrue(result.endswith('#*# z_offset = 1\n'))
 
     def test_screen_popup_filter_selective(self):
@@ -47,7 +42,7 @@ class Tests(unittest.TestCase):
         result=panel_patch('class Panel:\n    def cancel(self):\n        self._screen._ws.api.print_cancel()\n')
         compile(result,'job_status.py','exec')
         self.assertEqual(panel_patch(result),result)
-        self.assertIn('printer.lugo_fast_cancel.request',result)
+        self.assertIn('printer.fast_cancel.request',result)
         self.assertIn('_lugo_cancel_pending = False',result)
         with self.assertRaises(ValueError):
             panel_patch('unsupported')

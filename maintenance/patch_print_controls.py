@@ -2,34 +2,21 @@ import re
 
 
 def macros(text):
-    text = re.sub(r'^    LUGO_CANCEL_PHASE[^\n]*\n', '', text, flags=re.M)
-    def edit(name, change):
-        nonlocal text
-        pattern = r'(?ms)^\[gcode_macro ' + re.escape(name) + r'\]\n.*?(?=^\[|\Z)'
-        match = re.search(pattern, text)
-        if not match:
-            raise ValueError('Missing macro ' + name)
-        text = text[:match.start()] + change(match.group()) + text[match.end():]
-    edit('START_PRINT', lambda b: b.replace('gcode:\n', 'gcode:\n    LUGO_CANCEL_PHASE PHASE=normal TOOL=-1\n', 1))
+    # Model branches now ship the reviewed final macros. Do not regenerate old
+    # docking code or overwrite customer-edited coordinates in a post-merge hook.
+    required = ['CANCEL_PRINT', '_FAST_CANCEL_MOTION', '_FAST_CANCEL_RETURN',
+                '_FAST_CANCEL_FINALIZE', 'PAUSE', 'RESUME']
+    for name in required:
+        if '[gcode_macro ' + name + ']' not in text:
+            raise ValueError('Update the model configuration before installing fast_cancel: ' + name)
+    if re.search(r'^\s*LUGO_CANCEL_', text, re.M):
+        raise ValueError('Legacy and current cancellation commands are mixed; use the latest model configuration')
     for tool in range(4):
-        def dock(block, tool=tool):
-            lines = block.rstrip().splitlines()
-            # The first movement is after the initial temperature wait.
-            index = next(i for i, line in enumerate(lines) if line.strip().startswith('G1 '))
-            if not any('TEMPERATURE_WAIT' in line for line in lines[:index]):
-                raise ValueError('Docking preheat layout changed')
-            lines.insert(index, f'    LUGO_CANCEL_PHASE PHASE=docking TOOL={tool}')
-            # Extended Klipper commands require KEY=value, unlike native G4 P...
-            # Also repair the already-installed legacy spelling on reinstall.
-            lines = [re.sub(r'^(\s*)(?:G4|LUGO_CANCEL_WAIT)\s+P\s*=?\s*(.+)$',
-                            r'\1LUGO_CANCEL_WAIT P=\2', line) for line in lines]
-            lines.extend([f'    LUGO_CANCEL_PHASE PHASE=docked TOOL={tool}', ''])
-            return '\n'.join(lines) + '\n'
-        edit('DOCK_TOOL_' + str(tool), dock)
-        def park(block, tool=tool):
-            block = block.replace('gcode:\n', f'gcode:\n    LUGO_CANCEL_PHASE PHASE=parking TOOL={tool}\n', 1)
-            return block.rstrip() + f'\n    LUGO_CANCEL_PHASE PHASE=empty TOOL={tool}\n\n'
-        edit('PARK_TOOL_' + str(tool), park)
+        for marker in [f'FAST_CANCEL_PRIME STATE=begin TOOL={tool}',
+                       f'FAST_CANCEL_PRIME STATE=end TOOL={tool}',
+                       f'FAST_CANCEL_PHASE PHASE=docked TOOL={tool}']:
+            if marker not in text:
+                raise ValueError('Missing final cancellation marker: ' + marker)
     return text
 
 

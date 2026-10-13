@@ -4,7 +4,8 @@ import os
 from pathlib import Path
 import re
 import shutil
-from patch_print_controls import macros, prepare_macros
+from patch_print_controls import macros
+from final_print_ui import job_status, notification, popup
 
 
 def replace_once(text, old, new):
@@ -19,7 +20,7 @@ def panel_patch(text):
     if 'def _fast_cancel_response(' not in text:
         text = replace_once(text, '        self._screen._ws.api.print_cancel()', '''        self._screen._lugo_cancel_pending = True
         sent = self._screen._ws.send_method(
-            "printer.lugo_fast_cancel.request", {}, self._fast_cancel_response)
+            "printer.fast_cancel.request", {}, self._fast_cancel_response)
         if sent is False:
             self._fast_cancel_response({"error": {"message": _("Cancel request failed")}})
 
@@ -33,7 +34,7 @@ def panel_patch(text):
     text = text.replace('get("message", "Cancel failed")', 'get("message", _("Cancel failed"))')
     if '_lugo_cancel_pending' not in text:
         raise ValueError('Incomplete cancellation panel patch')
-    return text
+    return text.replace("printer.lugo_fast_cancel.request", "printer.fast_cancel.request")
 
 
 MHZ_PATTERN = r"(?i)(?:Klipper:\s*)?(?://\s*)?MCU '[^'\n]+' configured for \d+(?:\.\d+)?MHz but running at \d+(?:\.\d+)?MHz!"
@@ -59,16 +60,20 @@ def screen_patch(text):
 
 
 def config_patch(text):
-    if re.search(r'^\[lugo_fast_cancel\]\s*$', text, re.M):
+    text = re.sub(r'^\[lugo_fast_cancel\]\s*$', '[fast_cancel]', text, flags=re.M)
+    headers = list(re.finditer(r'^\[fast_cancel\]\s*$', text, re.M))
+    if len(headers) > 1:
+        raise ValueError('Duplicate fast_cancel sections; inspect printer.cfg')
+    if headers:
         return text
     marker = '#*# <---------------------- SAVE_CONFIG ---------------------->'
     if marker in text:
-        return text.replace(marker, '[lugo_fast_cancel]\n\n' + marker, 1)
-    return text.rstrip() + '\n\n[lugo_fast_cancel]\n'
+        return text.replace(marker, '[fast_cancel]\n\n' + marker, 1)
+    return text.rstrip() + '\n\n[fast_cancel]\n'
 
 
 def install(config, screen, klipper, backup, config_only=False):
-    changes = {config/'printer_base.cfg': macros(prepare_macros((config/'printer_base.cfg').read_text(encoding='utf-8'))),
+    changes = {config/'printer_base.cfg': macros((config/'printer_base.cfg').read_text(encoding='utf-8')),
                config/'printer.cfg': config_patch((config/'printer.cfg').read_text(encoding='utf-8'))}
     if not config_only:
         probe = (klipper/'klippy/extras/probe.py').read_text(encoding='utf-8')
@@ -78,9 +83,10 @@ def install(config, screen, klipper, backup, config_only=False):
                 raise ValueError('Unsupported probe API: ' + needle)
         if 'self.probe_mgr = ProbeManager(' not in mesh:
             raise ValueError('Unsupported bed mesh API')
-        changes.update({screen/'screen.py': screen_patch((screen/'screen.py').read_text(encoding='utf-8')),
-                        screen/'panels/job_status.py': panel_patch((screen/'panels/job_status.py').read_text(encoding='utf-8')),
-                        klipper/'klippy/extras/lugo_fast_cancel.py': Path(__file__).with_name('lugo_fast_cancel.py').read_text(encoding='utf-8')})
+        changes.update({screen/'screen.py': popup(screen_patch((screen/'screen.py').read_text(encoding='utf-8'))),
+                        screen/'panels/job_status.py': job_status(panel_patch((screen/'panels/job_status.py').read_text(encoding='utf-8'))),
+                        screen/'ks_includes/notification_handler.py': notification((screen/'ks_includes/notification_handler.py').read_text(encoding='utf-8')),
+                        klipper/'klippy/extras/fast_cancel.py': Path(__file__).with_name('fast_cancel.py').read_text(encoding='utf-8')})
     for path, text in changes.items():
         if path.suffix == '.py':
             compile(text, str(path), 'exec')

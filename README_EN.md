@@ -1,8 +1,12 @@
 # LUGOWARE Printer Configuration Auto-Update System
 
-## 2026-10-12 M5P Screen and Print Control Update
+## 2026-10-13 M5P Screen and Print Control Update
 
-Existing machines must also run `install.sh` again to install this shared code. It applies to all M, L, and W models and provides shared panels that follow the selected screen language. The model configuration update button alone does not download new panels or Python extensions. After installation, model configuration updates use the saved patcher to reapply the preparation and cancellation macros.
+Existing machines must **run `install.sh` again after printing has finished**. These configurations require the new `fast_cancel.py`; do not apply them first using only the model configuration update button. The last selected screen language is preserved. Subsequent model updates validate the current macros without rewriting model coordinates.
+
+This release includes the final V2.128 M/L/W configurations, CFG-based cancellation, parking and return moves, PAUSE/RESUME state guards and Z limits, and pausing after a failed dock. W docking and parking X coordinates are 104 mm larger than M/L. It also fixes the pause button appearance and removes the long preparation docking-failure notification.
+
+KlipperScreen popups and M117 status messages follow the selected language. Message catalogs cover 32 languages; some translations are machine-generated and may need wording review. Mainsail and raw logs are unchanged.
 
 The installer installs four shared panels from `panels/common` and backs up the existing files. Translations follow the KlipperScreen language setting. Panel updates require running `install.sh`.
 
