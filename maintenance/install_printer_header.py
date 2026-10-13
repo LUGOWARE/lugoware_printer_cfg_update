@@ -12,6 +12,23 @@ def sections(text):
             re.finditer(r'(?ms)^\[([^\]\n]+)\][^\n]*\n.*?(?=^\[|\Z)', text)}
 
 
+def ensure_probe_offset(saved, old):
+    probe = re.search(r'(?ms)^#\*#\s*\[probe\][^\n]*\n.*?(?=^#\*#\s*\[|\Z)', saved)
+    if probe and re.search(r'(?m)^#\*#\s*z_offset\s*[:=]', probe[0]):
+        return saved
+    # Migrate an active legacy probe value before replacing its header/base.
+    value = re.search(r'(?m)^\s*z_offset\s*[:=]\s*([^#;\r\n]+)', old.get('probe', ''))
+    offset = value[1].strip() if value else '0.000'
+    float(offset)  # Fail before writing if the existing value is malformed.
+    line = '#*# z_offset = ' + offset + '\n'
+    if probe:
+        end = saved.index('\n', probe.start()) + 1
+        return saved[:end] + line + saved[end:]
+    if not saved:
+        saved = SAVED + '\n#*# DO NOT EDIT THIS BLOCK OR BELOW. The contents are auto-generated.\n'
+    return saved.rstrip('\r\n') + '\n#*#\n#*# [probe]\n' + line
+
+
 def merge(existing, template, fallback='', gcode_path=None):
     body, marker, saved = existing.partition(SAVED)
     old = sections(fallback.partition(SAVED)[0])
@@ -33,7 +50,7 @@ def merge(existing, template, fallback='', gcode_path=None):
     result = result.replace('@GCODE_PATH@', path[1] if path else str(gcode_path or Path.home()/'printer_data/gcodes'))
     if '@MCU_SERIAL@' in result:
         raise ValueError('Unresolved MCU placeholder')
-    return result.rstrip() + '\n\n' + marker + saved
+    return result.rstrip() + '\n\n' + ensure_probe_offset(marker + saved, old)
 
 
 def install(template, target, backup, fallback=None):

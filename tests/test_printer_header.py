@@ -9,6 +9,24 @@ from install_screen_config import merge as screen_merge, SAVED as SCREEN_SAVED, 
 
 
 class HeaderTests(unittest.TestCase):
+    def test_missing_probe_offset_defaults_to_zero(self):
+        for tail in ('', SAVED + '\n#*# [stepper_z]\n#*# z_offset = 9.9\n',
+                     SAVED + '\n#*# [probe]\n#*# speed = 5\n'):
+            old = '[mcu]\nserial: /dev/serial/M\n\n' + tail
+            new = merge(old, self.template)
+            self.assertIn('#*# z_offset = 0.000', new)
+            self.assertEqual(new.count('#*# [probe]'), 1)
+            self.assertEqual(merge(new, self.template), new)
+
+    def test_inline_offset_migrated_and_saved_offset_wins(self):
+        old = '[mcu]\nserial: /dev/serial/M\n[probe]\nz_offset: 0.543\n'
+        new = merge(old, self.template)
+        self.assertIn('#*# z_offset = 0.543', new)
+        old += SAVED + '\n#*# [probe]\n#*# z_offset = -0.123\n'
+        new = merge(old, self.template)
+        self.assertIn('#*# z_offset = -0.123', new)
+        self.assertNotIn('0.543', new)
+
     def setUp(self):
         self.template = (ROOT/'templates/printer_header.cfg').read_text(encoding='utf-8')
 
