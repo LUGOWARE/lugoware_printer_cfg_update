@@ -22,6 +22,10 @@ def blocks(text):
 def merge(existing, template):
     body, marker, saved = existing.partition(SAVED)
     template = template.partition(SAVED)[0]
+    # Use the reviewed .151 menu/preheat set; retain device and UI preferences.
+    for match in reversed(blocks(body)):
+        if match[1].startswith(('menu ', 'preheat ')):
+            body = body[:match.start()] + body[match.end():]
     for match in blocks(template):
         section = match[1]
         # Language/main/printer connection options always belong to the user.
@@ -36,7 +40,7 @@ def merge(existing, template):
     # First installation: keep printer defaults, discard template language choice.
     if not existing.strip():
         prefix = ''.join(m[0] for m in blocks(template) if m[1].startswith('printer '))
-        body = prefix + body.lstrip()
+        body = (prefix.rstrip() + '\n\n' if prefix else '') + body.lstrip()
     for section, title in TITLES.items():
         pattern = r'(?ms)^\['+re.escape(section)+r'\][^\n]*\n.*?(?=^\[|\Z)'
         match = re.search(pattern,body)

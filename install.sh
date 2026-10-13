@@ -125,8 +125,11 @@ for name in printer_base.cfg crowsnest.conf; do
         cp -f "$REPO_DIR/$name" "$CONFIG_DIR/$target"
     fi
 done
+if [[ -f "$HOME/.local/share/lugoware/install_printer_header.py" ]]; then
+    python3 "$HOME/.local/share/lugoware/install_printer_header.py" "$HOME/.local/share/lugoware/printer_header.cfg" "$CONFIG_DIR/printer.cfg" "$HOME/lugoware_backups/post-merge-printer-$(date +%Y%m%d-%H%M%S).cfg" || exit 1
+fi
 if [[ -f "$HOME/.local/share/lugoware/install_screen_config.py" ]]; then
-    python3 "$HOME/.local/share/lugoware/install_screen_config.py" "$REPO_DIR/KlipperScreen_en.conf" "$CONFIG_DIR/KlipperScreen.conf" "$HOME/lugoware_backups/post-merge-screen.conf" || exit 1
+    python3 "$HOME/.local/share/lugoware/install_screen_config.py" "$HOME/.local/share/lugoware/KlipperScreen.conf" "$CONFIG_DIR/KlipperScreen.conf" "$HOME/lugoware_backups/post-merge-screen-$(date +%Y%m%d-%H%M%S).conf" || exit 1
 fi
 if [[ -f "$HOME/.local/share/lugoware/install_tool_temperature.py" ]]; then
     python3 "$HOME/.local/share/lugoware/install_tool_temperature.py" --config-only || exit 1
@@ -138,85 +141,11 @@ echo "Config files updated from repo. Screen language preserved."
 EOF
 chmod +x "$REPO_DIR/.git/hooks/post-merge"
 
-# 3. printer.cfg 분리
-echo "[3/6] printer.cfg 확인 중..."
-export MODEL_CODE_VAR="$MODEL_CODE"
-if ! grep -q "include printer_base.cfg" "$CONFIG_DIR/printer.cfg" 2>/dev/null; then
-    echo "  -> printer.cfg 분리 중..."
-    python3 - << 'PYEOF'
-import os, re
-CONFIG_DIR = os.path.expanduser("~/printer_data/config")
-model_code = os.environ.get('MODEL_CODE_VAR', 'HW1')
-content = open(f"{CONFIG_DIR}/printer.cfg").read()
-
-# MCU serial 추출
-mcu_match = re.search(r'\[mcu\][^\[]*?serial\s*:\s*(\S+)', content, re.DOTALL)
-mcu_serial = mcu_match.group(1) if mcu_match else '/dev/serial/by-id/YOUR_MCU_SERIAL'
-
-# SAVE_CONFIG 섹션 추출
-save_idx = content.find('#*# <---')
-save_config = ('\n' + content[save_idx:]) if save_idx != -1 else ''
-
-new_cfg = (
-    f"# ########==========================={model_code}_M5P_MULTISET============================########\n"
-    f"# ########============================== MCU 설정 ===============================########\n"
-    f"\n"
-    f"[include mainsail.cfg]\n"
-    f"[include timelapse.cfg]\n"
-    f"[include printer_base.cfg]\n"
-    f"[include printer_custom.cfg]\n"
-    f"\n"
-    f"[mcu CB2]\n"
-    f"serial: /tmp/klipper_host_mcu\n"
-    f"\n"
-    f"[mcu]\n"
-    f"serial: {mcu_serial}\n"
-    f"\n"
-    f"[virtual_sdcard]\n"
-    f"path: /home/biqu/printer_data/gcodes\n"
-    f"{save_config}"
-)
-open(f"{CONFIG_DIR}/printer.cfg", 'w').write(new_cfg)
-print(f"  -> printer.cfg 생성 완료 (MCU: {mcu_serial})")
-PYEOF
-else
-    echo "  -> 이미 분리됨, 건너뜀"
-    # 기존 설치 마이그레이션: MCU 섹션이 printer.cfg에 없으면 추가
-    python3 - << 'PYEOF'
-import os, re
-CONFIG_DIR = os.path.expanduser("~/printer_data/config")
-model_code = os.environ.get('MODEL_CODE_VAR', 'HW1')
-printer_content = open(f"{CONFIG_DIR}/printer.cfg").read()
-
-if '[mcu]' not in printer_content:
-    # printer_base.cfg에서 serial 찾기
-    base_content = open(f"{CONFIG_DIR}/printer_base.cfg").read()
-    mcu_match = re.search(r'\[mcu\][^\[]*?serial\s*:\s*(\S+)', base_content, re.DOTALL)
-    mcu_serial = mcu_match.group(1) if mcu_match else '/dev/serial/by-id/YOUR_MCU_SERIAL'
-
-    mcu_block = (
-        f"# ########==========================={model_code}_M5P_MULTISET============================########\n"
-        f"# ########============================== MCU 설정 ===============================########\n"
-        f"\n"
-        f"[include mainsail.cfg]\n"
-        f"[include timelapse.cfg]\n"
-        f"\n"
-        f"[mcu CB2]\n"
-        f"serial: /tmp/klipper_host_mcu\n"
-        f"\n"
-        f"[mcu]\n"
-        f"serial: {mcu_serial}\n"
-        f"\n"
-        f"[virtual_sdcard]\n"
-        f"path: /home/biqu/printer_data/gcodes\n"
-        f"\n"
-    )
-    open(f"{CONFIG_DIR}/printer.cfg", 'w').write(mcu_block + printer_content)
-    print(f"  -> MCU 섹션 추가 완료 (MCU: {mcu_serial})")
-else:
-    print("  -> MCU 섹션 이미 존재, 건너뜀")
-PYEOF
-fi
+# 3. .151 기준 공통 헤더 / 각 기기의 MCU·SAVE_CONFIG 보존
+echo "[3/6] printer.cfg 공통 헤더 적용 중..."
+python3 "$COMMON_DIR/repo/maintenance/install_printer_header.py" \
+    "$COMMON_DIR/repo/templates/printer_header.cfg" "$CONFIG_DIR/printer.cfg" \
+    "$BACKUP_DIR/printer-header.cfg" --fallback "$CONFIG_DIR/printer_base.cfg"
 
 # 3-1. z_offset SAVE_CONFIG 블록 보장 (초기 설치 시 필수)
 #   [probe]는 z_offset이 필수라, printer_base.cfg에서 주석 처리된 상태면
@@ -269,7 +198,7 @@ echo "[5/6] 설정 파일 복사 중..."
 copy_config "$REPO_DIR/printer_base.cfg" "$CONFIG_DIR/printer_base.cfg"
 copy_config "$REPO_DIR/crowsnest.conf" "$CONFIG_DIR/crowsnest.conf"
 python3 "$COMMON_DIR/repo/maintenance/install_screen_config.py" \
-    "$REPO_DIR/KlipperScreen_en.conf" "$CONFIG_DIR/KlipperScreen.conf" "$BACKUP_DIR/KlipperScreen.conf"
+    "$COMMON_DIR/repo/templates/KlipperScreen.conf" "$CONFIG_DIR/KlipperScreen.conf" "$BACKUP_DIR/KlipperScreen.conf"
 echo "  -> 복사 완료"
 
 # 6. moonraker.conf 업데이트
@@ -311,6 +240,7 @@ python3 "$COMMON_DIR/repo/maintenance/install_print_controls.py"
 echo "[진행] 메인 화면 IP 표시 / 압출 모서리 제어 버튼 제거"
 python3 "$COMMON_DIR/repo/maintenance/patch_screen_identity.py"
 mkdir -p "$HOME/.local/share/lugoware"
+cp "$COMMON_DIR/repo/maintenance/install_printer_header.py" "$COMMON_DIR/repo/templates/printer_header.cfg" "$COMMON_DIR/repo/templates/KlipperScreen.conf" "$HOME/.local/share/lugoware/"
 cp "$COMMON_DIR/repo/maintenance/install_tool_temperature.py" "$COMMON_DIR/repo/maintenance/install_screen_config.py" "$HOME/.local/share/lugoware/"
 cp "$COMMON_DIR/repo/maintenance/install_print_controls.py" "$COMMON_DIR/repo/maintenance/patch_print_controls.py" "$COMMON_DIR/repo/maintenance/final_print_ui.py" "$HOME/.local/share/lugoware/"
 

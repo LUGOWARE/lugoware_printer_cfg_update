@@ -10,6 +10,8 @@ KlipperScreen의 팝업과 M117 상태 문구도 선택 언어에 맞춰 표시�
 
 공통 `panels/common`의 패널 4개를 설치하고 기존 파일을 백업합니다. 번역은 KlipperScreen 언어 설정을 따릅니다. 패널 업데이트는 `install.sh`를 실행해야 합니다.
 
+설치와 이후 모델 업데이트는 공통 템플릿의 화면 메뉴·예열 설정과 `printer.cfg` 헤더를 적용합니다. 기기별 MCU 연결 정보, G-code 저장 경로, `SAVE_CONFIG` 전체 및 화면 언어·테마는 보존합니다. 이전 파일은 백업됩니다. 헤더의 그 밖의 사용자 설정은 공통 구성으로 교체되므로 필요한 개인 튜닝은 `printer_custom.cfg`에서 관리하세요.
+
 🌐 [English](README_EN.md) | 한국어
 
 이 저장소는 LUGOWARE FLEX4 3D 프린터의 설정 파일을 자동으로 업데이트하기 위한 시스템입니다.  

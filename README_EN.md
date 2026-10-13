@@ -10,6 +10,8 @@ KlipperScreen popups and M117 status messages follow the selected language. Mess
 
 The installer installs four shared panels from `panels/common` and backs up the existing files. Translations follow the KlipperScreen language setting. Panel updates require running `install.sh`.
 
+Installation and subsequent model updates apply shared templates for screen menus, preheat presets, and the `printer.cfg` header. Device MCU connections, the G-code directory, the complete `SAVE_CONFIG` block, and screen language/theme are preserved. Previous files are backed up. Other custom header settings are replaced by the shared configuration; keep personal tuning in `printer_custom.cfg`.
+
 🌐 English | [한국어](README.md)
 
 This repository provides a system for automatically updating configuration files for LUGOWARE FLEX4 3D printers.\
