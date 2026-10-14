@@ -1,6 +1,6 @@
 # LUGOWARE Printer Configuration Auto-Update System
 
-## 2026-10-13 M5P Screen and Print Control Update
+## M5P Installation and Update Management
 
 🌐 English | [한국어](README.md)
 
@@ -37,14 +37,14 @@ Example: `192.168.0.39`
    - Username: `biqu`
    - Port: `22`
 5. Click **OK**.
-6. Enter the password: `biqu`.
+6. Enter your current SSH password (`biqu` if the initial password has not been changed).
 
 ### Step 4 — Run the Installation Command
 
 After connecting via SSH, **copy and paste (right-click)** the command below and press Enter:
 
 ```bash
-bash <(curl -sSL https://raw.githubusercontent.com/LUGOWARE/lugoware_printer_cfg_update/main/install.sh)
+bash <(curl -fsSL "https://raw.githubusercontent.com/LUGOWARE/lugoware_printer_cfg_update/main/install.sh?nocache=$(date +%s)")
 ```
 
 A menu will appear asking you to select your printer model:
@@ -64,33 +64,74 @@ Enter the number corresponding to your printer model and press Enter. Installati
 Run the command as your regular SSH user and enter your sudo password when prompted.
 Proceed while the printer is not in use.
 
-When the completion message appears, restart **Klipper** and **Moonraker** in Mainsail.
+The installer restarts and checks the required services automatically. **Wait for the installation completion message**, then refresh Mainsail. No additional restart is required.
+
+- This command is for M5P. Use the dedicated distribution for an M8P board.
+- `main` selects the latest installer; `nocache` helps avoid a cached older download. You do not need to keep using a previously supplied commit-specific URL.
+- Initial installation requires your sudo password. It registers restricted update permissions so subsequent supported Mainsail updates do not prompt for a password.
+- If an existing installation has no `lugoware_system` entry, run the command above once to reinstall.
 
 ---
 
 ## Subsequent Updates (After Installation)
 
-In Mainsail, go to **Machine** → **Update Manager**, then\
-click the **Update button** for **lugoware_config**.
+1. Finish any print, pause, heating or movement operation first. Do not use or power off the printer during installation.
+2. In Mainsail, open **Machine → Update Manager** and refresh the update check.
+3. Select an update using the table below.
+4. Wait for **actual installation and verification completion**.
 
----
+| Entry | What it applies | When to use it |
+|-------|-----------------|----------------|
+| `lugoware_config` | Latest model-specific `printer_base.cfg` and `KlipperScreen.conf` | Configuration or macro changes only |
+| `lugoware_system` | Screen panels, translations, Python extensions, shared installation features, and **the latest config for your model** | System changes, or updates available for both entries |
 
-## Files That Are Updated
+**A system update also applies the latest config; a separate config update is not required.** Config-only updates remain available. If a new configuration requires new system features, update system first.
 
-| File | Description |
-|------|-------------|
-| `printer_base.cfg` | Base printer configuration (motion, heaters, macros, etc.) |
-| `crowsnest.conf` | Webcam configuration |
-| `KlipperScreen.conf` | Touchscreen configuration |
+### Progress and completion
 
-## Files That Are Not Updated (Protecting Your Settings)
+Git download is followed by a separate installation job. The current updater uses these Korean status labels:
 
-| File | Description |
-|------|-------------|
-| `printer.cfg` | Printer-specific settings (including the MCU serial and SAVE_CONFIG) |
-| `printer_custom.cfg` | Personal tuning values (pressure advance, etc.) |
-| `moonraker.conf` | Moonraker server configuration |
-| `mainsail.cfg` | Mainsail UI configuration |
+- **다운로드 완료 — 실제 설치 진행 중**: Download complete; actual installation is still running.
+- **설치 대기 중 / 설치 진행 중**: Installation queued / in progress. Check the update dialog and Mainsail announcements for the current stage.
+- **업데이트 완료 — 실제 설치 및 검증 완료**: Actual installation, config application and service verification have completed.
+- **설치 실패 — 업데이트 미완료**: Installation failed; resolve the cause before retrying.
+
+Moonraker may briefly disconnect while restarting. Check announcements after reconnecting. A device with the previous reporting component may still show `Update Finished` as soon as the download ends; check the actual installation completion announcement for this system update.
+
+For detailed results, these optional SSH commands show the status and log:
+
+```bash
+cat ~/.local/share/lugoware/system-status.json
+tail -n 80 ~/printer_data/logs/lugoware_system.log
+```
+
+For a config-only update, replace `system` with `config` in those paths. The status file must report `state: complete` for actual installation completion. After resolving a failure, restart `lugoware_system` or `lugoware_config` from Mainsail service controls to retry.
+
+## Managing Configuration and Personal Settings
+
+| Item | Update behavior |
+|------|-----------------|
+| `printer_base.cfg` | Replaced with the model release configuration. Direct edits may be replaced by the next update. |
+| `KlipperScreen.conf` | The release template is merged while retaining supported user preferences, including the last selected language. |
+| `printer_custom.cfg` | Existing file is preserved. Use it for personal settings where applicable. |
+| `printer.cfg` | Initial installation and system updates normalize the common header while preserving device MCU information and existing SAVE_CONFIG. A missing probe offset defaults to `0.000`. |
+| `moonraker.conf` | Installation-related sections, including update entries, are modified. The whole file is not guaranteed to remain unchanged. |
+| `crowsnest.conf` | Applied from the release during initial installation and system updates; excluded from config-only updates. |
+
+Config-only updates apply just `printer_base.cfg` and `KlipperScreen.conf`. Backups are stored in `~/lugoware_backups/`. Direct edits in the `~/lugoware_config` or `~/lugoware_system` repositories stop the automatic update instead of being overwritten. Save and resolve those changes before retrying.
+
+## When an SSH Reinstallation Is Required
+
+Routine configuration, screen, translation and existing extension updates can use Mainsail. Administrative operations run without a password only for **previously approved service controls, packages and file installations**. This is not unrestricted administrator access.
+
+Run the **initial installation command above** via SSH and enter your sudo password when an update requires:
+
+- A base Klipper or Linux MCU version migration
+- Changes to an older Moonraker service or dependency layout
+- Changes to the privileged update helper, sudo policy or updater service structure
+- Packages outside the allowlist or new privileged operations
+
+If Mainsail reports that an SSH installation is required, use that installer rather than manually broadening permissions.
 
 ---
 
