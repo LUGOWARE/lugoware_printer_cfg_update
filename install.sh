@@ -19,6 +19,14 @@ fi
 echo "=== LUGOWARE 설정 업데이트 시스템 설치 ==="
 echo ""
 
+SYSTEM_ONLY=0
+if [[ ${1:-} == --system-update ]]; then
+    SYSTEM_ONLY=1
+    BRANCH=${2:?model branch required}
+    case "$BRANCH" in FLEX4_M|FLEX4_L|FLEX4_W) ;; *) exit 1 ;; esac
+    MODEL="$BRANCH"
+    export LUGOWARE_SYSTEM_ONLY=1
+else
 # 모델 선택
 echo "프린터 모델을 선택하세요 / Select printer model:"
 echo "  1) FLEX4 M"
@@ -33,9 +41,15 @@ case $model_choice in
     3) BRANCH="FLEX4_W"; MODEL="FLEX4 W"; MODEL_CODE="HW1" ;;
     *) echo "잘못된 입력입니다. 1, 2, 3 중에 선택해 주세요."; exit 1 ;;
 esac
+fi
 
 echo ""
 echo "선택된 모델: $MODEL (브랜치: $BRANCH)"
+if (( ! SYSTEM_ONLY )); then
+    mkdir -p "$HOME/.local/share/lugoware"
+    exec 9>"$HOME/.local/share/lugoware/update.lock"
+    flock -n 9 || { echo '다른 LUGOWARE 업데이트가 진행 중입니다.' >&2; exit 1; }
+fi
 echo ""
 
 echo "화면 언어는 KlipperScreen에서 마지막으로 선택한 설정을 유지합니다."
@@ -43,13 +57,22 @@ echo "화면 언어는 KlipperScreen에서 마지막으로 선택한 설정을 �
 # 공통 기능은 모델 브랜치와 별도로 main에서 같은 커밋으로 가져옵니다.
 COMMON_DIR=$(mktemp -d)
 trap 'rm -rf -- "$COMMON_DIR"' EXIT
-git clone --depth 1 --branch main "$REPO_URL" "$COMMON_DIR/repo"
+if (( SYSTEM_ONLY )); then
+    # Use exactly the snapshot queued by the Mainsail worker, not moving main.
+    cp -a "$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)" "$COMMON_DIR/repo"
+else
+    git clone --depth 1 --branch main "$REPO_URL" "$COMMON_DIR/repo"
+fi
 export BACKUP_DIR="$HOME/lugoware_backups/$(date +%Y%m%d-%H%M%S)-$$"
 mkdir -m 700 -p "$BACKUP_DIR"
 MOONRAKER_UPDATER="${MOONRAKER_DIR:-$HOME/moonraker}/moonraker/components/update_manager/update_manager.py"
 PANEL_DIR="${KLIPPERSCREEN_DIR:-$HOME/KlipperScreen}/panels"
 python3 "$COMMON_DIR/repo/maintenance/install_panels.py" --target "$PANEL_DIR" --backup "$BACKUP_DIR/panels" --check
 sudo -v
+if ! sudo -n -k true; then
+    echo 'Mainsail 시스템 업데이트에는 기존 비밀번호 없는 sudo 권한이 필요합니다. 권한을 자동 확대하지 않고 중단합니다.' >&2
+    exit 1
+fi
 echo "설치 환경을 확인하고 있습니다..."
 python3 "$COMMON_DIR/repo/maintenance/upgrade_klipperscreen.py" --check
 echo '[확인] 이전 설치에서 중단된 Moonraker 복구'
@@ -98,48 +121,15 @@ fi
 sudo -v
 
 
-# 1. 레포 클론 or 업데이트
-if [ -d "$REPO_DIR/.git" ]; then
-    echo "[1/6] 기존 레포 업데이트 중..."
-    cd "$REPO_DIR"
-    git fetch origin
-    # The previous hook may rewrite current macros with legacy commands.
-    # This installer applies the configuration after installing current helpers.
-    git -c core.hooksPath=/dev/null checkout "$BRANCH"
-    git -c core.hooksPath=/dev/null pull --ff-only origin "$BRANCH"
-else
-    echo "[1/6] 레포 클론 중..."
-    git clone -b "$BRANCH" "$REPO_URL" "$REPO_DIR"
-    cd "$REPO_DIR"
-fi
-
-# 2. post-merge 훅 설정
-echo "[2/6] post-merge 훅 설정 중..."
-cat > "$REPO_DIR/.git/hooks/post-merge" << 'EOF'
-#!/bin/bash
-CONFIG_DIR="$HOME/printer_data/config"
-REPO_DIR="$HOME/lugoware_config"
-for name in printer_base.cfg crowsnest.conf; do
-    target="$name"
-    if ! cmp -s "$REPO_DIR/$name" "$CONFIG_DIR/$target"; then
-        cp -f "$REPO_DIR/$name" "$CONFIG_DIR/$target"
+if (( ! SYSTEM_ONLY )); then
+    if [ -d "$REPO_DIR/.git" ]; then
+        git -C "$REPO_DIR" fetch origin
+        git -C "$REPO_DIR" -c core.hooksPath=/dev/null checkout "$BRANCH"
+        git -C "$REPO_DIR" -c core.hooksPath=/dev/null pull --ff-only origin "$BRANCH"
+    else
+        git clone -b "$BRANCH" "$REPO_URL" "$REPO_DIR"
     fi
-done
-if [[ -f "$HOME/.local/share/lugoware/install_printer_header.py" ]]; then
-    python3 "$HOME/.local/share/lugoware/install_printer_header.py" "$HOME/.local/share/lugoware/printer_header.cfg" "$CONFIG_DIR/printer.cfg" "$HOME/lugoware_backups/post-merge-printer-$(date +%Y%m%d-%H%M%S).cfg" || exit 1
 fi
-if [[ -f "$HOME/.local/share/lugoware/install_screen_config.py" ]]; then
-    python3 "$HOME/.local/share/lugoware/install_screen_config.py" "$HOME/.local/share/lugoware/KlipperScreen.conf" "$CONFIG_DIR/KlipperScreen.conf" "$HOME/lugoware_backups/post-merge-screen-$(date +%Y%m%d-%H%M%S).conf" || exit 1
-fi
-if [[ -f "$HOME/.local/share/lugoware/install_tool_temperature.py" ]]; then
-    python3 "$HOME/.local/share/lugoware/install_tool_temperature.py" --config-only || exit 1
-fi
-if [[ -f "$HOME/.local/share/lugoware/install_print_controls.py" ]]; then
-    python3 "$HOME/.local/share/lugoware/install_print_controls.py" --config-only || exit 1
-fi
-echo "Config files updated from repo. Screen language preserved."
-EOF
-chmod +x "$REPO_DIR/.git/hooks/post-merge"
 
 # 3. .151 기준 공통 헤더 / 각 기기의 MCU·SAVE_CONFIG 보존
 echo "[3/6] printer.cfg 공통 헤더 적용 중..."
@@ -162,37 +152,15 @@ fi
 
 # 5. 설정 파일 복사
 echo "[5/6] 설정 파일 복사 중..."
+if (( ! SYSTEM_ONLY )); then
 copy_config "$REPO_DIR/printer_base.cfg" "$CONFIG_DIR/printer_base.cfg"
+fi
 copy_config "$REPO_DIR/crowsnest.conf" "$CONFIG_DIR/crowsnest.conf"
+if (( ! SYSTEM_ONLY )); then
 python3 "$COMMON_DIR/repo/maintenance/install_screen_config.py" \
-    "$COMMON_DIR/repo/templates/KlipperScreen.conf" "$CONFIG_DIR/KlipperScreen.conf" "$BACKUP_DIR/KlipperScreen.conf"
+    "$REPO_DIR/KlipperScreen.conf" "$CONFIG_DIR/KlipperScreen.conf" "$BACKUP_DIR/KlipperScreen.conf"
+fi
 echo "  -> 복사 완료"
-
-# 6. moonraker.conf 업데이트
-echo "[6/6] moonraker.conf 업데이트 중..."
-BRANCH_VAR="$BRANCH"
-python3 - << PYEOF
-import re, os
-branch = os.environ.get('BRANCH_VAR', '$BRANCH_VAR')
-path = os.path.expanduser("~/printer_data/config/moonraker.conf")
-original = open(path).read()
-content = re.sub(r'\[update_manager lugoware_config\][\s\S]*?(?=\[|\Z)', '', original).rstrip()
-content += f"""
-
-[update_manager lugoware_config]
-type: git_repo
-path: ~/lugoware_config
-origin: https://github.com/LUGOWARE/lugoware_printer_cfg_update.git
-primary_branch: {branch}
-is_system_service: False
-managed_services: klipper
-"""
-if content != original:
-    open(path, 'w').write(content)
-    print(f"  -> moonraker.conf 업데이트 완료 (브랜치: {branch})")
-else:
-    print('  [건너뜀] moonraker.conf: 동일한 설정')
-PYEOF
 
 # 공통 다국어 패널 설치 (기존 파일 백업 후 덮어쓰기)
 echo "KlipperScreen 다국어 패널 설치 / Installing multilingual panels"
@@ -225,6 +193,8 @@ echo "패널 백업 / Panel backup: $BACKUP_DIR/panels"
 
 python3 "$COMMON_DIR/repo/maintenance/wait_ready.py" --ready-only
 python3 "$COMMON_DIR/repo/maintenance/verify_multi_pin.py" "$HOME/klipper"
+
+python3 "$COMMON_DIR/repo/maintenance/install_update_channels.py" "$BRANCH"
 
 # Hide managed components only after all installation checks succeeded.
 echo 'Klipper / KlipperScreen / mainsail-config / Moonraker 업데이트 항목 주석 처리 중...'
@@ -260,6 +230,6 @@ echo "============================================"
 echo "  설치 완료! 모델: $MODEL / 화면 언어: 기존 설정 유지"
 echo "============================================"
 echo ""
-echo "  이후 업데이트: Mainsail > 업데이트 매니저 > lugoware_config 업데이트 버튼"
+echo "  이후 업데이트: Mainsail > 업데이트 매니저 > lugoware_system(시스템) / lugoware_config(설정) 업데이트 버튼"
 echo ""
 echo "모든 적용 및 검증이 완료되었습니다. 프린터 전체 재부팅은 하지 않습니다."

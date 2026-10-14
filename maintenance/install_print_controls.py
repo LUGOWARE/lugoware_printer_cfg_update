@@ -73,8 +73,9 @@ def config_patch(text):
 
 
 def install(config, screen, klipper, backup, config_only=False):
-    changes = {config/'printer_base.cfg': macros((config/'printer_base.cfg').read_text(encoding='utf-8')),
-               config/'printer.cfg': config_patch((config/'printer.cfg').read_text(encoding='utf-8'))}
+    changes = {config/'printer.cfg': config_patch((config/'printer.cfg').read_text(encoding='utf-8'))}
+    if os.environ.get('LUGOWARE_SYSTEM_ONLY') != '1':
+        changes[config/'printer_base.cfg'] = macros((config/'printer_base.cfg').read_text(encoding='utf-8'))
     if not config_only:
         probe = (klipper/'klippy/extras/probe.py').read_text(encoding='utf-8')
         mesh = (klipper/'klippy/extras/bed_mesh.py').read_text(encoding='utf-8')
@@ -87,6 +88,9 @@ def install(config, screen, klipper, backup, config_only=False):
                         screen/'panels/job_status.py': job_status(panel_patch((screen/'panels/job_status.py').read_text(encoding='utf-8'))),
                         screen/'ks_includes/notification_handler.py': notification((screen/'ks_includes/notification_handler.py').read_text(encoding='utf-8')),
                         klipper/'klippy/extras/fast_cancel.py': Path(__file__).with_name('fast_cancel.py').read_text(encoding='utf-8')})
+    if os.environ.get('LUGOWARE_SYSTEM_ONLY') == '1':
+        changes.pop(config / 'printer_base.cfg', None)
+        changes.pop(config / 'KlipperScreen.conf', None)
     for path, text in changes.items():
         if path.suffix == '.py':
             compile(text, str(path), 'exec')

@@ -49,6 +49,9 @@ def install(config, screen, klipper, backup, config_only=False):
             content = '[lugo_tool_temperature]\n\n' + content
         changes.update({klipper / 'klippy/extras/lugo_tool_temperature.py': source, job: updated, cfg: content})
     # Validate all inputs before the first mutation; retain previous versions.
+    if os.environ.get('LUGOWARE_SYSTEM_ONLY') == '1':
+        changes.pop(config / 'printer_base.cfg', None)
+        changes.pop(config / 'KlipperScreen.conf', None)
     for path, text in changes.items():
         if path.exists() and path.read_text(encoding='utf-8') == text:
             continue
