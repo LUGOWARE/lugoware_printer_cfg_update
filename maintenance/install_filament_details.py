@@ -34,6 +34,11 @@ def patch(source):
 
 
 def fit_preview(source):
+    # Preserve the existing translated key, removing only its leading blank line.
+    source = source.replace('                    fileinfo_text\n'
+                            '                    + _("\\nLast Duration")',
+                            '                    fileinfo_text.rstrip() + "\\n"\n'
+                            '                    + _("\\nLast Duration").strip()')
     # File lists show date/size via get_info_str; only append the estimate here.
     list_start = source.index('    def get_file_info(self, path):')
     list_end = source.index('    def get_file_info_extended(', list_start)
@@ -74,6 +79,16 @@ def fit_preview(source):
     image_anchor = '        inside_box.pack_start(image_button, True, True, 0)\n'
     if '        inside_box.reorder_child(image_button, 0)' not in source:
         source = source.replace(image_anchor, image_anchor + '        inside_box.reorder_child(image_button, 0)\n')
+    # History arrives after the dialog is laid out. Reserve one text row up front,
+    # borrowing the same height from the thumbnail rather than extending the dialog.
+    history_anchor = '            info_height = min(natural_height + 8, int(height * 11 / 9))'
+    history_new = ('            history_space = int(self._gtk.font_size * 1.6) if fileinfo_data.get("job_id") else 0\n'
+                   '            info_height = min(natural_height + 8, int(height * 11 / 9)) + history_space\n'
+                   '            height = max(self._gtk.font_size * 4, height - history_space)')
+    if '            history_space = ' not in source:
+        if history_anchor not in source:
+            raise ValueError('Unsupported metadata height calculation')
+        source = source.replace(history_anchor, history_new, 1)
     compile(source, 'gcodes.py', 'exec')
     return source
 
