@@ -21,7 +21,7 @@ class Panel(ScreenPanel):
         super().__init__(screen, title or _('Extrude'))
         self.diameter = 1.75
         self.flows = {1.75: 10, 2.85: 5}
-        self.distance = 15
+        self.distance = 10
         self.busy = False
         self.actions = []
         self.diameter_buttons = {}
@@ -148,7 +148,7 @@ class Panel(ScreenPanel):
         # A fresh visit always starts with the requested defaults.
         self.diameter = 1.75
         self.flows = {1.75: 10, 2.85: 5}
-        self.distance = 15
+        self.distance = 10
         self.render()
         self.update_state()
 
