@@ -11,7 +11,9 @@ def job_status(text):
     old = '                self.labels["lcdmessage"].set_label(f"{data[\'display_status\'][\'message\']}")'
     new = ('                from ks_includes.lugo_i18n import translate_text\n'
            '                self.labels["lcdmessage"].set_label(translate_text(str(data["display_status"]["message"])))')
-    text = once(text, old, new)
+    progress_line = '                self.labels["lcdmessage"].set_label(_lugo_print_message(str(data["display_status"]["message"]), self.state, self.progress, translate_text))'
+    if progress_line not in text:
+        text = once(text, old, new)
     for name in ('pause', 'resume'):
         anchor = f'            self.enable_button("{name}", "cancel")\n'
         # Only alter the state-display method, not a cancel-dialog callback.
@@ -22,6 +24,11 @@ def job_status(text):
         if code not in block:
             block = once(block, anchor, anchor + code)
         text = before + block
+    original = '                self.labels["lcdmessage"].set_label(translate_text(str(data["display_status"]["message"])))'
+    text = once(text, original, progress_line)
+    text = once(text, '        if self.state == "printing":\n            self.buttons["button_grid"].attach(self.buttons["pause"], 0, 0, 1, 1)', '        if self.state == "printing":\n            # A cancelled job\'s detached button can retain its disabled rendering.\n            old_pause = self.buttons["pause"]\n            self.buttons["pause"] = self._gtk.Button("pause", _("Pause"), "color1")\n            self.buttons["pause"].connect("clicked", self.pause)\n            old_pause.destroy()\n            self.buttons["button_grid"].attach(self.buttons["pause"], 0, 0, 1, 1)')
+    if 'def _lugo_print_message(' not in text:
+        text += PRINT_MESSAGE_HELPER
     return text
 
 
@@ -49,3 +56,13 @@ def popup(text):
     return once(text, anchor, anchor + marker +
                 '        if str(message).strip() == "FAST_CANCEL_DOCK_FAILED_PAUSED":\n'
                 '            message = "Tool-head is not in position."\n')
+
+
+PRINT_MESSAGE_HELPER = '\ndef _lugo_print_message(message, state, progress, translate):\n    """Keep explicit heating/mesh/error text; qualify M73 percentage messages."""\n    import re\n    value = message.strip()\n    if state == "printing":\n        if re.fullmatch(r"\\d{1,3}%", value):\n            return translate("PRINTING...") + " " + value\n        if value == "PRINTING...":\n            percent = max(0, min(100, int(progress * 100)))\n            return translate(value) + f" {percent}%"\n    return translate(message)\n'
+
+
+def temperature(text):
+    """Avoid portrait grid expansion caused by full-size +/- images."""
+    text = once(text, 'self._gtk.Button("increase", None, "color1")', 'self._gtk.Button("increase", None, "color1", self.bts if self._screen.vertical_mode else None)')
+    text = once(text, 'self._gtk.Button("decrease", None, "color3")', 'self._gtk.Button("decrease", None, "color3", self.bts if self._screen.vertical_mode else None)')
+    return text

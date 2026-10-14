@@ -5,7 +5,7 @@ from pathlib import Path
 import re
 import shutil
 from patch_print_controls import macros
-from final_print_ui import job_status, notification, popup
+from final_print_ui import job_status, notification, popup, temperature
 
 
 def replace_once(text, old, new):
@@ -84,6 +84,7 @@ def install(config, screen, klipper, backup, config_only=False):
                 raise ValueError('Unsupported probe API: ' + needle)
         if 'self.probe_mgr = ProbeManager(' not in mesh:
             raise ValueError('Unsupported bed mesh API')
+        changes[screen/'panels/temperature.py'] = temperature((screen/'panels/temperature.py').read_text(encoding='utf-8'))
         changes.update({screen/'screen.py': popup(screen_patch((screen/'screen.py').read_text(encoding='utf-8'))),
                         screen/'panels/job_status.py': job_status(panel_patch((screen/'panels/job_status.py').read_text(encoding='utf-8'))),
                         screen/'ks_includes/notification_handler.py': notification((screen/'ks_includes/notification_handler.py').read_text(encoding='utf-8')),
