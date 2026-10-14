@@ -287,7 +287,7 @@ class Panel(ScreenPanel):
         if diameter not in (1.75, 2.85):
             raise ValueError("Unsupported filament diameter")
         ratio = (1.75 / diameter) ** 2
-        return 10 * ratio, 5 * ratio
+        return 10 * ratio, 8 / (math.pi * (diameter / 2) ** 2)
 
     @staticmethod
     def action_warning(status, action, tool, allow_cross=False):
