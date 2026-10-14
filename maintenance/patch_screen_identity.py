@@ -78,6 +78,12 @@ VERSION_METHOD = r'''    def update_time(self):
 
 
 def patch_version(source):
+    # Repair previously installed local imports that shadow the title's Pango.
+    source = source.replace('        from gi.repository import Pango\n',
+                            '        from gi.repository import Pango as VersionPango\n')
+    source = source.replace('version_style = Pango.AttrList()', 'version_style = VersionPango.AttrList()')
+    source = source.replace('version_style.insert(Pango.attr_scale_new(0.8))',
+                            'version_style.insert(VersionPango.attr_scale_new(0.8))')
     tree = ast.parse(source)
     cls = next(n for n in tree.body if isinstance(n, ast.ClassDef) and n.name in ('Panel', 'BasePanel'))
     method = next(n for n in cls.body if isinstance(n, ast.FunctionDef) and n.name == 'update_time')
@@ -94,10 +100,10 @@ def patch_version(source):
         lines = source.splitlines(keepends=True)
         lines[node.lineno-1:node.end_lineno] = [
             '        # LUGOWARE version label style\n'
-            '        from gi.repository import Pango\n'
+            '        from gi.repository import Pango as VersionPango\n'
             '        self.control["time"] = Gtk.Label(label="V—")\n'
-            '        version_style = Pango.AttrList()\n'
-            '        version_style.insert(Pango.attr_scale_new(0.8))\n'
+            '        version_style = VersionPango.AttrList()\n'
+            '        version_style.insert(VersionPango.attr_scale_new(0.8))\n'
             '        self.control["time"].set_attributes(version_style)\n']
         source = ''.join(lines)
     compile(source, 'base_panel.py', 'exec')

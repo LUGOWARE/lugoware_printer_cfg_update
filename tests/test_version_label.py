@@ -25,6 +25,22 @@ class VersionTests(unittest.TestCase):
         self.assertIn('return 42', result)
         self.assertIn('attr_scale_new(0.8)', result)
 
+    def test_existing_pango_title_is_not_shadowed(self):
+        import symtable
+        for old_style in ('', '        # LUGOWARE version label style\n        from gi.repository import Pango\n'):
+            source = ('class BasePanel:\n'
+                      '    def __init__(self):\n'
+                      '        self.title = Pango.EllipsizeMode.END\n'
+                      + old_style +
+                      '        self.control["time"] = Gtk.Label(label="V—")\n'
+                      '    def update_time(self):\n'
+                      '        return True\n')
+            result = patch_version(source)
+            table = symtable.symtable(result, 'base_panel.py', 'exec')
+            init = table.get_children()[0].get_children()[0]
+            self.assertTrue(init.lookup('Pango').is_global())
+            self.assertEqual(patch_version(result), result)
+
     def test_refresh_formats_and_missing_file(self):
         ns = {}
         exec(textwrap.dedent(VERSION_METHOD), ns)
