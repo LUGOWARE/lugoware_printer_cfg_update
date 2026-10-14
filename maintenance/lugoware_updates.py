@@ -1,6 +1,8 @@
-"""Publish durable updater results as Mainsail announcements, including after restart."""
+"""Report real installation progress, not just Git download completion."""
 import json
 from pathlib import Path
+import re
+import time
 
 
 class UpdateStatus:
@@ -8,27 +10,136 @@ class UpdateStatus:
         self.server = config.get_server()
         self.announcements = self.server.load_component(config, 'announcements')
         self.folder = Path.home() / '.local/share/lugoware'
+        self.folder.mkdir(parents=True, exist_ok=True)
+        self.requests = {}
         self.timer = self.server.get_event_loop().register_timer(self.poll)
 
     async def component_init(self):
+        manager = self.server.lookup_component('update_manager', None)
+        if manager is not None:
+            helper = manager.cmd_helper
+            original = helper.notify_update_response
+
+            def notify(resp, is_complete=False):
+                message = resp.decode() if isinstance(resp, bytes) else resp
+                app = helper.cur_update_app
+                proc = helper.cur_update_id
+                channel = app.removeprefix('lugoware_') if app else ''
+                match = re.search(r'Git Repo lugoware_(config|system):', message)
+                if app == 'full' and match:
+                    channel = match.group(1)
+                if channel in ('config', 'system'):
+                    key = (proc, channel)
+                    started = self.requests.setdefault(key, time.time())
+                    # Git success only queues installation. Keep the update dialog open.
+                    if is_complete and ('Update Finished' in message or 'Reinstall Complete' in message):
+                        self.queue_ui(app, proc, channel, started)
+                        original('lugoware_' + channel + ': 다운로드 완료 — 실제 설치 진행 중입니다. 완료 알림을 기다려 주세요.', False)
+                        return
+                if app == 'full' and is_complete and 'Full Update Complete' in message and self.ui_pending(proc):
+                    original('다운로드 완료 — LUGOWARE 실제 설치 및 검증을 기다리는 중입니다.', False)
+                    return
+                original(resp, is_complete)
+
+            helper.notify_update_response = notify
         self.timer.start()
 
+    def ui_pending(self, proc):
+        try:
+            data = json.loads((self.folder / 'ui-install.json').read_text())
+            return data['proc_id'] == proc and not data.get('done')
+        except (OSError, ValueError, KeyError):
+            return False
+
+    def queue_ui(self, app, proc, channel, started):
+        path = self.folder / 'ui-install.json'
+        try:
+            data = json.loads(path.read_text())
+        except (OSError, ValueError):
+            data = {}
+        if data.get('proc_id') != proc or data.get('done'):
+            data = dict(application=app, proc_id=proc, channels={}, done=False)
+        data['channels'][channel] = started
+        path.write_text(json.dumps(data))
+
+    def stage(self, channel, data):
+        if data['state'] != 'running':
+            return data['detail']
+        path = Path.home() / 'printer_data/logs' / ('lugoware_' + channel + '.log')
+        try:
+            with path.open('rb') as stream:
+                stream.seek(max(0, path.stat().st_size - 32768))
+                text = stream.read().decode('utf-8', errors='replace')
+            text = text.rsplit('queued:', 1)[-1]
+            lines = [line.strip() for line in text.splitlines() if line.startswith(('[', 'Applying latest', 'System and model'))]
+            return lines[-1] if lines else data['detail']
+        except OSError:
+            return data['detail']
+
+    def update_dialog(self, states):
+        path = self.folder / 'ui-install.json'
+        try:
+            ui = json.loads(path.read_text())
+            if ui.get('done'):
+                return
+            manager = self.server.lookup_component('update_manager', None)
+            if ui['application'] == 'full' and manager is not None and manager.cmd_helper.is_update_busy():
+                return
+            current = []
+            for channel, started in ui['channels'].items():
+                data = states.get(channel)
+                # Never treat a prior installation's success as this run's result.
+                if not data or int(data['run_id']) / 1e9 < started:
+                    return
+                current.append((channel, data))
+            failed = any(d['state'] == 'failed' for _, d in current)
+            done = failed or all(d['state'] == 'complete' for _, d in current)
+            message = '\n'.join('lugoware_' + c + ': ' + self.describe(c, d) for c, d in current)
+            if message == ui.get('message') and done == ui.get('done'):
+                return
+            self.server.send_event('update_manager:update_response', dict(
+                message=message, application=ui['application'], proc_id=ui['proc_id'], complete=done))
+            ui.update(message=message, done=done)
+            path.write_text(json.dumps(ui))
+        except (OSError, ValueError, KeyError):
+            pass
+
+    def describe(self, channel, data):
+        labels = {'queued': '설치 대기 중', 'running': '설치 진행 중',
+                  'complete': '업데이트 완료 — 실제 설치 및 검증 완료', 'failed': '설치 실패 — 업데이트 미완료'}
+        return labels.get(data['state'], data['state']) + '\n' + self.stage(channel, data)
+
+    async def remove_previous(self, entry_id):
+        try:
+            await self.announcements.remove_announcement(entry_id)
+        except Exception:
+            pass
+
     def poll(self, eventtime):
+        states = {}
         for channel in ('config', 'system'):
             path = self.folder / (channel + '-status.json')
             seen = self.folder / (channel + '-announced.txt')
+            entry_path = self.folder / (channel + '-announcement-id.txt')
             try:
                 data = json.loads(path.read_text())
-                key = data['run_id'] + ':' + data['state']
+                states[channel] = data
+                description = self.describe(channel, data)
+                key = data['run_id'] + ':' + description
                 if seen.exists() and seen.read_text() == key:
                     continue
-                self.announcements.add_internal_announcement(
-                    'lugoware_' + channel + ': ' + data['state'],
-                    data['detail'] + '\nLog: ' + data['log'], '',
+                entry = self.announcements.add_internal_announcement(
+                    'lugoware_' + channel + ': ' + description.split('\n')[0],
+                    description + '\n상세 로그: ' + data['log'], '',
                     'high' if data['state'] == 'failed' else 'normal', 'lugoware_' + channel)
+                if isinstance(entry, dict) and 'entry_id' in entry:
+                    if entry_path.exists():
+                        self.server.get_event_loop().create_task(self.remove_previous(entry_path.read_text()))
+                    entry_path.write_text(entry['entry_id'])
                 seen.write_text(key)
             except (OSError, ValueError, KeyError):
                 pass
+        self.update_dialog(states)
         return eventtime + 2.
 
 
