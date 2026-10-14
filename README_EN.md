@@ -132,3 +132,9 @@ In Mainsail, open `printer_base.cfg` and change `dir_pin: PB1` to `dir_pin: !PB1
 Please contact LUGOWARE customer support.
 
 The extrusion panel uses MVS (mm³/s). Defaults are 10 for 1.75 mm filament, 5 for 2.85 mm filament, and 15 mm of actual filament travel. These values reset when you enter the menu. The arrows adjust values in increments of 1. A check mark identifies the selected diameter, and the Extrude and Retract buttons are at the bottom. The previous distance and speed presets are not used.
+
+## Version display
+
+The top-right corner shows the version from the `printer_base.cfg` header instead of the clock. For example, `# FLEX4_M_V2.128-1` displays `V2.128`, while `# FLEX4_M_V2.18.2` displays `V2.18.2`. File changes are checked about once per second. An unreadable or missing version displays `V—`. Suffixes such as `-1` and `-beta.1` are omitted on screen.
+
+Future releases use `major.minor.patch`: major for substantial hardware-support or configuration-compatibility changes, minor for screen or motion feature changes, and patch for bug fixes and small text or layout adjustments. Existing version numbers are not automatically converted. Board and model identifiers remain separate.
