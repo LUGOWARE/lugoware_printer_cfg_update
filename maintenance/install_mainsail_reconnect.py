@@ -4,7 +4,7 @@ import re
 from pathlib import Path
 import shutil
 
-TAG = '<script defer src="./lugoware-reconnect.js?v=2"></script>'
+TAG = '<script defer src="./lugoware-reconnect.js?v=3"></script>'
 
 
 def patch(source):

@@ -12,7 +12,7 @@
         if (dialog.querySelector('.red--text') || dialog.querySelector('a[href*="connection-"]')) return;
         const button = dialog.querySelector('button.primary--text');
         if (!button || button.disabled || !button.getClientRects().length) return;
-        nextAttempt = Date.now() + 10000;
+        nextAttempt = Date.now() + 5000;
         button.click();
-    }, 2000);
+    }, 1000);
 })();

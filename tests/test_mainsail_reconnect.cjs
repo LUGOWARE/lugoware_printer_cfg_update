@@ -18,13 +18,14 @@ const source=fs.readFileSync(path.join(__dirname,'../maintenance/mainsail_reconn
 vm.runInNewContext(source,context);
 tick(); assert.equal(calls,0);
 connected=false; tick(); assert.equal(calls,1);
-connecting=false; tick(); assert.equal(calls,1);
-now+=11000; authError=true; tick(); assert.equal(calls,1);
+connecting=false; now+=4999; tick(); assert.equal(calls,1);
+now-=4999;
+now+=5000; authError=true; tick(); assert.equal(calls,1);
 authError=false; context.navigator.onLine=false; tick(); assert.equal(calls,1);
 context.navigator.onLine=true; connecting=true; tick(); assert.equal(calls,1);
 connecting=false; button.disabled=true; tick(); assert.equal(calls,1);
 button.disabled=false; visible=false; tick(); assert.equal(calls,1);
 visible=true; tick(); assert.equal(calls,2);
 // Restarted pages already showing connection failure also recover, without Vue or a prior connection.
-now+=11000; connecting=false; tick(); assert.equal(calls,3);
+now+=5000; connecting=false; tick(); assert.equal(calls,3);
 console.log('PASS DOM reconnect without Vue, initial failure, throttle, auth, offline, hidden, disabled and in-flight guards');
