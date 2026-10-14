@@ -3,6 +3,7 @@ import json
 from pathlib import Path
 import sys
 import tempfile
+import time
 from types import SimpleNamespace
 import unittest
 from unittest.mock import Mock
@@ -10,6 +11,39 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'maintenance'))
 from lugoware_updates import UpdateStatus
 
 class ProgressTests(unittest.TestCase):
+    def test_reconnecting_web_client_receives_missed_completion(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            obj = self.instance(Path(tmp))
+            now = time.time()
+            obj.queue_ui('lugoware_system', 42, 'system', now - 10)
+            state = dict(run_id=str(int((now - 5) * 1e9)), state='complete', detail='abc', time=now)
+            (obj.folder / 'system-status.json').write_text(json.dumps(state))
+            obj.update_dialog({'system': state})
+            connection = SimpleNamespace(is_closed=False, call_method=Mock())
+            obj.replay_completion(connection)
+            name, payload = connection.call_method.call_args.args
+            self.assertEqual(name, 'notify_update_response')
+            self.assertTrue(payload[0]['complete'])
+            self.assertEqual(payload[0]['proc_id'], 42)
+            connection.call_method.reset_mock()
+            state['time'] = now - 1000
+            (obj.folder / 'system-status.json').write_text(json.dumps(state))
+            obj.replay_completion(connection)
+            connection.call_method.assert_not_called()
+
+    def test_does_not_replay_prior_result_over_new_install(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            obj = self.instance(Path(tmp))
+            now = time.time()
+            obj.queue_ui('lugoware_system', 42, 'system', now - 10)
+            state = dict(run_id=str(int((now - 5) * 1e9)), state='complete', detail='abc', time=now)
+            obj.update_dialog({'system': state})
+            state['run_id'] = str(int(now * 1e9))
+            (obj.folder / 'system-status.json').write_text(json.dumps(state))
+            connection = SimpleNamespace(is_closed=False, call_method=Mock())
+            obj.replay_completion(connection)
+            connection.call_method.assert_not_called()
+
     def instance(self, folder):
         obj = UpdateStatus.__new__(UpdateStatus)
         obj.folder = folder

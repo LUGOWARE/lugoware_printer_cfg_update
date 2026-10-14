@@ -13,6 +13,39 @@ class UpdateStatus:
         self.folder.mkdir(parents=True, exist_ok=True)
         self.requests = {}
         self.timer = self.server.get_event_loop().register_timer(self.poll)
+        self.server.register_event_handler('websockets:client_identified', self.client_identified)
+
+    def client_identified(self, connection):
+        # Moonraker may finish while the browser is still reconnecting.
+        if connection.client_data.get('type') == 'web':
+            self.server.get_event_loop().delay_callback(1., self.replay_completion, connection)
+
+    def replay_completion(self, connection):
+        if connection.is_closed:
+            return
+        try:
+            ui = json.loads((self.folder / 'ui-install.json').read_text())
+            if not ui.get('done') or not ui.get('message'):
+                return
+            manager = self.server.lookup_component('update_manager', None)
+            if manager is not None and manager.cmd_helper.is_update_busy():
+                return
+            for channel, started in ui['channels'].items():
+                if channel not in ('config', 'system'):
+                    return
+                state = json.loads((self.folder / (channel + '-status.json')).read_text())
+                if state['state'] not in ('complete', 'failed') or int(state['run_id']) / 1e9 < started:
+                    return
+                if state['run_id'] != ui.get('runs', {}).get(channel, state['run_id']):
+                    return
+                # Do not reopen dialogs for historical installations on a later visit.
+                if not 0 <= time.time() - state['time'] <= 900:
+                    return
+            connection.call_method('notify_update_response', [dict(
+                message=ui['message'], application=ui['application'],
+                proc_id=ui['proc_id'], complete=True)])
+        except (OSError, ValueError, KeyError, TypeError):
+            pass
 
     async def component_init(self):
         manager = self.server.lookup_component('update_manager', None)
@@ -99,7 +132,7 @@ class UpdateStatus:
                 return
             self.server.send_event('update_manager:update_response', dict(
                 message=message, application=ui['application'], proc_id=ui['proc_id'], complete=done))
-            ui.update(message=message, done=done)
+            ui.update(message=message, done=done, runs={c: d['run_id'] for c, d in current})
             path.write_text(json.dumps(ui))
         except (OSError, ValueError, KeyError):
             pass
