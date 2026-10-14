@@ -45,6 +45,8 @@ def upgrade(folder, backup):
         run('sudo', 'systemctl', 'restart', 'moonraker')
         wait_server()
         return
+    if os.environ.get('LUGOWARE_SYSTEM_ONLY') == '1':
+        raise RuntimeError('Moonraker service/dependency migration requires the SSH installer; no arbitrary root installer is permitted')
     backup.mkdir(parents=True, exist_ok=True)
     if old:
         changes = output('git', '-C', str(folder), 'diff', 'HEAD', '--name-only').splitlines()

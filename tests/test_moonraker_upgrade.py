@@ -50,13 +50,13 @@ class MoonrakerUpgradeTests(unittest.TestCase):
 
     def test_install_order_and_no_legacy_patch_preflight(self):
         text = (Path(__file__).resolve().parents[1] / 'install.sh').read_text(encoding='utf-8')
-        stages = ['python3 -u "$COMMON_DIR/repo/maintenance/' + name for name in
+        stages = ['python3 -u "$COMMON_REPO/maintenance/' + name for name in
                   ('upgrade_klipper.py', 'upgrade_klipperscreen.py', 'upgrade_moonraker.py', 'update_components.py')]
         positions = [text.index(stage) for stage in stages]
         self.assertEqual(positions, sorted(positions))
         self.assertGreater(text.index('maintenance/hide_klipper_updater.py'), positions[2])
-        self.assertGreater(text.index('bash "$COMMON_DIR/repo/maintenance/apply.sh"'), positions[-1])
-        self.assertEqual(text.count('python3 -u "$COMMON_DIR/repo/maintenance/update_components.py"'), 1)
+        self.assertGreater(text.index('bash "$COMMON_REPO/maintenance/apply.sh"'), positions[-1])
+        self.assertEqual(text.count('python3 -u "$COMMON_REPO/maintenance/update_components.py"'), 1)
 
 
 if __name__ == '__main__':

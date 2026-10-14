@@ -128,7 +128,13 @@ def run(channel):
                 backup = home / 'lugoware_backups' / (channel + '-' + run_id)
                 backup.mkdir(parents=True)
                 snapshot = backup / 'source'
-                shutil.copytree(repo, snapshot, ignore=shutil.ignore_patterns('.git', '__pycache__'))
+                if channel == 'system':
+                    snapshot = Path(subprocess.check_output(
+                        ['sudo', '--lugoware-prepare', commit], text=True).strip())
+                    if snapshot != Path('/var/lib/lugoware-updates') / commit:
+                        raise RuntimeError('Unexpected trusted release path')
+                else:
+                    shutil.copytree(repo, snapshot, ignore=shutil.ignore_patterns('.git', '__pycache__'))
                 status('running', commit + '; backup: ' + str(backup))
                 if channel == 'config':
                     apply_config(snapshot, home, backup)

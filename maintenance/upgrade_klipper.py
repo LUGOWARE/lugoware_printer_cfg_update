@@ -41,6 +41,8 @@ def upgrade(folder, backup, check=False):
     if not update_host and not pending.exists():
         print('[건너뜀] Klipper 본체: ' + version, flush=True)
         return
+    if os.environ.get('LUGOWARE_SYSTEM_ONLY') == '1':
+        raise RuntimeError('Base Klipper/Linux MCU migration requires the SSH installer; unattended permission is intentionally limited')
     changes = output('git', '-C', str(folder), 'diff', 'HEAD', '--name-only').splitlines()
     if set(changes) - {'klippy/extras/multi_pin.py'}:
         raise RuntimeError('Unrecognized local Klipper edits; preserved: ' + ', '.join(changes))

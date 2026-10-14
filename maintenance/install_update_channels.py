@@ -48,8 +48,9 @@ Type=simple
 User={user}
 Environment=HOME={home}
 Environment=PYTHONUNBUFFERED=1
+Environment=PATH=/opt/lugoware/update-runtime/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 WorkingDirectory={home}
-ExecStart=/usr/bin/python3 {home}/.local/share/lugoware/channel_worker.py {channel}
+ExecStart=/usr/bin/python3 -I /opt/lugoware/update-runtime/run_worker.py {channel}
 Restart=no
 TimeoutStopSec=30
 '''
@@ -61,10 +62,12 @@ def install(branch):
     user = pwd.getpwuid(os.getuid()).pw_name
     if not re.fullmatch(r'[a-z_][a-z0-9_-]*', user) or str(home) != '/home/' + user:
         raise ValueError('Expected a standard /home/user installation')
-    # Background installers cannot use an interactive sudo password prompt.
-    # Verify existing privileges, never grant broad new sudo access.
-    subprocess.run(['sudo', '-n', '-k', 'true'], check=True)
     source = Path(__file__).resolve().parent
+    unattended = os.environ.get('LUGOWARE_SYSTEM_ONLY') == '1'
+    if unattended:
+        subprocess.run(['sudo', '--lugoware-refresh-worker'], check=True)
+    else:
+        subprocess.run(['sudo', 'python3', str(source / 'install_update_privileges.py'), user], check=True)
     cache = home / '.local/share/lugoware'
     cache.mkdir(parents=True, exist_ok=True)
     backup = Path(os.environ['BACKUP_DIR']) / 'update-channels'
@@ -89,13 +92,14 @@ def install(branch):
     # Copy dependencies as well so future jobs use the last successfully installed code.
     for path in source.glob('*.py'):
         shutil.copy2(path, cache / path.name)
-    for channel in ('config', 'system'):
-        for name, content in service_units(user, home, channel).items():
-            temporary = backup / name
-            temporary.write_text(content)
-            subprocess.run(['sudo', '-n', 'install', '-m', '644', str(temporary),
-                            '/etc/systemd/system/' + name], check=True)
-    subprocess.run(['sudo', '-n', 'systemctl', 'daemon-reload'], check=True)
+    if not unattended:
+        for channel in ('config', 'system'):
+            for name, content in service_units(user, home, channel).items():
+                temporary = backup / name
+                temporary.write_text(content)
+                subprocess.run(['sudo', 'install', '-m', '644', str(temporary),
+                                '/etc/systemd/system/' + name], check=True)
+        subprocess.run(['sudo', 'systemctl', 'daemon-reload'], check=True)
     allow = home / 'printer_data/moonraker.asvc'
     old = allow.read_text()
     shutil.copy2(allow, backup / allow.name)

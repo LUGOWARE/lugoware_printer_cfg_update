@@ -56,44 +56,41 @@ echo "화면 언어는 KlipperScreen에서 마지막으로 선택한 설정을 �
 
 # 공통 기능은 모델 브랜치와 별도로 main에서 같은 커밋으로 가져옵니다.
 COMMON_DIR=$(mktemp -d)
+COMMON_REPO="$COMMON_DIR/repo"
 trap 'rm -rf -- "$COMMON_DIR"' EXIT
 if (( SYSTEM_ONLY )); then
     # Use exactly the snapshot queued by the Mainsail worker, not moving main.
-    cp -a "$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)" "$COMMON_DIR/repo"
+    COMMON_REPO="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 else
-    git clone --depth 1 --branch main "$REPO_URL" "$COMMON_DIR/repo"
+    git clone --depth 1 --branch main "$REPO_URL" "$COMMON_REPO"
 fi
 export BACKUP_DIR="$HOME/lugoware_backups/$(date +%Y%m%d-%H%M%S)-$$"
 mkdir -m 700 -p "$BACKUP_DIR"
 MOONRAKER_UPDATER="${MOONRAKER_DIR:-$HOME/moonraker}/moonraker/components/update_manager/update_manager.py"
 PANEL_DIR="${KLIPPERSCREEN_DIR:-$HOME/KlipperScreen}/panels"
-python3 "$COMMON_DIR/repo/maintenance/install_panels.py" --target "$PANEL_DIR" --backup "$BACKUP_DIR/panels" --check
+python3 "$COMMON_REPO/maintenance/install_panels.py" --target "$PANEL_DIR" --backup "$BACKUP_DIR/panels" --check
 sudo -v
-if ! sudo -n -k true; then
-    echo 'Mainsail 시스템 업데이트에는 기존 비밀번호 없는 sudo 권한이 필요합니다. 권한을 자동 확대하지 않고 중단합니다.' >&2
-    exit 1
-fi
 echo "설치 환경을 확인하고 있습니다..."
-python3 "$COMMON_DIR/repo/maintenance/upgrade_klipperscreen.py" --check
+python3 "$COMMON_REPO/maintenance/upgrade_klipperscreen.py" --check
 echo '[확인] 이전 설치에서 중단된 Moonraker 복구'
-python3 "$COMMON_DIR/repo/maintenance/upgrade_moonraker.py" --recover-only 2>&1 | tee -a "$BACKUP_DIR/install.log"
-python3 "$COMMON_DIR/repo/maintenance/check_idle.py"
+python3 "$COMMON_REPO/maintenance/upgrade_moonraker.py" --recover-only 2>&1 | tee -a "$BACKUP_DIR/install.log"
+python3 "$COMMON_REPO/maintenance/check_idle.py"
 cp -a "$CONFIG_DIR" "$BACKUP_DIR/config"
 
 echo '[업데이트 1/6] Klipper 버전 확인 및 업데이트'
-python3 -u "$COMMON_DIR/repo/maintenance/upgrade_klipper.py" 2>&1 | tee -a "$BACKUP_DIR/install.log"
+python3 -u "$COMMON_REPO/maintenance/upgrade_klipper.py" 2>&1 | tee -a "$BACKUP_DIR/install.log"
 echo '[업데이트 2/6] KlipperScreen 버전 확인 및 업데이트'
-python3 -u "$COMMON_DIR/repo/maintenance/upgrade_klipperscreen.py" 2>&1 | tee -a "$BACKUP_DIR/install.log"
-python3 "$COMMON_DIR/repo/maintenance/install_i18n.py" --check
+python3 -u "$COMMON_REPO/maintenance/upgrade_klipperscreen.py" 2>&1 | tee -a "$BACKUP_DIR/install.log"
+python3 "$COMMON_REPO/maintenance/install_i18n.py" --check
 # Comment configuration now; the built-in Klipper patch needs Moonraker >= 0.11.
-python3 "$COMMON_DIR/repo/maintenance/disable_screen_updates.py" \
+python3 "$COMMON_REPO/maintenance/disable_screen_updates.py" \
     "$CONFIG_DIR/moonraker.conf" "$BACKUP_DIR/moonraker-update-sections" --installed-components
 echo '[업데이트 3/6] Moonraker 최소 v0.11.0-0 확인 및 업데이트'
-python3 -u "$COMMON_DIR/repo/maintenance/upgrade_moonraker.py" 2>&1 | tee -a "$BACKUP_DIR/install.log"
-python3 "$COMMON_DIR/repo/maintenance/hide_klipper_updater.py" \
+python3 -u "$COMMON_REPO/maintenance/upgrade_moonraker.py" 2>&1 | tee -a "$BACKUP_DIR/install.log"
+python3 "$COMMON_REPO/maintenance/hide_klipper_updater.py" \
     "$MOONRAKER_UPDATER" "$BACKUP_DIR/update_manager.py"
 echo '[확인] sonar 서비스 재시작 권한'
-python3 "$COMMON_DIR/repo/maintenance/allow_sonar_service.py" 2>&1 | tee -a "$BACKUP_DIR/install.log"
+python3 "$COMMON_REPO/maintenance/allow_sonar_service.py" 2>&1 | tee -a "$BACKUP_DIR/install.log"
 sudo systemctl restart moonraker
 sudo systemctl start klipper
 # Klipper may report a firmware mismatch until the later firmware patch stage.
@@ -112,9 +109,9 @@ else:
     raise SystemExit('Klipper 연결 확인 실패: 로그를 확인하세요.')
 PY
 echo '[업데이트 4~6/6] Mainsail / print_area_bed_mesh / sonar (시스템 전체 업데이트 제외)'
-python3 -u "$COMMON_DIR/repo/maintenance/update_components.py" 2>&1 | tee -a "$BACKUP_DIR/install.log"
+python3 -u "$COMMON_REPO/maintenance/update_components.py" 2>&1 | tee -a "$BACKUP_DIR/install.log"
 echo '[업데이트 완료] 설정 파일 및 사용자 패치 적용 시작'
-if ! bash "$COMMON_DIR/repo/maintenance/apply.sh" --check >> "$BACKUP_DIR/install.log" 2>&1; then
+if ! bash "$COMMON_REPO/maintenance/apply.sh" --check >> "$BACKUP_DIR/install.log" 2>&1; then
     echo "설치 환경 확인에 실패했습니다. 고객지원에 문의해 주세요. 기록: $BACKUP_DIR/install.log" >&2
     exit 1
 fi
@@ -133,8 +130,8 @@ fi
 
 # 3. .151 기준 공통 헤더 / 각 기기의 MCU·SAVE_CONFIG 보존
 echo "[3/6] printer.cfg 공통 헤더 적용 중..."
-python3 "$COMMON_DIR/repo/maintenance/install_printer_header.py" \
-    "$COMMON_DIR/repo/templates/printer_header.cfg" "$CONFIG_DIR/printer.cfg" \
+python3 "$COMMON_REPO/maintenance/install_printer_header.py" \
+    "$COMMON_REPO/templates/printer_header.cfg" "$CONFIG_DIR/printer.cfg" \
     "$BACKUP_DIR/printer-header.cfg" --fallback "$CONFIG_DIR/printer_base.cfg"
 
 # Probe SAVE_CONFIG preservation/defaulting is handled by install_printer_header.py.
@@ -157,31 +154,31 @@ copy_config "$REPO_DIR/printer_base.cfg" "$CONFIG_DIR/printer_base.cfg"
 fi
 copy_config "$REPO_DIR/crowsnest.conf" "$CONFIG_DIR/crowsnest.conf"
 if (( ! SYSTEM_ONLY )); then
-python3 "$COMMON_DIR/repo/maintenance/install_screen_config.py" \
+python3 "$COMMON_REPO/maintenance/install_screen_config.py" \
     "$REPO_DIR/KlipperScreen.conf" "$CONFIG_DIR/KlipperScreen.conf" "$BACKUP_DIR/KlipperScreen.conf"
 fi
 echo "  -> 복사 완료"
 
 # 공통 다국어 패널 설치 (기존 파일 백업 후 덮어쓰기)
 echo "KlipperScreen 다국어 패널 설치 / Installing multilingual panels"
-bash "$COMMON_DIR/repo/maintenance/install_fonts.sh"
-python3 "$COMMON_DIR/repo/maintenance/install_i18n.py"
-python3 "$COMMON_DIR/repo/maintenance/install_panels.py" --target "$PANEL_DIR" --backup "$BACKUP_DIR/panels"
+bash "$COMMON_REPO/maintenance/install_fonts.sh"
+python3 "$COMMON_REPO/maintenance/install_i18n.py"
+python3 "$COMMON_REPO/maintenance/install_panels.py" --target "$PANEL_DIR" --backup "$BACKUP_DIR/panels"
 
 echo '[진행] 툴별 출력 온도 및 출력 더보기 메뉴 설치'
-python3 "$COMMON_DIR/repo/maintenance/install_tool_temperature.py"
+python3 "$COMMON_REPO/maintenance/install_tool_temperature.py"
 echo "[진행] 준비 화면 / 빠른 정상 취소 / 메쉬 중 취소 / MHz 팝업 숨김"
-python3 "$COMMON_DIR/repo/maintenance/install_print_controls.py"
+python3 "$COMMON_REPO/maintenance/install_print_controls.py"
 echo "[진행] 메인 화면 IP 표시 / 압출 모서리 제어 버튼 제거"
-python3 "$COMMON_DIR/repo/maintenance/patch_screen_identity.py"
+python3 "$COMMON_REPO/maintenance/patch_screen_identity.py"
 mkdir -p "$HOME/.local/share/lugoware"
-cp "$COMMON_DIR/repo/maintenance/install_printer_header.py" "$COMMON_DIR/repo/templates/printer_header.cfg" "$COMMON_DIR/repo/templates/KlipperScreen.conf" "$HOME/.local/share/lugoware/"
-cp "$COMMON_DIR/repo/maintenance/install_tool_temperature.py" "$COMMON_DIR/repo/maintenance/install_screen_config.py" "$HOME/.local/share/lugoware/"
-cp "$COMMON_DIR/repo/maintenance/install_print_controls.py" "$COMMON_DIR/repo/maintenance/patch_print_controls.py" "$COMMON_DIR/repo/maintenance/final_print_ui.py" "$HOME/.local/share/lugoware/"
+cp "$COMMON_REPO/maintenance/install_printer_header.py" "$COMMON_REPO/templates/printer_header.cfg" "$COMMON_REPO/templates/KlipperScreen.conf" "$HOME/.local/share/lugoware/"
+cp "$COMMON_REPO/maintenance/install_tool_temperature.py" "$COMMON_REPO/maintenance/install_screen_config.py" "$HOME/.local/share/lugoware/"
+cp "$COMMON_REPO/maintenance/install_print_controls.py" "$COMMON_REPO/maintenance/patch_print_controls.py" "$COMMON_REPO/maintenance/final_print_ui.py" "$HOME/.local/share/lugoware/"
 
 # 공통 시스템 설정 (재실행해도 cron 중복 없음)
 echo "설정을 적용하고 있습니다. 완료될 때까지 전원을 유지해 주세요..."
-if ! LUGOWARE_SHOW_STATUS=1 bash "$COMMON_DIR/repo/maintenance/apply.sh" 3>&1 >> "$BACKUP_DIR/install.log" 2>&1; then
+if ! LUGOWARE_SHOW_STATUS=1 bash "$COMMON_REPO/maintenance/apply.sh" 3>&1 >> "$BACKUP_DIR/install.log" 2>&1; then
     echo "설정 적용에 실패했습니다. 고객지원에 문의해 주세요. 기록: $BACKUP_DIR/install.log" >&2
     exit 1
 fi
@@ -191,16 +188,16 @@ systemctl is-active --quiet KlipperScreen
 echo "패널 4개 설치 완료 / Installed: extrude.py, nozzle_temperature.py, tool_prepare.py, tool_temperature.py"
 echo "패널 백업 / Panel backup: $BACKUP_DIR/panels"
 
-python3 "$COMMON_DIR/repo/maintenance/wait_ready.py" --ready-only
-python3 "$COMMON_DIR/repo/maintenance/verify_multi_pin.py" "$HOME/klipper"
+python3 "$COMMON_REPO/maintenance/wait_ready.py" --ready-only
+python3 "$COMMON_REPO/maintenance/verify_multi_pin.py" "$HOME/klipper"
 
-python3 "$COMMON_DIR/repo/maintenance/install_update_channels.py" "$BRANCH"
+python3 "$COMMON_REPO/maintenance/install_update_channels.py" "$BRANCH"
 
 # Hide managed components only after all installation checks succeeded.
 echo 'Klipper / KlipperScreen / mainsail-config / Moonraker 업데이트 항목 주석 처리 중...'
-python3 "$COMMON_DIR/repo/maintenance/hide_klipper_updater.py" \
+python3 "$COMMON_REPO/maintenance/hide_klipper_updater.py" \
     "$MOONRAKER_UPDATER" "$BACKUP_DIR/update_manager.py"
-updates_result=$(python3 "$COMMON_DIR/repo/maintenance/disable_screen_updates.py" \
+updates_result=$(python3 "$COMMON_REPO/maintenance/disable_screen_updates.py" \
     "$CONFIG_DIR/moonraker.conf" "$BACKUP_DIR/moonraker-update-sections" --installed-components)
 # Restart even if already commented: an earlier run may have stopped before reload.
 sudo systemctl restart moonraker
