@@ -120,5 +120,3 @@ In Mainsail, open `printer_base.cfg` and change `dir_pin: PB1` to `dir_pin: !PB1
 
 **Other Questions**\
 Please contact LUGOWARE customer support.
-
-The extrusion panel uses MVS (mm³/s). Defaults are 10 for 1.75 mm filament, 5 for 2.85 mm filament, and 15 mm of actual filament travel. These values reset when you enter the menu. The arrows adjust values in increments of 1. A check mark identifies the selected diameter, and the Extrude and Retract buttons are at the bottom. The previous distance and speed presets are not used.
