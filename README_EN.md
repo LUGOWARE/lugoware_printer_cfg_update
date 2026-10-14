@@ -67,7 +67,6 @@ Proceed while the printer is not in use.
 The installer restarts and checks the required services automatically. **Wait for the installation completion message**, then refresh Mainsail. No additional restart is required.
 
 - This command is for M5P. Use the dedicated distribution for an M8P board.
-- `main` selects the latest installer; `nocache` helps avoid a cached older download. You do not need to keep using a previously supplied commit-specific URL.
 - Initial installation requires your sudo password. It registers restricted update permissions so subsequent supported Mainsail updates do not prompt for a password.
 - If an existing installation has no `lugoware_system` entry, run the command above once to reinstall.
 
@@ -119,19 +118,6 @@ For a config-only update, replace `system` with `config` in those paths. The sta
 | `crowsnest.conf` | Applied from the release during initial installation and system updates; excluded from config-only updates. |
 
 Config-only updates apply just `printer_base.cfg` and `KlipperScreen.conf`. Backups are stored in `~/lugoware_backups/`. Direct edits in the `~/lugoware_config` or `~/lugoware_system` repositories stop the automatic update instead of being overwritten. Save and resolve those changes before retrying.
-
-## When an SSH Reinstallation Is Required
-
-Routine configuration, screen, translation and existing extension updates can use Mainsail. Administrative operations run without a password only for **previously approved service controls, packages and file installations**. This is not unrestricted administrator access.
-
-Run the **initial installation command above** via SSH and enter your sudo password when an update requires:
-
-- A base Klipper or Linux MCU version migration
-- Changes to an older Moonraker service or dependency layout
-- Changes to the privileged update helper, sudo policy or updater service structure
-- Packages outside the allowlist or new privileged operations
-
-If Mainsail reports that an SSH installation is required, use that installer rather than manually broadening permissions.
 
 ---
 
