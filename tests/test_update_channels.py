@@ -140,6 +140,34 @@ class ChannelTests(unittest.TestCase):
                 install_controls(cfg, cfg, cfg, cfg / 'backup', config_only=True)
             self.assertEqual((cfg / 'printer_base.cfg').read_text(), 'old model configuration')
 
+    def test_system_fetches_model_config_and_applies_exact_commit(self):
+        with tempfile.TemporaryDirectory() as d:
+            home = Path(d)
+            responses = ['FLEX4_W', '', 'https://github.com/LUGOWARE/lugoware_printer_cfg_update.git',
+                         'a' * 40, b'new base', b'new screen']
+            with patch.object(worker.subprocess, 'check_output', side_effect=responses), patch.object(worker.subprocess, 'run') as run, patch.object(worker, 'apply_config') as apply:
+                worker.sync_latest_config(home, 'FLEX4_W', home / 'backup')
+            snapshot = home / 'backup/source'
+            self.assertEqual((snapshot / 'printer_base.cfg').read_bytes(), b'new base')
+            self.assertEqual((snapshot / 'KlipperScreen.conf').read_bytes(), b'new screen')
+            apply.assert_called_once_with(snapshot, home, home / 'backup')
+            self.assertIn('refs/heads/FLEX4_W', run.call_args_list[0].args[0])
+            self.assertIn('--ff-only', run.call_args_list[-1].args[0])
+
+    def test_system_rejects_dirty_config_before_fetch_or_apply(self):
+        with patch.object(worker.subprocess, 'check_output', side_effect=['FLEX4_M', ' M printer_base.cfg']), patch.object(worker.subprocess, 'run') as run, patch.object(worker, 'apply_config') as apply:
+            with self.assertRaisesRegex(RuntimeError, 'edits preserved'):
+                worker.sync_latest_config(Path('/home/biqu'), 'FLEX4_M', Path('/unused'))
+            run.assert_not_called()
+            apply.assert_not_called()
+
+    def test_system_config_failure_is_not_ignored(self):
+        with tempfile.TemporaryDirectory() as d:
+            responses = ['FLEX4_L', '', 'https://github.com/LUGOWARE/lugoware_printer_cfg_update.git', 'b' * 40, b'base', b'screen']
+            with patch.object(worker.subprocess, 'check_output', side_effect=responses), patch.object(worker.subprocess, 'run'), patch.object(worker, 'apply_config', side_effect=RuntimeError('invalid config')):
+                with self.assertRaisesRegex(RuntimeError, 'invalid config'):
+                    worker.sync_latest_config(Path(d), 'FLEX4_L', Path(d) / 'backup')
+
     def test_failure_announcement_survives_restart_without_duplicates(self):
         with tempfile.TemporaryDirectory() as d:
             status = UpdateStatus.__new__(UpdateStatus)

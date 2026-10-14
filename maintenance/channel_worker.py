@@ -63,6 +63,37 @@ def apply_config(repo, home, backup):
     subprocess.run(['systemctl', 'is-active', '--quiet', 'KlipperScreen'], check=True)
 
 
+def sync_latest_config(home, branch, backup):
+    """Fetch the model configuration before reporting system installation success."""
+    if branch not in ('FLEX4_M', 'FLEX4_L', 'FLEX4_W'):
+        raise ValueError('Unrecognized model branch')
+    repo = home / 'lugoware_config'
+    git = ['git', '-c', 'core.hooksPath=/dev/null', '-C', str(repo)]
+    def output(*args):
+        return subprocess.check_output(git + list(args), text=True).strip()
+    if output('branch', '--show-current') != branch:
+        raise RuntimeError('Config model branch changed; preserved without modification')
+    if output('status', '--porcelain'):
+        raise RuntimeError('Local config repository edits preserved; resolve before updating system')
+    url = 'https://github.com/LUGOWARE/lugoware_printer_cfg_update.git'
+    if output('remote', 'get-url', 'origin') not in (url, url[:-4]):
+        raise RuntimeError('Unexpected config origin; preserved without modification')
+    # Explicit official source and ref; do not trust a custom origin fetch refspec.
+    subprocess.run(git + ['fetch', url, 'refs/heads/' + branch], check=True)
+    commit = output('rev-parse', 'FETCH_HEAD')
+    subprocess.run(git + ['merge-base', '--is-ancestor', 'HEAD', commit], check=True)
+    subprocess.run(git + ['merge', '--ff-only', commit], check=True)
+    backup.mkdir(parents=True, exist_ok=True)
+    snapshot = backup / 'source'
+    snapshot.mkdir()
+    for name in ('printer_base.cfg', 'KlipperScreen.conf'):
+        data = subprocess.check_output(git + ['show', commit + ':' + name])
+        (snapshot / name).write_bytes(data)
+    print('Applying latest model config: ' + branch + ' ' + commit, flush=True)
+    apply_config(snapshot, home, backup)
+    print('System and model config applied: ' + commit, flush=True)
+
+
 def wait_manager():
     # Never call a nested Moonraker update while its Git/full-update lock is held.
     for _ in range(1800):
@@ -153,4 +184,7 @@ def run(channel):
 
 
 if __name__ == '__main__':
-    run(sys.argv[1])
+    if sys.argv[1] == '--sync-config':
+        sync_latest_config(Path.home(), sys.argv[2], Path(sys.argv[3]))
+    else:
+        run(sys.argv[1])

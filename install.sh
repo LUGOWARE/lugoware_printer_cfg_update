@@ -176,6 +176,12 @@ cp "$COMMON_REPO/maintenance/install_printer_header.py" "$COMMON_REPO/templates/
 cp "$COMMON_REPO/maintenance/install_tool_temperature.py" "$COMMON_REPO/maintenance/install_screen_config.py" "$HOME/.local/share/lugoware/"
 cp "$COMMON_REPO/maintenance/install_print_controls.py" "$COMMON_REPO/maintenance/patch_print_controls.py" "$COMMON_REPO/maintenance/final_print_ui.py" "$HOME/.local/share/lugoware/"
 
+# Run from the newly downloaded release so existing workers gain this behavior too.
+if (( SYSTEM_ONLY )); then
+    echo '[진행] 시스템에 맞는 최신 모델 설정 함께 적용'
+    python3 "$COMMON_REPO/maintenance/channel_worker.py" --sync-config "$BRANCH" "$BACKUP_DIR/latest-config"
+fi
+
 # 공통 시스템 설정 (재실행해도 cron 중복 없음)
 echo "설정을 적용하고 있습니다. 완료될 때까지 전원을 유지해 주세요..."
 if ! LUGOWARE_SHOW_STATUS=1 bash "$COMMON_REPO/maintenance/apply.sh" 3>&1 >> "$BACKUP_DIR/install.log" 2>&1; then
