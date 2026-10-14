@@ -1,0 +1,19 @@
+{
+  "ID": "ID",
+  "g": "g",
+  "mm": "mm",
+  "mm/s": "mm/s",
+  "mm/s²": "mm/s²",
+  "mm³/s": "mm³/s",
+  "s": "s",
+  "\nLast Duration": "\nAnkstesnė spausdinimo trukmė",
+  "Auto": "Auto",
+  "Enable Add-ons": "Įgalinti priedus",
+  "Initiate an MPC calibration for:": "Pradėkite MPC kalibravimą:",
+  "Input Shaper": "Įvesties formuotojas",
+  "Max": "Maks",
+  "Minimum:": "Mažiausias:",
+  "Runs third-party code from the addons folder at startup. Add-ons are not provided or reviewed by the KlipperScreen developers. Takes effect after a restart.": "Paleidžiant paleidžia trečiosios šalies kodą iš priedų aplanko. KlipperScreen kūrėjai priedų nepateikia ir neperžiūrėjo. Įsigalioja po pakartotinio paleidimo.",
+  "System language": "Sistemos kalba",
+  "Material usage": "Sąnaudos"
+}

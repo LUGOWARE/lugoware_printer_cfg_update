@@ -1,0 +1,19 @@
+{
+  "ID": "ID",
+  "g": "g",
+  "mm": "mm",
+  "mm/s": "mm/s",
+  "mm/s²": "mm/s²",
+  "mm³/s": "mm³/s",
+  "s": "s",
+  "\nLast Duration": "\nÖnceki yazdırma süresi",
+  "Disk": "Disk",
+  "Enable Add-ons": "Eklentileri Etkinleştir",
+  "Fan": "Hayran",
+  "Filament:": "Filaman:",
+  "Initiate an MPC calibration for:": "Aşağıdakiler için bir MPC kalibrasyonu başlatın:",
+  "Minimum:": "Minimum:",
+  "Runs third-party code from the addons folder at startup. Add-ons are not provided or reviewed by the KlipperScreen developers. Takes effect after a restart.": "Başlangıçta eklentiler klasöründen üçüncü taraf kodunu çalıştırır. Eklentiler KlipperScreen geliştiricileri tarafından sağlanmaz veya incelenmez. Yeniden başlatmanın ardından etkili olur.",
+  "System language": "Sistem dili",
+  "Material usage": "Tüketim"
+}

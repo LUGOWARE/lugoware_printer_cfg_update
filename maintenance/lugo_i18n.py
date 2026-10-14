@@ -24,6 +24,11 @@ class Translations(gettext.NullTranslations):
         if re.fullmatch(r'[A-Za-z_]+', language or '') and extra.is_file():
             self.catalog.update(json.loads(extra.read_text(encoding='utf-8')))
 
+        # Fill gaps in upstream UI translations without replacing official entries.
+        extra = Path(__file__).with_name('screen_locales') / (language + '.json')
+        if re.fullmatch(r'[A-Za-z_]+', language or '') and extra.is_file():
+            self.catalog.update(json.loads(extra.read_text(encoding='utf-8')))
+
     def gettext(self, message):
         original = self.upstream.gettext(message)
         return original if original != message else self.catalog.get(message, original)

@@ -15,6 +15,8 @@ def install(user):
     account = pwd.getpwnam(user)
     if account.pw_dir != '/home/' + user:
         raise ValueError('Unexpected printer home directory')
+    from install_timezone import install_permission
+    install_permission(user)
     source = Path(__file__).resolve().parent
     root = Path('/opt/lugoware/update-runtime')
     root.mkdir(parents=True, exist_ok=True, mode=0o755)

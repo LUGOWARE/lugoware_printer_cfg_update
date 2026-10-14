@@ -1,0 +1,11 @@
+{
+  "Gcodes": "Gcodes",
+  "ID": "ID",
+  "Leds": "Leds",
+  "\nLast Duration": "\nПродължителност на предишен печат",
+  "Enable Add-ons": "Разрешаване на добавки",
+  "Initiate an MPC calibration for:": "Иницииране на MPC калибриране за:",
+  "Runs third-party code from the addons folder at startup. Add-ons are not provided or reviewed by the KlipperScreen developers. Takes effect after a restart.": "Изпълнява код на трета страна от папката addons при стартиране. Добавките не се предоставят или преглеждат от разработчиците на KlipperScreen. Влиза в сила след рестартиране.",
+  "System language": "Системен език",
+  "Material usage": "Разход"
+}

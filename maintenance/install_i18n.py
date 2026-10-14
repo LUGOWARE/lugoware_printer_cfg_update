@@ -71,21 +71,38 @@ def patch_network(text):
     return insert(text, anchor, replacement)
 
 
+def patch_languages(text):
+    if 'from ks_includes.lugo_language_names import language_name' in text:
+        return text.replace('for lang in ["system_lang", *self._config.lang_list]:',
+                            'for lang in self._config.lang_list:')
+    anchor = '        for lang in ["system_lang", *self._config.lang_list]:'
+    text = insert(text, anchor, '        from ks_includes.lugo_language_names import language_name\n' + anchor)
+    if text.count('"name": lang,') != 1 or text.count('"callback": self._screen.change_language,') != 1:
+        raise ValueError('Unsupported language selection layout')
+    return text.replace('for lang in ["system_lang", *self._config.lang_list]:',
+                        'for lang in self._config.lang_list:').replace('"name": lang,', '"name": language_name(lang),').replace(
+        '"callback": self._screen.change_language,',
+        '"callback": lambda widget, name, code=lang: self._screen.change_language(widget, code),')
+
+
 def install(screen, backup, check=False):
     root=Path(__file__).resolve().parents[1]
     pairs={'ks_includes/config.py':patch_config,'screen.py':patch_screen,
            'ks_includes/widgets/prompts.py':patch_prompts,'panels/temperature.py':patch_temperature,
            'ks_includes/KlippyGtk.py':patch_gtk,'panels/base_panel.py':patch_title,
-           'panels/network.py':patch_network}
+           'panels/network.py':patch_network,'panels/settings.py':patch_languages}
     changes={screen/name:fn((screen/name).read_text(encoding='utf-8')) for name,fn in pairs.items()}
     changes[screen/'ks_includes/lugo_i18n.py']=Path(__file__).with_name('lugo_i18n.py').read_text(encoding='utf-8')
     changes[screen/'ks_includes/lugo_layout.py']=Path(__file__).with_name('lugo_layout.py').read_text(encoding='utf-8')
     changes[screen/'ks_includes/lugo_interface_selector.py']=Path(__file__).with_name('lugo_interface_selector.py').read_text(encoding='utf-8')
-    for name in ('printer_messages.py', 'message_rules.json'):
+    for name in ('printer_messages.py', 'message_rules.json', 'lugo_language_names.py'):
         changes[screen/'ks_includes'/name]=Path(__file__).with_name(name).read_text(encoding='utf-8')
     for path in Path(__file__).with_name('printer_locales').glob('*.json'):
         text=path.read_text(encoding='utf-8'); json.loads(text)
         changes[screen/'ks_includes/printer_locales'/path.name]=text
+    for path in Path(__file__).with_name('screen_locales').glob('*.json'):
+        text=path.read_text(encoding='utf-8'); json.loads(text)
+        changes[screen/'ks_includes/screen_locales'/path.name]=text
     catalog_dir=root/'translations'
     for path in catalog_dir.glob('*.json'):
         text=path.read_text(encoding='utf-8'); json.loads(text)

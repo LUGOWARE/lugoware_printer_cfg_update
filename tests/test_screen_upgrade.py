@@ -62,9 +62,9 @@ class ScreenUpgradeTests(unittest.TestCase):
 
     def test_installer_order(self):
         source = (Path(__file__).resolve().parents[1] / 'install.sh').read_text(encoding='utf-8')
-        upgrade = source.index('python3 -u "$COMMON_DIR/repo/maintenance/upgrade_klipperscreen.py"')
-        panels = source.index('python3 "$COMMON_DIR/repo/maintenance/install_panels.py"', upgrade)
-        maintenance = source.index('bash "$COMMON_DIR/repo/maintenance/apply.sh"', panels)
+        upgrade = source.index('python3 -u "$COMMON_REPO/maintenance/upgrade_klipperscreen.py"')
+        panels = source.index('python3 "$COMMON_REPO/maintenance/install_panels.py"', upgrade)
+        maintenance = source.index('bash "$COMMON_REPO/maintenance/apply.sh"', panels)
         hide = source.index('updates_result=', maintenance)
         self.assertLess(upgrade, panels)
         self.assertLess(panels, maintenance)
