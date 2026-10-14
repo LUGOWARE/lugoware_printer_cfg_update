@@ -1,0 +1,12 @@
+[Unit]
+Description=USB G-code storage on %i
+BindsTo=dev-%i.device
+After=dev-%i.device
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/boot/scripts/usb_udev.sh usb %i add
+ExecStop=/boot/scripts/usb_udev.sh usb %i remove
+TimeoutStartSec=30
+TimeoutStopSec=30

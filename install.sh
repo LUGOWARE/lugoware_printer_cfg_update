@@ -176,6 +176,11 @@ python3 "$COMMON_REPO/maintenance/install_settings_policy.py"
 python3 "$COMMON_REPO/maintenance/install_filament_details.py"
 python3 "$COMMON_REPO/maintenance/install_screen_session.py"
 python3 "$COMMON_REPO/maintenance/install_mainsail_reconnect.py"
+if (( SYSTEM_ONLY )); then
+    python3 "$COMMON_REPO/maintenance/usb/check_install.py"
+else
+    sudo bash "$COMMON_REPO/maintenance/usb/install.sh" "$BACKUP_DIR/usb"
+fi
 mkdir -p "$HOME/.local/share/lugoware"
 cp "$COMMON_REPO/maintenance/install_printer_header.py" "$COMMON_REPO/templates/printer_header.cfg" "$COMMON_REPO/templates/KlipperScreen.conf" "$HOME/.local/share/lugoware/"
 cp "$COMMON_REPO/maintenance/install_tool_temperature.py" "$COMMON_REPO/maintenance/install_screen_config.py" "$HOME/.local/share/lugoware/"

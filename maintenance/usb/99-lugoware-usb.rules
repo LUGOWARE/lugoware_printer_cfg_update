@@ -1,0 +1,2 @@
+# Run after standard rules have populated ID_BUS and ID_FS_USAGE.
+ACTION=="add", SUBSYSTEM=="block", KERNEL=="sd[a-z]*", ENV{ID_BUS}=="usb", ENV{ID_FS_USAGE}=="filesystem", TAG+="systemd", ENV{SYSTEMD_WANTS}+="usb-mount@%k.service"
