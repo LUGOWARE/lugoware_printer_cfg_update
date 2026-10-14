@@ -1,25 +1,18 @@
-/* Continue Mainsail reconnect attempts after a previously connected server restarts. */
+/* Retry the native Mainsail reconnect control without relying on Vue internals. */
 (() => {
     if (window.lugowareReconnectInstalled) return;
     window.lugowareReconnectInstalled = true;
-    let previousUrl = null;
     let nextAttempt = 0;
     window.setInterval(() => {
-        const app = document.getElementById('app')?.__vue__;
-        const state = app?.$store?.state?.socket;
-        const socket = app?.$socket;
-        if (!state || !socket) return;
-        if (state.isConnected) {
-            previousUrl = socket.url;
-            nextAttempt = 0;
-            return;
-        }
-        // Do not interfere with printer selection, authorization failures or an active attempt.
-        if (socket.url !== previousUrl || !state.connectingFailed || state.isConnecting ||
-            state.connectionFailedMessage || !navigator.onLine || Date.now() < nextAttempt) return;
+        if (!navigator.onLine || Date.now() < nextAttempt) return;
+        // Scope to the connection-failed dialog, never printer selection or print controls.
+        const dialog = document.querySelector('.v-dialog--active .the-connection-dialog');
+        if (!dialog || !dialog.getClientRects().length) return;
+        // Mainsail displays protocol/authentication errors separately from an ordinary outage.
+        if (dialog.querySelector('.red--text') || dialog.querySelector('a[href*="connection-"]')) return;
+        const button = dialog.querySelector('button.primary--text');
+        if (!button || button.disabled || !button.getClientRects().length) return;
         nextAttempt = Date.now() + 10000;
-        socket.reconnects = 0;
-        app.$store.dispatch('socket/setData', { connectingFailed: false });
-        socket.connect();
+        button.click();
     }, 2000);
 })();

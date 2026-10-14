@@ -1,12 +1,14 @@
 """Install an idempotent Mainsail reconnect helper without rebuilding its assets."""
 import os
+import re
 from pathlib import Path
 import shutil
 
-TAG = '<script defer src="./lugoware-reconnect.js?v=1"></script>'
+TAG = '<script defer src="./lugoware-reconnect.js?v=2"></script>'
 
 
 def patch(source):
+    source = re.sub(r'<script\s+defer\s+src="\./lugoware-reconnect\.js\?v=\d+"></script>', TAG, source)
     if TAG in source:
         return source
     if source.count('</head>') != 1:
