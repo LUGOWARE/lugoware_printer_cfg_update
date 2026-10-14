@@ -26,13 +26,13 @@ class UpgradePolicyTests(unittest.TestCase):
                 run.assert_not_called()
 
     def test_unknown_customizations_block_before_mutation(self):
-        with tempfile.TemporaryDirectory() as tmp, patch.object(upgrade, 'output', side_effect=['v0.12.0-1-gabc', 'klippy/mcu.py']), patch.object(upgrade, 'run') as run:
+        with tempfile.TemporaryDirectory() as tmp, patch.object(upgrade, 'output', side_effect=['v0.12.0-1-gabc', 'old-commit', 'klippy/mcu.py']), patch.object(upgrade, 'run') as run:
             with self.assertRaises(RuntimeError):
                 upgrade.upgrade(Path(tmp), Path(tmp) / 'backup')
             run.assert_not_called()
 
     def test_old_host_preflight_does_not_mutate(self):
-        with tempfile.TemporaryDirectory() as tmp, patch.object(upgrade, 'output', side_effect=['v0.12.0-1-gabc', 'klippy/extras/multi_pin.py']), patch.object(upgrade, 'run') as run:
+        with tempfile.TemporaryDirectory() as tmp, patch.object(upgrade, 'output', side_effect=['v0.12.0-1-gabc', 'old-commit', 'klippy/extras/multi_pin.py']), patch.object(upgrade, 'run') as run:
             upgrade.upgrade(Path(tmp), Path(tmp) / 'backup', check=True)
             run.assert_not_called()
 
@@ -52,6 +52,12 @@ class UpgradePolicyTests(unittest.TestCase):
         for version in ('v0.13.0-770-gce7002be-dirty', 'v0.13.0-1000-gabc', 'v0.13.1', 'v0.14.0'):
             self.assertGreaterEqual(upgrade.version_key(version), upgrade.MIN_VERSION)
 
+    def test_baseline_commit_with_old_tag_does_not_migrate(self):
+        with tempfile.TemporaryDirectory() as tmp, patch.object(upgrade, 'output', side_effect=['v0.12.0-1263-gce7002bed-dirty', upgrade.BASELINE]), patch.object(upgrade, 'run') as run:
+            with patch.dict('os.environ', {'LUGOWARE_SYSTEM_ONLY': '1'}):
+                upgrade.upgrade(Path(tmp), Path(tmp) / 'backup')
+            run.assert_not_called()
+
     def test_live_firmware_policy(self):
         ready = {'state': 'ready', 'software_version': 'v0.13.0-745-gabc'}
         self.assertEqual(firmware.decide(ready, {'mcu': {'mcu_version': 'exact'}}, 'exact'), 'skip')
@@ -59,3 +65,5 @@ class UpgradePolicyTests(unittest.TestCase):
         self.assertEqual(firmware.decide({'state': 'error'}, {}, 'exact'), 'flash')
         self.assertEqual(firmware.decide(ready, {}, 'exact'), 'flash')
         self.assertEqual(firmware.decide({'state': 'ready', 'software_version': 'v0.12.0-1-gabc'}, {'mcu': {'mcu_version': 'old'}}, 'exact'), 'flash')
+        self.assertEqual(firmware.decide({'state': 'ready', 'software_version': 'v0.12.0-1263-gce7002bed'}, {'mcu': {'mcu_version': 'working'}}, 'exact', baseline_host=True), 'keep')
+        self.assertEqual(firmware.decide({'state': 'error'}, {}, 'exact', baseline_host=True), 'flash')

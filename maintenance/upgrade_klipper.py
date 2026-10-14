@@ -38,6 +38,10 @@ def upgrade(folder, backup, check=False):
     version = output('git', '-C', str(folder), 'describe', '--always', '--tags', '--long', '--dirty')
     pending = folder / '.git/lugoware-linux-mcu-pending'
     update_host = version_key(version) < MIN_VERSION
+    if update_host:
+        # Shallow checkouts can describe the same baseline commit using an older tag.
+        # Exact commit identity is stronger evidence than git-describe's tag prefix.
+        update_host = output('git', '-C', str(folder), 'rev-parse', 'HEAD') != BASELINE
     if not update_host and not pending.exists():
         print('[건너뜀] Klipper 본체: ' + version, flush=True)
         return
