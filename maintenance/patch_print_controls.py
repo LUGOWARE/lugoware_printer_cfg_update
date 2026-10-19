@@ -73,14 +73,22 @@ def feature_macros(text):
             raise ValueError('Missing macro: ' + name)
         text = text[:match.start()] + match[1] + transform(match[2]) + text[match.end():]
 
-    once('variable_active_tool: -1', 'variable_tc_count: 0\nvariable_tc_total: 0\nvariable_active_tool: -1')
+    additions = ''.join('variable_' + name + ': 0\n' for name in ('tc_count', 'tc_total')
+                        if not re.search(r'^variable_' + name + r'\s*:', text, re.M))
+    if additions:
+        once('variable_active_tool: -1', additions + 'variable_active_tool: -1')
+    change = re.search(r'(?s)\[gcode_macro CHANGE_TOOL\].*?(?=\n\[|\Z)', text).group()
+    increment = '' if 'VARIABLE=tc_count ' in change else '    SET_GCODE_VARIABLE MACRO=TOOL_STATE VARIABLE=tc_count VALUE={st.tc_count|int + 1}\n'
     once('    SAVE_GCODE_STATE NAME=FAST_CANCEL_CHANGE_TOOL_STATE',
-         '    SET_GCODE_VARIABLE MACRO=TOOL_STATE VARIABLE=tc_count VALUE={st.tc_count|int + 1}\n'
-         '    PRINT_SENSOR_GATE ENABLE=0\n    SAVE_GCODE_STATE NAME=FAST_CANCEL_CHANGE_TOOL_STATE')
-    once('    RESET_FIRSTDOCK_FLAGS',
-         '    SET_GCODE_VARIABLE MACRO=TOOL_STATE VARIABLE=tc_count VALUE=0\n'
-         '    SET_GCODE_VARIABLE MACRO=TOOL_STATE VARIABLE=tc_total VALUE={params.TC_TOTAL|default(0)|int}\n'
-         '    RESET_FIRSTDOCK_FLAGS')
+         increment + '    PRINT_SENSOR_GATE ENABLE=0\n    SAVE_GCODE_STATE NAME=FAST_CANCEL_CHANGE_TOOL_STATE')
+    start = re.search(r'(?s)\[gcode_macro START_PRINT\].*?(?=\n\[|\Z)', text).group()
+    reset = ''
+    if 'VARIABLE=tc_count ' not in start:
+        reset += '    SET_GCODE_VARIABLE MACRO=TOOL_STATE VARIABLE=tc_count VALUE=0\n'
+    if 'VARIABLE=tc_total ' not in start:
+        reset += '    SET_GCODE_VARIABLE MACRO=TOOL_STATE VARIABLE=tc_total VALUE={params.TC_TOTAL|default(0)|int}\n'
+    if reset:
+        once('    RESET_FIRSTDOCK_FLAGS', reset + '    RESET_FIRSTDOCK_FLAGS')
     text = re.sub(r'SET_FILAMENT_SENSOR SENSOR=encoder_sensor ENABLE=[01]', 'PRINT_SENSOR_GATE ENABLE=0', text)
     edit('START_PRINT', lambda b: b.replace('gcode:\n', 'gcode:\n    PRINT_SENSOR_BEGIN\n', 1).replace(
         '    SET_FILAMENT_SENSOR SENSOR=toolhead_sensor ENABLE=0',

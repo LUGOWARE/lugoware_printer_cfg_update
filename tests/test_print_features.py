@@ -31,6 +31,10 @@ class FeatureTests(unittest.TestCase):
         self.assertEqual(feature_macros(result), result)
         motion = lambda s: [x for x in s.splitlines() if x.strip().startswith('G1 ')]
         self.assertEqual(motion(source), motion(result))
+        existing_tc = '\n'.join(line for line in result.splitlines() if 'PRINT_SENSOR_' not in line) + '\n'
+        upgraded = feature_macros(existing_tc)
+        self.assertEqual(upgraded.count('variable_tc_count:'), 1)
+        self.assertEqual(upgraded.count('VARIABLE=tc_count '), 2)
         self.assertIn('PRINT_SENSOR_BEGIN', result)
         self.assertEqual(result.count('PRINT_SENSOR_END'), 2)
         self.assertIn('BASE_RESUME\n  PRINT_SENSOR_GATE ENABLE=1', result)
