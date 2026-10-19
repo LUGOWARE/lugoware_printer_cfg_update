@@ -7,12 +7,23 @@ from patch_print_controls import feature_macros
 
 
 def patch_ui(source, name):
+    upgrades = json.loads(Path(__file__).with_name('print_features').joinpath('preprint_patches.json').read_text(encoding='utf-8')).get(name, [])
+    # Normalize an already upgraded panel before applying the base migration.
+    for old, new in reversed(upgrades):
+        if new in source:
+            source = source.replace(new, old, 1)
     patches = json.loads(Path(__file__).with_name('print_features').joinpath('ui_patches.json').read_text(encoding='utf-8'))
     for old, new in patches[name]:
         if new in source:
             continue
         if source.count(old) != 1:
             raise ValueError('Unsupported print UI source: ' + name + '\n' + old[:180])
+        source = source.replace(old, new, 1)
+    for old, new in upgrades:
+        if new in source:
+            continue
+        if source.count(old) != 1:
+            raise ValueError('Unsupported preprint UI source: ' + name + '\n' + old[:180])
         source = source.replace(old, new, 1)
     compile(source, name, 'exec')
     return source

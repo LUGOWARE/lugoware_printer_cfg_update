@@ -68,11 +68,11 @@ class PolicyTests(unittest.TestCase):
         self.paused.is_paused=False;self.p.tick(21)
         self.assertFalse(self.helper.sensor_enabled)
 
-    def test_next_job_defaults_on_and_pending_off_consumed_once(self):
-        self.p.pending=False;self.p.begin(None)
-        self.assertFalse(self.p.enabled)
-        self.p.finish();self.p.begin(None)
+    def test_next_job_defaults_off_and_pending_on_consumed_once(self):
+        self.p.pending=True;self.p.begin(None)
         self.assertTrue(self.p.enabled)
+        self.p.finish();self.p.begin(None)
+        self.assertFalse(self.p.enabled)
 
     def test_terminal_disables_and_resets(self):
         for state in ('complete','cancelled','error'):
@@ -80,6 +80,6 @@ class PolicyTests(unittest.TestCase):
             self.stats['state']=state;self.p.tick(10)
             self.assertFalse(self.p.in_job)
             self.assertFalse(self.helper.sensor_enabled)
-            self.assertTrue(self.p.enabled)
+            self.assertFalse(self.p.enabled)
 
 if __name__=='__main__':unittest.main()

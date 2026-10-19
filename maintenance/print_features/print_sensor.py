@@ -5,7 +5,7 @@ class PrintSensor:
     def __init__(self, config):
         self.printer = config.get_printer()
         self.reactor = self.printer.get_reactor()
-        self.enabled = True
+        self.enabled = False
         self.pending = None
         self.in_job = False
         self.gate = False
@@ -82,7 +82,7 @@ class PrintSensor:
         return now + .1
 
     def begin(self, gcmd):
-        self.enabled = self.pending if self.pending is not None else True
+        self.enabled = self.pending if self.pending is not None else False
         self.pending = None
         self.in_job = True
         self.close_gate()
@@ -108,7 +108,7 @@ class PrintSensor:
     def finish(self):
         self.close_gate()
         self.in_job = False
-        self.enabled = True
+        self.enabled = False
 
     def end(self, gcmd):
         self.finish()
