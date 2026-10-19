@@ -183,7 +183,7 @@ def run(channel):
                                    stdin=subprocess.DEVNULL, check=True)
                 status('complete', commit)
         except (Exception, SystemExit) as exc:
-            status('failed', str(exc) + '; retry from Mainsail service restart after resolving the cause')
+            status('failed', str(exc) + '; resolve the cause, then retry Update in Mainsail (or restart the update service)')
             raise
 
 

@@ -75,7 +75,58 @@ class UpdateStatus:
                 original(resp, is_complete)
 
             helper.notify_update_response = notify
+            for channel in ('config', 'system'):
+                updater = getattr(manager, 'updaters', {}).get('lugoware_' + channel)
+                if updater is not None:
+                    self.enable_retry(updater, channel)
         self.timer.start()
+
+    def failed_install(self, channel):
+        try:
+            data = json.loads((self.folder / (channel + '-status.json')).read_text())
+            return data if data.get('state') == 'failed' else None
+        except (OSError, ValueError):
+            return None
+
+    def enable_retry(self, updater, channel):
+        if getattr(updater, '_lugoware_retry_enabled', False):
+            return
+        original_status = updater.get_update_status
+        original_update = updater.update
+
+        def status():
+            data = dict(original_status())
+            failed = self.failed_install(channel)
+            if failed:
+                data['installation_pending'] = True
+                data['warnings'] = list(data.get('warnings', [])) + [
+                    '설치 실패: 원인을 해결한 뒤 업데이트를 다시 누르세요. 다운로드된 Git 버전은 최신일 수 있습니다.']
+                # Mainsail enables Git update buttons from this list. This is an
+                # explicitly labelled install task for the real downloaded commit,
+                # not a fabricated version or a repository reset.
+                if not data.get('commits_behind'):
+                    data['commits_behind'] = [dict(
+                        sha=data.get('current_hash', ''), author='LUGOWARE installer',
+                        date=str(int(failed.get('time', time.time()))),
+                        subject='설치 재시도 — 다운로드 완료, 실제 설치 미완료',
+                        message=failed.get('detail', ''), tag=None)]
+            return data
+
+        async def update():
+            await updater.repo.wait_for_refresh()
+            if not self.failed_install(channel) or not updater.repo.is_current():
+                return await original_update()
+            info = original_status()
+            if not info.get('is_valid', True) or updater.repo.is_dirty():
+                return await original_update()
+            updater.notify_status('Retrying failed installation; Git checkout unchanged...')
+            await updater.restart_service()
+            updater.notify_status('Update Finished...', is_complete=True)
+            return True
+
+        updater.get_update_status = status
+        updater.update = update
+        updater._lugoware_retry_enabled = True
 
     def ui_pending(self, proc):
         try:
@@ -173,6 +224,12 @@ class UpdateStatus:
             except (OSError, ValueError, KeyError):
                 pass
         self.update_dialog(states)
+        signature = tuple((c, d.get('run_id'), d.get('state')) for c, d in sorted(states.items()))
+        if signature != getattr(self, '_retry_signature', None):
+            self._retry_signature = signature
+            manager = self.server.lookup_component('update_manager', None)
+            if manager is not None:
+                manager.cmd_helper.notify_update_refreshed()
         return eventtime + 2.
 
 
