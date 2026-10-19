@@ -6,6 +6,7 @@ import shutil
 import subprocess
 import time
 
+from moonraker_apt import installer as dependency_installer
 from upgrade_klipper import version_key
 from update_components import api, restore_known_patch
 
@@ -69,7 +70,8 @@ def upgrade(folder, backup):
     print('[진행] Moonraker 공식 의존성·서비스 설치', flush=True)
     run('sudo', 'python3', str(Path(__file__).with_name('repair_apt_sources.py')), str(backup / 'apt-sources'))
     # The official installer runs apt-get update after the source repair.
-    run('bash', str(folder / 'scripts/install-moonraker.sh'))
+    with dependency_installer(folder) as script:
+        run('bash', str(script))
     wait_server()
     pending.unlink()
     print('[확인 완료] Moonraker v0.11.0-0 이상 실행 확인', flush=True)
