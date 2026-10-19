@@ -1,15 +1,34 @@
 import sys
 import unittest
+import tempfile
+from unittest.mock import patch
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'maintenance/print_features'))
 sys.path.insert(0, str(ROOT / 'maintenance'))
-from toolchange_count import count_toolchanges
+from toolchange_count import count_toolchanges, file_total
 from patch_print_controls import feature_macros
 
 
 class FeatureTests(unittest.TestCase):
+    def test_cache_reuse_and_same_name_replacement(self):
+        with tempfile.TemporaryDirectory(dir=ROOT) as tmp:
+            folder = Path(tmp)
+            file = folder / 'part.gcode'
+            cache = folder / 'cache'
+            file.write_text('START_PRINT INITIAL_TOOL=0\nT1\n')
+            self.assertEqual(file_total(folder, file.name, cache), 2)
+            with patch('toolchange_count.count_toolchanges', side_effect=AssertionError('cache not used')):
+                self.assertEqual(file_total(folder, file.name, cache), 2)
+            file.write_text('START_PRINT INITIAL_TOOL=0\nT1\nT2\n')
+            self.assertEqual(file_total(folder, file.name, cache), 3)
+
+    def test_rejects_outside_gcode_root(self):
+        with tempfile.TemporaryDirectory(dir=ROOT) as tmp:
+            with self.assertRaises(ValueError):
+                file_total(tmp, '../outside.gcode', Path(tmp) / 'cache')
+
     def test_slicer_duplicate_selection_counts_once(self):
         lines = ['START_PRINT INITIAL_TOOL=3', 'CHANGE_TOOL NEXT_TOOL=3', 'T3',
                  'CHANGE_TOOL NEXT_TOOL=0', 'T0', '; CHANGE_TOOL NEXT_TOOL=1',

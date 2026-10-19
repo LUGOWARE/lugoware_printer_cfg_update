@@ -2,8 +2,10 @@
 from gi.repository import Gtk, GLib, Gdk
 import re
 import threading
+import subprocess
+import sys
+import json
 from pathlib import Path
-from ks_includes.toolchange_count import count_toolchanges
 
 
 def text(screen, key):
@@ -266,17 +268,19 @@ def update_controls(panel):
         panel._toolchange_file = filename
         panel._toolchange_count = '0'
         panel._toolchange_total = None
-        if filename:
+        if filename and not (panel._printer.get_stat('gcode_macro TOOL_STATE') or {}).get('tc_total', 0):
             root = panel._printer.get_config_section('virtual_sdcard').get('path', '')
             def scan():
                 total = None
                 try:
-                    base = Path(root).expanduser().resolve()
-                    path = (base / filename).resolve()
-                    path.relative_to(base)
-                    with path.open(errors='replace') as stream:
-                        total = count_toolchanges(stream)
-                except (OSError, ValueError):
+                    result = subprocess.run(
+                        [sys.executable, str(Path(__file__).with_name('toolchange_count.py')), root, filename],
+                        stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
+                        text=True, timeout=120, check=True)
+                    total = json.loads(result.stdout)['total']
+                    if type(total) is not int or total < 0:
+                        total = None
+                except (OSError, ValueError, KeyError, subprocess.SubprocessError):
                     pass
                 def ready():
                     if panel._toolchange_file == filename:
@@ -284,7 +288,20 @@ def update_controls(panel):
                         update_controls(panel)
                     return False
                 GLib.idle_add(ready)
-            threading.Thread(target=scan, daemon=True).start()
+            def start_scan():
+                if panel._toolchange_file == filename and panel.content.get_mapped():
+                    threading.Thread(target=scan, daemon=True).start()
+                return False
+            def defer_scan():
+                # Paint the print panel first. CPU-heavy parsing runs in another process.
+                GLib.timeout_add(350, start_scan, priority=GLib.PRIORITY_DEFAULT_IDLE)
+            if panel.content.get_mapped():
+                defer_scan()
+            else:
+                def mapped(widget):
+                    widget.disconnect(handler)
+                    defer_scan()
+                handler = panel.content.connect('map', mapped)
     message = str(panel._printer.get_stat('display_status', 'message') or '')
     match = re.search(r'\bTC\s+(\d+(?:/\d+)?)', message)
     if match:
@@ -295,7 +312,9 @@ def update_controls(panel):
     if not total and '/' in panel._toolchange_count:
         total = int(panel._toolchange_count.split('/')[1])
     name = '툴체인지' if panel._screen._config.get_main_config().get('language', 'en').startswith('ko') else 'Tool changes'
-    panel._toolchange_label.set_label(f'{name} {current}/{total if total is not None else "…"}')
+    label = f'{name} {current}/{total if total is not None else "…"}'
+    if panel._toolchange_label.get_label() != label:
+        panel._toolchange_label.set_label(label)
     controller = panel._screen.trial_touch_lock
     in_print = panel.state in ('printing', 'paused')
     if not in_print:
