@@ -94,5 +94,9 @@
   "Wait for movement to stop before releasing motors and clearing preparation errors.": "Изчакайте движението да спре, преди да освободите двигателите и да изчистите грешките при подготовката.",
   "duty={v0} high_count={v1}": "мито={v0} high_count={v1}",
   "skip bed-off (still printing).": "пропуснете леглото (все още се печата).",
-  "skip bed-off (target={v0}).": "пропускане на почивка (target={v0})."
+  "skip bed-off (target={v0}).": "пропускане на почивка (target={v0}).",
+  "Tool change {count}": "Смяна на инструмент {count}",
+  "Must home axis first: Z": "Първо установете началната позиция на оста Z.",
+  "Probe measurement error - redeploying probe ({attempt}/{total})": "Грешка при измерване — повторно разгъване на сондата ({attempt}/{total})",
+  "Lower Z": "Спускане на Z"
 }

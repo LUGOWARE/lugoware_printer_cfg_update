@@ -94,5 +94,9 @@
   "Wait for movement to stop before releasing motors and clearing preparation errors.": "Vent på, at bevægelsen stopper, før du slipper motorer og fjerner forberedelsesfejl.",
   "duty={v0} high_count={v1}": "duty={v0} high_count={v1}",
   "skip bed-off (still printing).": "springe ud (udskriver stadig).",
-  "skip bed-off (target={v0}).": "spring over bed-off (target={v0})."
+  "skip bed-off (target={v0}).": "spring over bed-off (target={v0}).",
+  "Tool change {count}": "Værktøjsskift {count}",
+  "Must home axis first: Z": "Kør først Z-aksen til hjemmepositionen.",
+  "Probe measurement error - redeploying probe ({attempt}/{total})": "Probemålefejl — proben køres ud igen ({attempt}/{total})",
+  "Lower Z": "Sænk Z"
 }

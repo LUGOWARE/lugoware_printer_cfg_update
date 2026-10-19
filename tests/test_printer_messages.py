@@ -19,13 +19,16 @@ class PrinterMessages(unittest.TestCase):
             self.assertEqual(set(data), set(rules['keys']), path.name)
             for key, value in data.items():
                 self.assertTrue(value.strip(), (path.name, key))
-                self.assertEqual(sorted(re.findall(r'\{v\d+\}', key)),
-                                 sorted(re.findall(r'\{v\d+\}', value)), (path.name, key))
+                self.assertEqual(sorted(re.findall(r'\{\w+\}', key)),
+                                 sorted(re.findall(r'\{\w+\}', value)), (path.name, key))
             for pattern, key in rules['patterns'].items():
-                values = {name: '12.5' for name in re.findall(r'\{(v\d+)\}', key)}
-                result = translate_printer_message(key.format(**values), lambda s: data.get(s, s))
+                values = {name: ('1' if name in ('count', 'attempt') else '2' if name == 'total' else '12.5') for name in re.findall(r'\{(\w+)\}', key)}
+                message = key.format(**values)
+                if key == 'Tool change {count}':
+                    message = 'Toolchange 1'
+                result = translate_printer_message(message, lambda s: data.get(s, s))
                 self.assertIsNotNone(result, (path.name, key))
-                self.assertNotRegex(result, r'\{v\d+\}')
+                self.assertNotRegex(result, r'\{\w+\}')
 
     def test_unknown_filenames_and_gcode_are_not_translated(self):
         for text in ('My PLA.gcode', 'G1 X10 Y125', 'PLA custom 210', '42%'):

@@ -173,6 +173,8 @@ class ChannelTests(unittest.TestCase):
             status = UpdateStatus.__new__(UpdateStatus)
             status.folder = Path(d)
             status.announcements = Mock()
+            status.server = Mock()
+            status.server.lookup_component.return_value = None
             (status.folder / 'system-status.json').write_text(json.dumps(dict(run_id='1', state='failed', detail='bad', log='log')))
             status.poll(0)
             status.poll(1)

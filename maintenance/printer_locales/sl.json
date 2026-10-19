@@ -94,5 +94,9 @@
   "Wait for movement to stop before releasing motors and clearing preparation errors.": "Počakajte, da se gibanje ustavi, preden sprostite motorje in odpravite napake pri pripravi.",
   "duty={v0} high_count={v1}": "dolžnost={v0} high_count={v1}",
   "skip bed-off (still printing).": "skip bed off (še vedno tiskanje).",
-  "skip bed-off (target={v0}).": "preskoči spanje (target={v0})."
+  "skip bed-off (target={v0}).": "preskoči spanje (target={v0}).",
+  "Tool change {count}": "Menjava orodja {count}",
+  "Must home axis first: Z": "Najprej premaknite os Z v izhodiščni položaj.",
+  "Probe measurement error - redeploying probe ({attempt}/{total})": "Napaka meritve — ponovno izvlečenje sonde ({attempt}/{total})",
+  "Lower Z": "Spusti Z"
 }

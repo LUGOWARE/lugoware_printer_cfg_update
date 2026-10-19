@@ -94,5 +94,9 @@
   "Wait for movement to stop before releasing motors and clearing preparation errors.": "Motorları serbest bırakmadan ve hazırlık hatalarını temizlemeden önce hareketin durmasını bekleyin.",
   "duty={v0} high_count={v1}": "görev={v0} yüksek_sayım={v1}",
   "skip bed-off (still printing).": "yataktan kalkmayı atlayın (hala yazdırıyor).",
-  "skip bed-off (target={v0}).": "yatmayı atla (hedef={v0})."
+  "skip bed-off (target={v0}).": "yatmayı atla (hedef={v0}).",
+  "Tool change {count}": "Takım değişimi {count}",
+  "Must home axis first: Z": "Önce Z eksenini başlangıç konumuna getirin.",
+  "Probe measurement error - redeploying probe ({attempt}/{total})": "Prob ölçüm hatası — prob yeniden açılıyor ({attempt}/{total})",
+  "Lower Z": "Z indir"
 }

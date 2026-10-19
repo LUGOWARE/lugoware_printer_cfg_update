@@ -94,5 +94,9 @@
   "Wait for movement to stop before releasing motors and clearing preparation errors.": "Várja meg, amíg a mozgás leáll, mielőtt elengedi a motorokat és kiküszöböli az előkészítési hibákat.",
   "duty={v0} high_count={v1}": "duty={v0} high_count={v1}",
   "skip bed-off (still printing).": "kihagyja az ágyat (még mindig nyomtat).",
-  "skip bed-off (target={v0}).": "kihagyás (cél={v0})."
+  "skip bed-off (target={v0}).": "kihagyás (cél={v0}).",
+  "Tool change {count}": "Szerszámcsere {count}",
+  "Must home axis first: Z": "Először állítsa alaphelyzetbe a Z tengelyt.",
+  "Probe measurement error - redeploying probe ({attempt}/{total})": "Mérési hiba — szonda újbóli kinyújtása ({attempt}/{total})",
+  "Lower Z": "Z leengedése"
 }

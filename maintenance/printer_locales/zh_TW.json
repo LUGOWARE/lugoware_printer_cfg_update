@@ -94,5 +94,9 @@
   "Wait for movement to stop before releasing motors and clearing preparation errors.": "等待動作停止，然後再釋放馬達並清除準備錯誤。",
   "duty={v0} high_count={v1}": "職責={v0} high_count={v1}",
   "skip bed-off (still printing).": "跳過下床（仍在列印）。",
-  "skip bed-off (target={v0}).": "跳過就寢（目標={v0}）。"
+  "skip bed-off (target={v0}).": "跳過就寢（目標={v0}）。",
+  "Tool change {count}": "工具切換 {count}",
+  "Must home axis first: Z": "請先完成 Z 軸歸零。",
+  "Probe measurement error - redeploying probe ({attempt}/{total})": "探針測量錯誤 — 正在重新展開探針 ({attempt}/{total})",
+  "Lower Z": "降低 Z"
 }

@@ -94,5 +94,9 @@
   "Wait for movement to stop before releasing motors and clearing preparation errors.": "Pričekajte da se kretanje zaustavi prije otpuštanja motora i uklanjanja grešaka u pripremi.",
   "duty={v0} high_count={v1}": "duty={v0} high_count={v1}",
   "skip bed-off (still printing).": "skip bed-off (još se ispisuje).",
-  "skip bed-off (target={v0}).": "preskoči spavanje (target={v0})."
+  "skip bed-off (target={v0}).": "preskoči spavanje (target={v0}).",
+  "Tool change {count}": "Promjena alata {count}",
+  "Must home axis first: Z": "Najprije postavite Z-os u početni položaj.",
+  "Probe measurement error - redeploying probe ({attempt}/{total})": "Pogreška mjerenja — ponovno izvlačenje sonde ({attempt}/{total})",
+  "Lower Z": "Spusti Z"
 }

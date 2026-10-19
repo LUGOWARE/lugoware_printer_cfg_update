@@ -94,5 +94,9 @@
   "Wait for movement to stop before releasing motors and clearing preparation errors.": "Prieš atleisdami variklius ir pašalindami paruošimo klaidas, palaukite, kol judėjimas sustos.",
   "duty={v0} high_count={v1}": "pareiga={v0} high_count={v1}",
   "skip bed-off (still printing).": "praleisti lovą (vis dar spausdinama).",
-  "skip bed-off (target={v0}).": "praleisti lovą (target={v0})."
+  "skip bed-off (target={v0}).": "praleisti lovą (target={v0}).",
+  "Tool change {count}": "Įrankio keitimas {count}",
+  "Must home axis first: Z": "Pirmiausia nustatykite Z ašies pradinę padėtį.",
+  "Probe measurement error - redeploying probe ({attempt}/{total})": "Zondo matavimo klaida — zondas vėl išskleidžiamas ({attempt}/{total})",
+  "Lower Z": "Nuleisti Z"
 }

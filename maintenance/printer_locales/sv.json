@@ -94,5 +94,9 @@
   "Wait for movement to stop before releasing motors and clearing preparation errors.": "Vänta tills rörelsen stannar innan du släpper motorer och rensar förberedelsefel.",
   "duty={v0} high_count={v1}": "duty={v0} high_count={v1}",
   "skip bed-off (still printing).": "hoppa över sänggående (fortfarande utskrift).",
-  "skip bed-off (target={v0}).": "hoppa över sänggåendet (target={v0})."
+  "skip bed-off (target={v0}).": "hoppa över sänggåendet (target={v0}).",
+  "Tool change {count}": "Verktygsbyte {count}",
+  "Must home axis first: Z": "Kör först Z-axeln till hempositionen.",
+  "Probe measurement error - redeploying probe ({attempt}/{total})": "Mätfel — proben fälls ut igen ({attempt}/{total})",
+  "Lower Z": "Sänk Z"
 }

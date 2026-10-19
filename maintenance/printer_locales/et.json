@@ -94,5 +94,9 @@
   "Wait for movement to stop before releasing motors and clearing preparation errors.": "Enne mootorite vabastamist ja ettevalmistusvigade kõrvaldamist oodake, kuni liikumine peatub.",
   "duty={v0} high_count={v1}": "duty={v0} high_count={v1}",
   "skip bed-off (still printing).": "vahelejätmine (printimine alles).",
-  "skip bed-off (target={v0}).": "jäta voodist välja (target={v0})."
+  "skip bed-off (target={v0}).": "jäta voodist välja (target={v0}).",
+  "Tool change {count}": "Tööriistavahetus {count}",
+  "Must home axis first: Z": "Viige esmalt Z-telg algasendisse.",
+  "Probe measurement error - redeploying probe ({attempt}/{total})": "Anduri mõõtmisviga — anduri uuesti väljalükkamine ({attempt}/{total})",
+  "Lower Z": "Langeta Z"
 }

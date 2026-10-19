@@ -185,7 +185,7 @@ fi
 mkdir -p "$HOME/.local/share/lugoware"
 cp "$COMMON_REPO/maintenance/install_printer_header.py" "$COMMON_REPO/templates/printer_header.cfg" "$COMMON_REPO/templates/KlipperScreen.conf" "$HOME/.local/share/lugoware/"
 cp "$COMMON_REPO/maintenance/install_tool_temperature.py" "$COMMON_REPO/maintenance/install_screen_config.py" "$HOME/.local/share/lugoware/"
-cp "$COMMON_REPO/maintenance/install_print_controls.py" "$COMMON_REPO/maintenance/patch_print_controls.py" "$COMMON_REPO/maintenance/final_print_ui.py" "$HOME/.local/share/lugoware/"
+cp "$COMMON_REPO/maintenance/install_print_controls.py" "$COMMON_REPO/maintenance/patch_print_controls.py" "$COMMON_REPO/maintenance/final_print_ui.py" "$COMMON_REPO/maintenance/october_features.py" "$HOME/.local/share/lugoware/"
 
 # Run from the newly downloaded release so existing workers gain this behavior too.
 if (( SYSTEM_ONLY )); then

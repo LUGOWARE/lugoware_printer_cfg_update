@@ -94,5 +94,9 @@
   "Wait for movement to stop before releasing motors and clearing preparation errors.": "Đợi chuyển động dừng lại trước khi nhả động cơ và xử lý các lỗi chuẩn bị.",
   "duty={v0} high_count={v1}": "nhiệm vụ={v0} high_count={v1}",
   "skip bed-off (still printing).": "bỏ qua việc tắt máy (vẫn đang in).",
-  "skip bed-off (target={v0}).": "bỏ qua giờ đi ngủ (target={v0})."
+  "skip bed-off (target={v0}).": "bỏ qua giờ đi ngủ (target={v0}).",
+  "Tool change {count}": "Đổi công cụ {count}",
+  "Must home axis first: Z": "Hãy đưa trục Z về gốc trước.",
+  "Probe measurement error - redeploying probe ({attempt}/{total})": "Lỗi đo — đang triển khai lại đầu dò ({attempt}/{total})",
+  "Lower Z": "Hạ Z"
 }

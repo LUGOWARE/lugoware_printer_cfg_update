@@ -94,5 +94,9 @@
   "Wait for movement to stop before releasing motors and clearing preparation errors.": "Wait for movement to stop before releasing motors and clearing preparation errors.",
   "duty={v0} high_count={v1}": "duty={v0} high_count={v1}",
   "skip bed-off (still printing).": "skip bed-off (still printing).",
-  "skip bed-off (target={v0}).": "skip bed-off (target={v0})."
+  "skip bed-off (target={v0}).": "skip bed-off (target={v0}).",
+  "Tool change {count}": "Tool change {count}",
+  "Must home axis first: Z": "Home the Z axis first.",
+  "Probe measurement error - redeploying probe ({attempt}/{total})": "Probe measurement error — redeploying probe ({attempt}/{total})",
+  "Lower Z": "Lower Z"
 }

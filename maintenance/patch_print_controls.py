@@ -51,6 +51,8 @@ def prepare_macros(text):
 
 def feature_macros(text):
     """Add control hooks only; preserve model-specific pins and motion lines."""
+    from october_features import config
+    text = config(text)
     if '[gcode_macro START_PRINT]' not in text:
         return text
     if 'PRINT_SENSOR_BEGIN' in text:

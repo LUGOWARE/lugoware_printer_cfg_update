@@ -95,7 +95,11 @@
     "Wait for movement to stop before releasing motors and clearing preparation errors.",
     "duty={v0} high_count={v1}",
     "skip bed-off (still printing).",
-    "skip bed-off (target={v0})."
+    "skip bed-off (target={v0}).",
+    "Must home axis first: Z",
+    "Lower Z",
+    "Tool change {count}",
+    "Probe measurement error - redeploying probe ({attempt}/{total})"
   ],
   "patterns": {
     "duty=(?P<v0>.+?)\\ high_count=(?P<v1>.+?)": "duty={v0} high_count={v1}",
@@ -112,6 +116,8 @@
     "Park\\ T(?P<v0>.+?)\\ first\\.": "Park T{v0} first.",
     "Heater\\ (?P<v0>.+?)\\ \\((?P<v1>.+?)\\):\\ (?P<v2>.+?)": "Heater {v0} ({v1}): {v2}",
     "Temperature\\ rise:\\ (?P<v0>.+?)°C": "Temperature rise: {v0}°C",
-    "Temperature\\ change:\\ (?P<v0>.+?)°C": "Temperature change: {v0}°C"
+    "Temperature\\ change:\\ (?P<v0>.+?)°C": "Temperature change: {v0}°C",
+    "Toolchange (?P<count>\\d+(?:/\\d+)?)": "Tool change {count}",
+    "Probe measurement error - redeploying probe \\((?P<attempt>[12])/(?P<total>2)\\)": "Probe measurement error - redeploying probe ({attempt}/{total})"
   }
 }

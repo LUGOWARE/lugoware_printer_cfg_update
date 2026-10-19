@@ -49,7 +49,7 @@ class FeatureTests(unittest.TestCase):
         result = feature_macros(source)
         self.assertEqual(feature_macros(result), result)
         motion = lambda s: [x for x in s.splitlines() if x.strip().startswith('G1 ')]
-        self.assertEqual(motion(source), motion(result))
+        self.assertEqual(motion(source), motion(result.split("[gcode_macro SCREEN_LOWER_BED_10]")[0]))
         existing_tc = '\n'.join(line for line in result.splitlines() if 'PRINT_SENSOR_' not in line) + '\n'
         upgraded = feature_macros(existing_tc)
         self.assertEqual(upgraded.count('variable_tc_count:'), 1)

@@ -94,5 +94,9 @@
   "Wait for movement to stop before releasing motors and clearing preparation errors.": "Attendre l'arrêt du mouvement avant de relâcher les moteurs et d'effacer les erreurs de préparation.",
   "duty={v0} high_count={v1}": "devoir={v0} high_count={v1}",
   "skip bed-off (still printing).": "sauter le lit (en cours d'impression).",
-  "skip bed-off (target={v0}).": "sauter le lit (target={v0})."
+  "skip bed-off (target={v0}).": "sauter le lit (target={v0}).",
+  "Tool change {count}": "Changement d’outil {count}",
+  "Must home axis first: Z": "Effectuez d’abord la prise d’origine de l’axe Z.",
+  "Probe measurement error - redeploying probe ({attempt}/{total})": "Erreur de mesure — redéploiement de la sonde ({attempt}/{total})",
+  "Lower Z": "Abaisser Z"
 }

@@ -94,5 +94,9 @@
   "Wait for movement to stop before releasing motors and clearing preparation errors.": "قبل از رها کردن موتورها و پاک کردن خطاهای آماده سازی، منتظر توقف حرکت باشید.",
   "duty={v0} high_count={v1}": "duty={v0} high_count={v1}",
   "skip bed-off (still printing).": "رد شدن از بستر (هنوز چاپ).",
-  "skip bed-off (target={v0}).": "رد شدن از بستر (target={v0})."
+  "skip bed-off (target={v0}).": "رد شدن از بستر (target={v0}).",
+  "Tool change {count}": "تعویض ابزار {count}",
+  "Must home axis first: Z": "ابتدا محور Z را به موقعیت مبدا ببرید.",
+  "Probe measurement error - redeploying probe ({attempt}/{total})": "خطای اندازه‌گیری پروب — باز کردن مجدد پروب ({attempt}/{total})",
+  "Lower Z": "پایین بردن Z"
 }

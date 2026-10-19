@@ -94,5 +94,9 @@
   "Wait for movement to stop before releasing motors and clearing preparation errors.": "Pred uvoľnením motorov a odstránením chýb prípravy počkajte, kým sa pohyb nezastaví.",
   "duty={v0} high_count={v1}": "clo={v0} high_count={v1}",
   "skip bed-off (still printing).": "preskočiť spodnú vrstvu (stále tlačenie).",
-  "skip bed-off (target={v0}).": "preskočiť bed-off (cieľ={v0})."
+  "skip bed-off (target={v0}).": "preskočiť bed-off (cieľ={v0}).",
+  "Tool change {count}": "Výmena nástroja {count}",
+  "Must home axis first: Z": "Najprv nastavte východiskovú polohu osi Z.",
+  "Probe measurement error - redeploying probe ({attempt}/{total})": "Chyba merania — opätovné vysunutie sondy ({attempt}/{total})",
+  "Lower Z": "Znížiť Z"
 }

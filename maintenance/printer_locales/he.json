@@ -94,5 +94,9 @@
   "Wait for movement to stop before releasing motors and clearing preparation errors.": "המתן עד שהתנועה תיפסק לפני שחרור מנועים וניקוי שגיאות הכנה.",
   "duty={v0} high_count={v1}": "duty={v0} high_count={v1}",
   "skip bed-off (still printing).": "דלג על מיטה (עדיין הדפסה).",
-  "skip bed-off (target={v0}).": "דלג על יציאה מהמיטה (target={v0})."
+  "skip bed-off (target={v0}).": "דלג על יציאה מהמיטה (target={v0}).",
+  "Tool change {count}": "החלפת כלי {count}",
+  "Must home axis first: Z": "יש להחזיר תחילה את ציר Z לנקודת הבית.",
+  "Probe measurement error - redeploying probe ({attempt}/{total})": "שגיאת מדידה — פריסה מחדש של הגשש ({attempt}/{total})",
+  "Lower Z": "הורדת Z"
 }

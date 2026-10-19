@@ -94,5 +94,9 @@
   "Wait for movement to stop before releasing motors and clearing preparation errors.": "이동이 멈춘 뒤 모터를 해제하고 준비 오류를 초기화해주세요.",
   "duty={v0} high_count={v1}": "히터 출력={v0} 고출력 횟수={v1}",
   "skip bed-off (still printing).": "출력 중이므로 베드 히터를 유지합니다.",
-  "skip bed-off (target={v0}).": "베드 히터 끄기를 생략합니다. 목표 온도: {v0}"
+  "skip bed-off (target={v0}).": "베드 히터 끄기를 생략합니다. 목표 온도: {v0}",
+  "Tool change {count}": "툴체인지 {count}",
+  "Must home axis first: Z": "먼저 Z축 홈 이동을 완료해 주세요.",
+  "Probe measurement error - redeploying probe ({attempt}/{total})": "프로브 측정 오류 — 프로브를 재전개 중 ({attempt}/{total})",
+  "Lower Z": "Z 내리기"
 }

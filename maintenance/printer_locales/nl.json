@@ -94,5 +94,9 @@
   "Wait for movement to stop before releasing motors and clearing preparation errors.": "Wacht tot de beweging stopt voordat u de motoren vrijgeeft en voorbereidingsfouten verhelpt.",
   "duty={v0} high_count={v1}": "plicht={v0} high_count={v1}",
   "skip bed-off (still printing).": "bed-off overslaan (nog steeds aan het afdrukken).",
-  "skip bed-off (target={v0}).": "sla het uit bed over (target={v0})."
+  "skip bed-off (target={v0}).": "sla het uit bed over (target={v0}).",
+  "Tool change {count}": "Gereedschapswissel {count}",
+  "Must home axis first: Z": "Voer eerst de homing van de Z-as uit.",
+  "Probe measurement error - redeploying probe ({attempt}/{total})": "Meetfout — probe wordt opnieuw uitgeschoven ({attempt}/{total})",
+  "Lower Z": "Z verlagen"
 }

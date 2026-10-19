@@ -94,5 +94,9 @@
   "Wait for movement to stop before releasing motors and clearing preparation errors.": "動きが停止するまで待ってから、モーターを解放し、準備エラーをクリアしてください。",
   "duty={v0} high_count={v1}": "義務={v0} high_count={v1}",
   "skip bed-off (still printing).": "ベッドオフをスキップします (静止印刷)。",
-  "skip bed-off (target={v0}).": "就寝をスキップします (ターゲット={v0})。"
+  "skip bed-off (target={v0}).": "就寝をスキップします (ターゲット={v0})。",
+  "Tool change {count}": "ツール交換 {count}",
+  "Must home axis first: Z": "先にZ軸の原点復帰を行ってください。",
+  "Probe measurement error - redeploying probe ({attempt}/{total})": "プローブ測定エラー — プローブを再展開中 ({attempt}/{total})",
+  "Lower Z": "Zを下げる"
 }

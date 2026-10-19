@@ -4,9 +4,12 @@ import os
 from pathlib import Path
 import shutil
 from patch_print_controls import feature_macros
+from october_features import job, notification, popup
 
 
 def patch_ui(source, name):
+    if name == "job_status.py":
+        source = job(source, reverse=True)
     upgrades = json.loads(Path(__file__).with_name('print_features').joinpath('preprint_patches.json').read_text(encoding='utf-8')).get(name, [])
     # Normalize an already upgraded panel before applying the base migration.
     for old, new in reversed(upgrades):
@@ -25,6 +28,10 @@ def patch_ui(source, name):
         if source.count(old) != 1:
             raise ValueError('Unsupported preprint UI source: ' + name + '\n' + old[:180])
         source = source.replace(old, new, 1)
+    if name == "job_status.py":
+        source = job(source)
+    if name == "screen.py":
+        source = popup(source)
     compile(source, name, 'exec')
     return source
 
@@ -37,6 +44,9 @@ def install(home, screen, klipper, backup):
                            ('screen_panel.py', 'ks_includes/screen_panel.py'), ('screen.py', 'screen.py')]:
         path = screen / relative
         changes[path] = patch_ui(path.read_text(encoding='utf-8'), name)
+    handler = screen / 'ks_includes/notification_handler.py'
+    changes[handler] = notification(handler.read_text(encoding='utf-8'))
+    changes[klipper / 'klippy/extras/probe_auto_recovery.py'] = (assets / 'probe_auto_recovery.py').read_text(encoding='utf-8')
     for name in ('print_controls.py', 'toolchange_count.py'):
         changes[screen / 'ks_includes' / name] = (assets / name).read_text(encoding='utf-8')
     changes[klipper / 'klippy/extras/print_sensor.py'] = (assets / 'print_sensor.py').read_text(encoding='utf-8')
@@ -48,6 +58,8 @@ def install(home, screen, klipper, backup):
         text = text.replace('[fast_cancel]', '[fast_cancel]\n[print_sensor]', 1)
     if '[print_sensor]' not in text:
         raise ValueError('Missing fast_cancel section')
+    if '[probe_auto_recovery]' not in text:
+        text = text.replace('[print_sensor]', '[print_sensor]\n\n[probe_auto_recovery]\nattempts: 2\nminimum_clearance: 1.0', 1)
     changes[p] = text
     if os.environ.get('LUGOWARE_SYSTEM_ONLY') != '1':
         p = config / 'printer_base.cfg'

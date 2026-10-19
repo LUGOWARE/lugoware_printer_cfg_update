@@ -94,5 +94,9 @@
   "Wait for movement to stop before releasing motors and clearing preparation errors.": "Подождите, пока движение остановится, прежде чем отпускать двигатели и сбрасывать ошибки подготовки.",
   "duty={v0} high_count={v1}": "долг={v0} high_count={v1}",
   "skip bed-off (still printing).": "пропустить отстой (печать продолжается).",
-  "skip bed-off (target={v0}).": "пропустить отход от сна (target={v0})."
+  "skip bed-off (target={v0}).": "пропустить отход от сна (target={v0}).",
+  "Tool change {count}": "Смена инструмента {count}",
+  "Must home axis first: Z": "Сначала выполните поиск нуля оси Z.",
+  "Probe measurement error - redeploying probe ({attempt}/{total})": "Ошибка измерения — повторное выдвижение щупа ({attempt}/{total})",
+  "Lower Z": "Опустить Z"
 }
