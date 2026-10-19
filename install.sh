@@ -174,6 +174,7 @@ python3 "$COMMON_REPO/maintenance/patch_screen_identity.py"
 python3 "$COMMON_REPO/maintenance/install_timezone.py"
 python3 "$COMMON_REPO/maintenance/install_settings_policy.py"
 python3 "$COMMON_REPO/maintenance/install_filament_details.py"
+python3 "$COMMON_REPO/maintenance/install_print_features.py"
 python3 "$COMMON_REPO/maintenance/install_screen_session.py"
 python3 "$COMMON_REPO/maintenance/install_mainsail_reconnect.py"
 if (( SYSTEM_ONLY )); then

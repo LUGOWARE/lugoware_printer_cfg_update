@@ -47,3 +47,52 @@ def prepare_macros(text):
     {% endif %}
 ''')
     return text[:start] + block + text[end:]
+
+
+def feature_macros(text):
+    """Add control hooks only; preserve model-specific pins and motion lines."""
+    if '[gcode_macro START_PRINT]' not in text:
+        return text
+    if 'PRINT_SENSOR_BEGIN' in text:
+        for marker in ('PRINT_SENSOR_END', 'PRINT_SENSOR_GATE', 'variable_tc_count:', 'variable_tc_total:'):
+            if marker not in text:
+                raise ValueError('Incomplete print features: ' + marker)
+        return text
+
+    def once(old, new):
+        nonlocal text
+        if text.count(old) != 1:
+            raise ValueError('Unsupported print feature anchor: ' + old)
+        text = text.replace(old, new, 1)
+
+    def edit(name, transform):
+        nonlocal text
+        pattern = r'(\[gcode_macro ' + re.escape(name) + r'\]\n)(.*?)(?=\n\[|\Z)'
+        match = re.search(pattern, text, re.S)
+        if not match:
+            raise ValueError('Missing macro: ' + name)
+        text = text[:match.start()] + match[1] + transform(match[2]) + text[match.end():]
+
+    once('variable_active_tool: -1', 'variable_tc_count: 0\nvariable_tc_total: 0\nvariable_active_tool: -1')
+    once('    SAVE_GCODE_STATE NAME=FAST_CANCEL_CHANGE_TOOL_STATE',
+         '    SET_GCODE_VARIABLE MACRO=TOOL_STATE VARIABLE=tc_count VALUE={st.tc_count|int + 1}\n'
+         '    PRINT_SENSOR_GATE ENABLE=0\n    SAVE_GCODE_STATE NAME=FAST_CANCEL_CHANGE_TOOL_STATE')
+    once('    RESET_FIRSTDOCK_FLAGS',
+         '    SET_GCODE_VARIABLE MACRO=TOOL_STATE VARIABLE=tc_count VALUE=0\n'
+         '    SET_GCODE_VARIABLE MACRO=TOOL_STATE VARIABLE=tc_total VALUE={params.TC_TOTAL|default(0)|int}\n'
+         '    RESET_FIRSTDOCK_FLAGS')
+    text = re.sub(r'SET_FILAMENT_SENSOR SENSOR=encoder_sensor ENABLE=[01]', 'PRINT_SENSOR_GATE ENABLE=0', text)
+    edit('START_PRINT', lambda b: b.replace('gcode:\n', 'gcode:\n    PRINT_SENSOR_BEGIN\n', 1).replace(
+        '    SET_FILAMENT_SENSOR SENSOR=toolhead_sensor ENABLE=0',
+        '    SET_FILAMENT_SENSOR SENSOR=toolhead_sensor ENABLE=0\n    PRINT_SENSOR_GATE ENABLE=1'))
+    edit('CHANGE_TOOL', lambda b: b.rstrip() + '\n    PRINT_SENSOR_GATE ENABLE=1\n\n')
+    edit('PAUSE', lambda b: b.replace('gcode:\n', 'gcode:\n    PRINT_SENSOR_GATE ENABLE=0\n', 1))
+    def resume(b):
+        b, count = re.subn(r'(?m)^(\s*)BASE_RESUME\s*$', r'\1BASE_RESUME\n\1PRINT_SENSOR_GATE ENABLE=1', b)
+        if count != 1:
+            raise ValueError('Missing resume gate anchor')
+        return b
+    edit('RESUME', resume)
+    for name in ('END_PRINT', 'CANCEL_PRINT'):
+        edit(name, lambda b: b.replace('gcode:\n', 'gcode:\n    PRINT_SENSOR_END\n', 1))
+    return text

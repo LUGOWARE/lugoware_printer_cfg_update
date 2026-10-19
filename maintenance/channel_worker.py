@@ -12,7 +12,7 @@ import time
 
 from check_idle import main as check_idle, request
 from install_screen_config import merge
-from patch_print_controls import macros
+from patch_print_controls import macros, feature_macros
 
 
 def atomic(path, data):
@@ -42,8 +42,12 @@ def validate_config(text, screen, home):
 def apply_config(repo, home, backup):
     target = home / 'printer_data/config'
     base = (repo / 'printer_base.cfg').read_text(encoding='utf-8-sig')
+    if (home / 'klipper/klippy/extras/print_sensor.py').is_file():
+        base = feature_macros(base)
     template = (repo / 'KlipperScreen.conf').read_text(encoding='utf-8-sig')
     previous_screen = (target / 'KlipperScreen.conf').read_text(encoding='utf-8')
+    if (home / 'klipper/klippy/extras/print_sensor.py').is_file() and '[menu __print lock]' not in template:
+        template += '\n[menu __print lock]\nenable: False\n'
     screen = merge(previous_screen, template)
     validate_config(base, screen, home)
     changes = {'printer_base.cfg': base.encode(), 'KlipperScreen.conf': screen.encode()}
