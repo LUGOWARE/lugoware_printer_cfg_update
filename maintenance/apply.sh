@@ -82,6 +82,8 @@ if [[ ${LUGOWARE_SYSTEM_ONLY:-0} == 1 && ! -f /opt/lugoware/screen-restart/sched
     cp "$BACKUP_DIR/root.crontab" "$BACKUP_DIR/root.crontab.new"
 fi
 
+mkdir -p "$HOME/.local/share/lugoware"
+printf '{"reason":"installer stopped Klipper"}\n' > "$HOME/.local/share/lugoware/maintenance-stopped.json"
 sudo systemctl stop klipper
 # An interrupted/failed installation leaves Klipper stopped, with backups intact.
 stage='히터 테스트 코드 설치'
@@ -137,3 +139,5 @@ status '[확인 완료] KlipperScreen: prompt_text 누적 패치 및 문법 검�
 status '※ 실제 히터 출력과 재부팅 화면은 별도 확인이 필요합니다.'
 trap - ERR
 echo "펌웨어, 히터 테스트 확장, 6시간 간격 KlipperScreen 재시작 설정 적용 완료. 백업: $BACKUP_DIR"
+
+rm -f "$HOME/.local/share/lugoware/maintenance-stopped.json"

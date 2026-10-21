@@ -44,6 +44,22 @@ class ProgressTests(unittest.TestCase):
             obj.replay_completion(connection)
             connection.call_method.assert_not_called()
 
+    def test_announcement_failure_still_closes_failed_update_and_keeps_polling(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            obj = self.instance(Path(tmp))
+            now = time.time()
+            obj.queue_ui('lugoware_system', 42, 'system', now - 10)
+            state = dict(run_id=str(int((now-5)*1e9)), state='failed', detail='installation failed', time=now, log='/tmp/log')
+            (obj.folder/'system-status.json').write_text(json.dumps(state))
+            obj.announcements = Mock()
+            obj.announcements.add_internal_announcement.side_effect = RuntimeError('announcement unavailable')
+            with self.assertLogs(level='ERROR'):
+                self.assertEqual(obj.poll(10),12)
+            payload = obj.server.send_event.call_args.args[1]
+            self.assertTrue(payload['complete'])
+            self.assertIn('설치 실패',payload['message'])
+            self.assertTrue(json.loads((obj.folder/'ui-install.json').read_text())['done'])
+
     def instance(self, folder):
         obj = UpdateStatus.__new__(UpdateStatus)
         obj.folder = folder

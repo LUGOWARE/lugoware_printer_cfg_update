@@ -1,5 +1,6 @@
 """Report real installation progress, not just Git download completion."""
 import json
+import logging
 from pathlib import Path
 import re
 import time
@@ -64,6 +65,8 @@ class UpdateStatus:
                 if channel in ('config', 'system'):
                     key = (proc, channel)
                     started = self.requests.setdefault(key, time.time())
+                    if not self.ui_pending(proc):
+                        self.queue_ui(app, proc, channel, started)
                     # Git success only queues installation. Keep the update dialog open.
                     if is_complete and ('Update Finished' in message or 'Reinstall Complete' in message):
                         self.queue_ui(app, proc, channel, started)
@@ -223,13 +226,22 @@ class UpdateStatus:
                 seen.write_text(key)
             except (OSError, ValueError, KeyError):
                 pass
-        self.update_dialog(states)
+            except Exception:
+                logging.exception('LUGOWARE announcement failed; keep polling installation status')
+        try:
+            self.update_dialog(states)
+        except Exception:
+            logging.exception('LUGOWARE update dialog delivery failed; retry on next poll')
         signature = tuple((c, d.get('run_id'), d.get('state')) for c, d in sorted(states.items()))
         if signature != getattr(self, '_retry_signature', None):
             self._retry_signature = signature
             manager = self.server.lookup_component('update_manager', None)
             if manager is not None:
-                manager.cmd_helper.notify_update_refreshed()
+                try:
+                    manager.cmd_helper.notify_update_refreshed()
+                except Exception:
+                    self._retry_signature = None
+                    logging.exception('LUGOWARE retry-button refresh failed; retry on next poll')
         return eventtime + 2.
 
 

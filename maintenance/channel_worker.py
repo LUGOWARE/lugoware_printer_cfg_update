@@ -131,6 +131,10 @@ def run(channel):
     state_dir = home / '.local/share/lugoware'
     state_dir.mkdir(parents=True, exist_ok=True)
     status_file = state_dir / (channel + '-status.json')
+    try:
+        previous = json.loads(status_file.read_text())
+    except (OSError, ValueError):
+        previous = None
     run_id = str(time.time_ns())
     log = home / 'printer_data/logs' / ('lugoware_' + channel + '.log')
     log.parent.mkdir(parents=True, exist_ok=True)
@@ -150,7 +154,7 @@ def run(channel):
                 wait_system(state_dir)
             with (state_dir / 'update.lock').open('a') as lock:
                 fcntl.flock(lock, fcntl.LOCK_EX)
-                check_idle()
+                check_idle(previous=previous)
                 if channel == 'config':
                     system_status = state_dir / 'system-status.json'
                     if system_status.exists() and json.loads(system_status.read_text())['state'] != 'complete':

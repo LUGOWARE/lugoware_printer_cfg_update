@@ -9,8 +9,43 @@ def request(path):
         return json.load(response)['result']
 
 
-def main():
+def recover_stopped(previous=None):
+    """Start, never restart, a service stopped by a failed installer."""
+    from pathlib import Path
+    import subprocess
+    import time
+    folder = Path.home()/'.local/share/lugoware'
+    marker = folder/'maintenance-stopped.json'
+    evidence = marker.is_file()
+    for name in ('system-status.json', 'config-status.json'):
+        try:
+            data = previous if previous is not None and name == 'system-status.json' else json.loads((folder/name).read_text())
+            evidence = evidence or data.get('state') == 'failed'
+        except (OSError, ValueError, TypeError):
+            pass
+    if not evidence:
+        return
+    state = subprocess.check_output(['systemctl','show','klipper','-p','ActiveState','--value'], text=True).strip()
+    if state not in ('inactive', 'failed'):
+        return
+    print('[복구] 이전 설치 중단으로 정지된 Klipper 서비스를 시작합니다.', flush=True)
+    subprocess.run(['sudo','systemctl','start','moonraker'], check=True)
+    subprocess.run(['sudo','systemctl','start','klipper'], check=True)
+    for attempt in range(30):
+        try:
+            info = request('/printer/info')
+            if info.get('state') in ('ready','error','shutdown'):
+                print('[복구 확인] Klipper 연결 복원. 설치 전 상태를 다시 검사합니다.', flush=True)
+                return
+        except Exception:
+            pass
+        time.sleep(1)
+    raise RuntimeError('Klipper 자동 복구 후 연결 실패. klippy.log를 확인하세요.')
+
+
+def main(previous=None):
     try:
+        recover_stopped(previous)
         info = request('/printer/info')
         if info['state'] in ('error', 'shutdown'):
             return
