@@ -76,6 +76,12 @@ lines.append('59 5,11,17,23 * * * /usr/bin/python3 -I /opt/lugoware/screen-resta
 dest.write_text('\n'.join(lines) + '\n')
 PY
 
+# Legacy service-restricted root policy cannot install the new schedule.
+# Preserve its exact existing crontab instead of requesting an unsupported change.
+if [[ ${LUGOWARE_SYSTEM_ONLY:-0} == 1 && ! -f /opt/lugoware/screen-restart/schedule.py ]]; then
+    cp "$BACKUP_DIR/root.crontab" "$BACKUP_DIR/root.crontab.new"
+fi
+
 sudo systemctl stop klipper
 # An interrupted/failed installation leaves Klipper stopped, with backups intact.
 stage='히터 테스트 코드 설치'
