@@ -98,5 +98,13 @@
   "Tool change {count}": "تعویض ابزار {count}",
   "Must home axis first: Z": "ابتدا محور Z را به موقعیت مبدا ببرید.",
   "Probe measurement error - redeploying probe ({attempt}/{total})": "خطای اندازه‌گیری پروب — باز کردن مجدد پروب ({attempt}/{total})",
-  "Lower Z": "پایین بردن Z"
+  "Lower Z": "پایین بردن Z",
+  "Homing...": "در حال بازگشت به مبدأ...",
+  "Print paused": "چاپ متوقف شده",
+  "Print cancelled": "چاپ لغو شد",
+  "Print completed": "چاپ کامل شد",
+  "Screen restarts in one minute.": "نمایشگر یک دقیقه دیگر راه‌اندازی مجدد می‌شود.",
+  "Screen restart countdown: {seconds}": "راه‌اندازی مجدد نمایشگر تا {seconds} ثانیه",
+  "Tool changes": "تعویض ابزار",
+  "Filament sensor": "حسگر فیلامنت"
 }

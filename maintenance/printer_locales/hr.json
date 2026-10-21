@@ -98,5 +98,13 @@
   "Tool change {count}": "Promjena alata {count}",
   "Must home axis first: Z": "Najprije postavite Z-os u početni položaj.",
   "Probe measurement error - redeploying probe ({attempt}/{total})": "Pogreška mjerenja — ponovno izvlačenje sonde ({attempt}/{total})",
-  "Lower Z": "Spusti Z"
+  "Lower Z": "Spusti Z",
+  "Homing...": "Traženje početnog položaja...",
+  "Print paused": "Ispis pauziran",
+  "Print cancelled": "Ispis otkazan",
+  "Print completed": "Ispis završen",
+  "Screen restarts in one minute.": "Zaslon će se ponovno pokrenuti za minutu.",
+  "Screen restart countdown: {seconds}": "Ponovno pokretanje zaslona za {seconds} s",
+  "Tool changes": "Promjene alata",
+  "Filament sensor": "Senzor filamenta"
 }

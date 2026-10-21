@@ -1,10 +1,13 @@
 """Tested October print UI and mesh recovery integration; preserve board settings."""
+import stage_features
 import json
 import re
 from pathlib import Path
 
 
 def job(text, reverse=False):
+    if reverse:
+        text = stage_features.job(text, reverse=True)
     patches = json.loads(Path(__file__).with_name('print_features').joinpath('october_ui.json').read_text(encoding='utf-8'))
     for old, new in (reversed(patches) if reverse else patches):
         if reverse:
@@ -14,7 +17,7 @@ def job(text, reverse=False):
             if text.count(old) != 1:
                 raise ValueError('Unsupported October UI anchor: ' + old[:120])
             text = text.replace(old, new, 1)
-    return text
+    return text if reverse else stage_features.job(text)
 
 
 def insert(text, anchor, block):
@@ -33,7 +36,7 @@ def notification(text):
 
 
 def popup(text):
-    return insert(text, POPUP_ANCHOR, POPUP_BLOCK)
+    return stage_features.screen(insert(text, POPUP_ANCHOR, POPUP_BLOCK))
 
 
 def config(text):
@@ -63,7 +66,7 @@ def config(text):
             text = text[:match.start()] + block + text[match.end():]
     if '[gcode_macro SCREEN_LOWER_BED_10]' not in text:
         text = text.rstrip() + '\n' + LOWER_BED
-    return text
+    return stage_features.config(text)
 
 NOTIFICATION_ANCHOR = '    def _gcode_response(self, data):\n'
 NOTIFICATION_BLOCK = '        # Keep the second retry visible for at least two seconds, without\n        # delaying Klipper motion or closing a newer/unrelated notification.\n        if re.fullmatch(r"echo: Probe measurement error - redeploying probe \\([12]/2\\)", data.strip()):\n            self._screen.show_popup_message(data.strip()[6:], 1)\n            self._probe_recovery_popup = self._screen.popup_message\n            self._probe_recovery_until = monotonic() + (2.0 if data.strip().endswith("(2/2)") else 0.0)\n            return True\n        if data.strip() == "// PROBE_RECOVERY_SAMPLING":\n            popup = getattr(self, "_probe_recovery_popup", None)\n            if popup is not None:\n                def close_recovery():\n                    if getattr(self, "_probe_recovery_popup", None) is popup:\n                        if self._screen.popup_message is popup:\n                            self._screen.close_popup_message()\n                        self._probe_recovery_popup = None\n                    return False\n                remaining = getattr(self, "_probe_recovery_until", 0.0) - monotonic()\n                if remaining > 0:\n                    GLib.timeout_add(int(remaining * 1000) + 1, close_recovery)\n                else:\n                    close_recovery()\n            return True\n\n'

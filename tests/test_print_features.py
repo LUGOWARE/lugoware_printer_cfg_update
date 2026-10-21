@@ -41,7 +41,7 @@ class FeatureTests(unittest.TestCase):
 
     def test_macro_hooks_preserve_board_motion_and_repeat(self):
         source = '[gcode_macro TOOL_STATE]\nvariable_active_tool: -1\ngcode:\n\n'
-        source += '[gcode_macro START_PRINT]\ngcode:\n    RESET_FIRSTDOCK_FLAGS\n    G1 X334 Y50\n    SET_FILAMENT_SENSOR SENSOR=toolhead_sensor ENABLE=0\n'
+        source += '[gcode_macro START_PRINT]\ngcode:\n    {% if True %}\n    HOME_CHECK\n    BED_MESH_CALIBRATE\n    RESET_FIRSTDOCK_FLAGS\n    G1 X334 Y50\n    SET_FILAMENT_SENSOR SENSOR=toolhead_sensor ENABLE=0\n    {% endif %}\n'
         source += '[gcode_macro CHANGE_TOOL]\ngcode:\n    SAVE_GCODE_STATE NAME=FAST_CANCEL_CHANGE_TOOL_STATE\n    G1 X438\n'
         for name in ('PAUSE', 'RESUME', 'END_PRINT', 'CANCEL_PRINT'):
             source += f'[gcode_macro {name}]\ngcode:\n'

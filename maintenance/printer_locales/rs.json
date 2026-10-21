@@ -98,5 +98,13 @@
   "Tool change {count}": "Промена алата {count}",
   "Must home axis first: Z": "Прво поставите Z осу у почетни положај.",
   "Probe measurement error - redeploying probe ({attempt}/{total})": "Грешка мерења — поновно извлачење сонде ({attempt}/{total})",
-  "Lower Z": "Спусти Z"
+  "Lower Z": "Спусти Z",
+  "Homing...": "Тражење почетног положаја...",
+  "Print paused": "Штампање паузирано",
+  "Print cancelled": "Штампање отказано",
+  "Print completed": "Штампање завршено",
+  "Screen restarts in one minute.": "Екран ће се поново покренути за минут.",
+  "Screen restart countdown: {seconds}": "Поновно покретање екрана за {seconds} с",
+  "Tool changes": "Промене алата",
+  "Filament sensor": "Сензор филамента"
 }

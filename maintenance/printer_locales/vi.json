@@ -98,5 +98,13 @@
   "Tool change {count}": "Đổi công cụ {count}",
   "Must home axis first: Z": "Hãy đưa trục Z về gốc trước.",
   "Probe measurement error - redeploying probe ({attempt}/{total})": "Lỗi đo — đang triển khai lại đầu dò ({attempt}/{total})",
-  "Lower Z": "Hạ Z"
+  "Lower Z": "Hạ Z",
+  "Homing...": "Đang về gốc...",
+  "Print paused": "Đã tạm dừng in",
+  "Print cancelled": "Đã hủy in",
+  "Print completed": "In hoàn tất",
+  "Screen restarts in one minute.": "Màn hình sẽ khởi động lại sau một phút.",
+  "Screen restart countdown: {seconds}": "Màn hình khởi động lại sau {seconds} giây",
+  "Tool changes": "Đổi công cụ",
+  "Filament sensor": "Cảm biến nhựa in"
 }

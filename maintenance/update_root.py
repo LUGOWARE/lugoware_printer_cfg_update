@@ -170,7 +170,9 @@ def execute(args, channel, cfg):
         else:
             pattern = r'^\s*0\s+\*/6\s+\*\s+\*\s+\*\s+/(?:usr/)?bin/systemctl\s+restart\s+KlipperScreen(?:\.service)?\s*(?:#.*)?$'
             lines = [line for line in current.stdout.splitlines() if not re.match(pattern, line)]
-            lines.append('0 */6 * * * /bin/systemctl restart KlipperScreen')
+            write_fixed(Path('/opt/lugoware/screen-restart/schedule.py'), (active_source() / 'screen_restart_schedule.py').read_bytes())
+            lines = [line for line in lines if '/opt/lugoware/screen-restart/schedule.py' not in line]
+            lines.append('59 5,11,17,23 * * * /usr/bin/python3 -I /opt/lugoware/screen-restart/schedule.py')
             run_fixed(['/usr/bin/crontab', '-'], input='\n'.join(lines) + '\n', text=True)
     elif action == 'extensions':
         source = active_source()

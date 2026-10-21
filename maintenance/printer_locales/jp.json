@@ -98,5 +98,13 @@
   "Tool change {count}": "ツール交換 {count}",
   "Must home axis first: Z": "先にZ軸の原点復帰を行ってください。",
   "Probe measurement error - redeploying probe ({attempt}/{total})": "プローブ測定エラー — プローブを再展開中 ({attempt}/{total})",
-  "Lower Z": "Zを下げる"
+  "Lower Z": "Zを下げる",
+  "Homing...": "原点復帰中...",
+  "Print paused": "一時停止",
+  "Print cancelled": "印刷キャンセル",
+  "Print completed": "印刷完了",
+  "Screen restarts in one minute.": "1分後に画面が再起動します。",
+  "Screen restart countdown: {seconds}": "画面再起動まで {seconds} 秒",
+  "Tool changes": "ツール交換",
+  "Filament sensor": "フィラメント検知"
 }

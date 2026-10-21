@@ -98,5 +98,13 @@
   "Tool change {count}": "Výměna nástroje {count}",
   "Must home axis first: Z": "Nejprve nastavte výchozí polohu osy Z.",
   "Probe measurement error - redeploying probe ({attempt}/{total})": "Chyba měření sondy — opětovné vysunutí sondy ({attempt}/{total})",
-  "Lower Z": "Snížit Z"
+  "Lower Z": "Snížit Z",
+  "Homing...": "Hledání výchozí polohy...",
+  "Print paused": "Tisk pozastaven",
+  "Print cancelled": "Tisk zrušen",
+  "Print completed": "Tisk dokončen",
+  "Screen restarts in one minute.": "Obrazovka se za minutu restartuje.",
+  "Screen restart countdown: {seconds}": "Restart obrazovky za {seconds} s",
+  "Tool changes": "Výměny nástroje",
+  "Filament sensor": "Snímač filamentu"
 }

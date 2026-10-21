@@ -98,5 +98,13 @@
   "Tool change {count}": "Takım değişimi {count}",
   "Must home axis first: Z": "Önce Z eksenini başlangıç konumuna getirin.",
   "Probe measurement error - redeploying probe ({attempt}/{total})": "Prob ölçüm hatası — prob yeniden açılıyor ({attempt}/{total})",
-  "Lower Z": "Z indir"
+  "Lower Z": "Z indir",
+  "Homing...": "Başlangıç konumuna gidiliyor...",
+  "Print paused": "Yazdırma duraklatıldı",
+  "Print cancelled": "Yazdırma iptal edildi",
+  "Print completed": "Yazdırma tamamlandı",
+  "Screen restarts in one minute.": "Ekran bir dakika sonra yeniden başlayacak.",
+  "Screen restart countdown: {seconds}": "Ekran {seconds} saniye sonra yeniden başlayacak",
+  "Tool changes": "Takım değişimleri",
+  "Filament sensor": "Filament sensörü"
 }

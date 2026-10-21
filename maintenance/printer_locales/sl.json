@@ -98,5 +98,13 @@
   "Tool change {count}": "Menjava orodja {count}",
   "Must home axis first: Z": "Najprej premaknite os Z v izhodiščni položaj.",
   "Probe measurement error - redeploying probe ({attempt}/{total})": "Napaka meritve — ponovno izvlečenje sonde ({attempt}/{total})",
-  "Lower Z": "Spusti Z"
+  "Lower Z": "Spusti Z",
+  "Homing...": "Iskanje izhodišča...",
+  "Print paused": "Tiskanje začasno ustavljeno",
+  "Print cancelled": "Tiskanje preklicano",
+  "Print completed": "Tiskanje končano",
+  "Screen restarts in one minute.": "Zaslon se bo čez minuto znova zagnal.",
+  "Screen restart countdown: {seconds}": "Ponovni zagon zaslona čez {seconds} s",
+  "Tool changes": "Menjave orodja",
+  "Filament sensor": "Senzor filamenta"
 }

@@ -98,5 +98,13 @@
   "Tool change {count}": "Werkzeugwechsel {count}",
   "Must home axis first: Z": "Bitte referenzieren Sie zuerst die Z-Achse.",
   "Probe measurement error - redeploying probe ({attempt}/{total})": "Fehler bei der Sondenmessung — Sonde wird erneut ausgefahren ({attempt}/{total})",
-  "Lower Z": "Z absenken"
+  "Lower Z": "Z absenken",
+  "Homing...": "Referenzfahrt...",
+  "Print paused": "Druck pausiert",
+  "Print cancelled": "Druck abgebrochen",
+  "Print completed": "Druck abgeschlossen",
+  "Screen restarts in one minute.": "Der Bildschirm startet in einer Minute neu.",
+  "Screen restart countdown: {seconds}": "Bildschirmneustart in {seconds} Sekunden",
+  "Tool changes": "Werkzeugwechsel",
+  "Filament sensor": "Filamentsensor"
 }

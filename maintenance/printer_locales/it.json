@@ -98,5 +98,13 @@
   "Tool change {count}": "Cambio utensile {count}",
   "Must home axis first: Z": "Eseguire prima l’azzeramento dell’asse Z.",
   "Probe measurement error - redeploying probe ({attempt}/{total})": "Errore di misurazione — nuova estensione della sonda ({attempt}/{total})",
-  "Lower Z": "Abbassa Z"
+  "Lower Z": "Abbassa Z",
+  "Homing...": "Ricerca origine...",
+  "Print paused": "Stampa in pausa",
+  "Print cancelled": "Stampa annullata",
+  "Print completed": "Stampa completata",
+  "Screen restarts in one minute.": "Lo schermo si riavvierà tra un minuto.",
+  "Screen restart countdown: {seconds}": "Riavvio schermo tra {seconds} secondi",
+  "Tool changes": "Cambi utensile",
+  "Filament sensor": "Sensore filamento"
 }

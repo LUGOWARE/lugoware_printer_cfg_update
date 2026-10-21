@@ -98,5 +98,13 @@
   "Tool change {count}": "툴체인지 {count}",
   "Must home axis first: Z": "먼저 Z축 홈 이동을 완료해 주세요.",
   "Probe measurement error - redeploying probe ({attempt}/{total})": "프로브 측정 오류 — 프로브를 재전개 중 ({attempt}/{total})",
-  "Lower Z": "Z 내리기"
+  "Lower Z": "Z 내리기",
+  "Homing...": "홈 이동 중...",
+  "Print paused": "일시정지",
+  "Print cancelled": "출력 취소",
+  "Print completed": "출력 완료",
+  "Screen restarts in one minute.": "1분 후 클리퍼스크린이 재시작됩니다.",
+  "Screen restart countdown: {seconds}": "클리퍼스크린 재시작까지 {seconds}초",
+  "Tool changes": "툴체인지",
+  "Filament sensor": "필라멘트 감지"
 }

@@ -98,5 +98,13 @@
   "Tool change {count}": "Verktygsbyte {count}",
   "Must home axis first: Z": "Kör först Z-axeln till hempositionen.",
   "Probe measurement error - redeploying probe ({attempt}/{total})": "Mätfel — proben fälls ut igen ({attempt}/{total})",
-  "Lower Z": "Sänk Z"
+  "Lower Z": "Sänk Z",
+  "Homing...": "Söker hemposition...",
+  "Print paused": "Utskrift pausad",
+  "Print cancelled": "Utskrift avbruten",
+  "Print completed": "Utskrift klar",
+  "Screen restarts in one minute.": "Skärmen startar om om en minut.",
+  "Screen restart countdown: {seconds}": "Skärmen startar om om {seconds} sekunder",
+  "Tool changes": "Verktygsbyten",
+  "Filament sensor": "Filamentsensor"
 }

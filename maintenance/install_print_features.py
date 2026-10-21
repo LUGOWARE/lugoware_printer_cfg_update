@@ -3,6 +3,8 @@ import json
 import os
 from pathlib import Path
 import shutil
+import subprocess
+import re
 from patch_print_controls import feature_macros
 from october_features import job, notification, popup
 
@@ -47,7 +49,7 @@ def install(home, screen, klipper, backup):
     handler = screen / 'ks_includes/notification_handler.py'
     changes[handler] = notification(handler.read_text(encoding='utf-8'))
     changes[klipper / 'klippy/extras/probe_auto_recovery.py'] = (assets / 'probe_auto_recovery.py').read_text(encoding='utf-8')
-    for name in ('print_controls.py', 'toolchange_count.py'):
+    for name in ('print_controls.py', 'toolchange_count.py', 'restart_notice.py', 'info_marquee.py'):
         changes[screen / 'ks_includes' / name] = (assets / name).read_text(encoding='utf-8')
     changes[klipper / 'klippy/extras/print_sensor.py'] = (assets / 'print_sensor.py').read_text(encoding='utf-8')
     for images in (screen / 'styles').glob('*/images'):
@@ -75,6 +77,19 @@ def install(home, screen, klipper, backup):
         if p.exists() and not saved.exists():
             shutil.copy2(p, saved)
         p.write_text(text, encoding='utf-8')
+    cron = subprocess.run(['crontab', '-l'], capture_output=True, text=True, env={**os.environ, 'LC_ALL': 'C'})
+    if cron.returncode == 0 and Path('/opt/lugoware/screen-restart/schedule.py').is_file():
+        lines = cron.stdout.splitlines()
+        kept = [line for line in lines if not re.fullmatch(
+            r'\s*(?:0 \*/6|59 5,11,17,23) \* \* \* ' + re.escape(str(home / 'klipperscreen_restart.sh')) + r'\s*', line)]
+        if kept != lines:
+            backup.mkdir(parents=True, exist_ok=True)
+            saved = backup / 'user-crontab.txt'
+            if not saved.exists():
+                saved.write_text(cron.stdout)
+            subprocess.run(['crontab', '-'], input='\n'.join(kept)+'\n', text=True, check=True)
+    elif cron.returncode != 0 and 'no crontab for' not in cron.stderr:
+        raise RuntimeError('Cannot read user crontab; restart schedule migration stopped')
     print('Installed toolchange counts, touch lock, filament policy and print UI.')
 
 

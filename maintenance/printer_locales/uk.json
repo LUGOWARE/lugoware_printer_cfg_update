@@ -98,5 +98,13 @@
   "Tool change {count}": "Зміна інструмента {count}",
   "Must home axis first: Z": "Спочатку виконайте пошук нуля осі Z.",
   "Probe measurement error - redeploying probe ({attempt}/{total})": "Помилка вимірювання — повторне висування щупа ({attempt}/{total})",
-  "Lower Z": "Опустити Z"
+  "Lower Z": "Опустити Z",
+  "Homing...": "Пошук початку координат...",
+  "Print paused": "Друк призупинено",
+  "Print cancelled": "Друк скасовано",
+  "Print completed": "Друк завершено",
+  "Screen restarts in one minute.": "Екран перезапуститься за хвилину.",
+  "Screen restart countdown: {seconds}": "Перезапуск екрана через {seconds} с",
+  "Tool changes": "Зміни інструмента",
+  "Filament sensor": "Датчик філаменту"
 }

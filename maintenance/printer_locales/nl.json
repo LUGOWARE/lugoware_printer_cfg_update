@@ -98,5 +98,13 @@
   "Tool change {count}": "Gereedschapswissel {count}",
   "Must home axis first: Z": "Voer eerst de homing van de Z-as uit.",
   "Probe measurement error - redeploying probe ({attempt}/{total})": "Meetfout — probe wordt opnieuw uitgeschoven ({attempt}/{total})",
-  "Lower Z": "Z verlagen"
+  "Lower Z": "Z verlagen",
+  "Homing...": "Referentie zoeken...",
+  "Print paused": "Afdruk gepauzeerd",
+  "Print cancelled": "Afdruk geannuleerd",
+  "Print completed": "Afdruk voltooid",
+  "Screen restarts in one minute.": "Het scherm start over één minuut opnieuw.",
+  "Screen restart countdown: {seconds}": "Scherm herstart over {seconds} seconden",
+  "Tool changes": "Gereedschapswissels",
+  "Filament sensor": "Filamentsensor"
 }

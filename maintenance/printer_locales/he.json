@@ -98,5 +98,13 @@
   "Tool change {count}": "החלפת כלי {count}",
   "Must home axis first: Z": "יש להחזיר תחילה את ציר Z לנקודת הבית.",
   "Probe measurement error - redeploying probe ({attempt}/{total})": "שגיאת מדידה — פריסה מחדש של הגשש ({attempt}/{total})",
-  "Lower Z": "הורדת Z"
+  "Lower Z": "הורדת Z",
+  "Homing...": "חזרה לנקודת הבית...",
+  "Print paused": "ההדפסה מושהית",
+  "Print cancelled": "ההדפסה בוטלה",
+  "Print completed": "ההדפסה הושלמה",
+  "Screen restarts in one minute.": "המסך יופעל מחדש בעוד דקה.",
+  "Screen restart countdown: {seconds}": "המסך יופעל מחדש בעוד {seconds} שניות",
+  "Tool changes": "החלפות כלי",
+  "Filament sensor": "חיישן פילמנט"
 }

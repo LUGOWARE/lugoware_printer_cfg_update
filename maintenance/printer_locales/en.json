@@ -98,5 +98,13 @@
   "Tool change {count}": "Tool change {count}",
   "Must home axis first: Z": "Home the Z axis first.",
   "Probe measurement error - redeploying probe ({attempt}/{total})": "Probe measurement error — redeploying probe ({attempt}/{total})",
-  "Lower Z": "Lower Z"
+  "Lower Z": "Lower Z",
+  "Homing...": "Homing...",
+  "Print paused": "Print paused",
+  "Print cancelled": "Print cancelled",
+  "Print completed": "Print completed",
+  "Screen restarts in one minute.": "Screen restarts in one minute.",
+  "Screen restart countdown: {seconds}": "Screen restart countdown: {seconds}",
+  "Tool changes": "Tool changes",
+  "Filament sensor": "Filament sensor"
 }

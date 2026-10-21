@@ -98,5 +98,13 @@
   "Tool change {count}": "تبديل الأداة {count}",
   "Must home axis first: Z": "يجب إرجاع المحور Z إلى موضع الأصل أولاً.",
   "Probe measurement error - redeploying probe ({attempt}/{total})": "خطأ في قياس المسبار — جارٍ إعادة نشر المسبار ({attempt}/{total})",
-  "Lower Z": "خفض Z"
+  "Lower Z": "خفض Z",
+  "Homing...": "جارٍ الرجوع إلى نقطة الأصل...",
+  "Print paused": "الطباعة متوقفة مؤقتًا",
+  "Print cancelled": "تم إلغاء الطباعة",
+  "Print completed": "اكتملت الطباعة",
+  "Screen restarts in one minute.": "ستُعاد تشغيل الشاشة بعد دقيقة.",
+  "Screen restart countdown: {seconds}": "إعادة تشغيل الشاشة بعد {seconds} ثانية",
+  "Tool changes": "تغييرات الأداة",
+  "Filament sensor": "مستشعر الفتيل"
 }

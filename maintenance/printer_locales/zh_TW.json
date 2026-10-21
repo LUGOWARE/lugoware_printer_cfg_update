@@ -98,5 +98,13 @@
   "Tool change {count}": "工具切換 {count}",
   "Must home axis first: Z": "請先完成 Z 軸歸零。",
   "Probe measurement error - redeploying probe ({attempt}/{total})": "探針測量錯誤 — 正在重新展開探針 ({attempt}/{total})",
-  "Lower Z": "降低 Z"
+  "Lower Z": "降低 Z",
+  "Homing...": "正在歸零...",
+  "Print paused": "已暫停",
+  "Print cancelled": "列印已取消",
+  "Print completed": "列印完成",
+  "Screen restarts in one minute.": "螢幕將在一分鐘後重新啟動。",
+  "Screen restart countdown: {seconds}": "螢幕重啟倒數：{seconds} 秒",
+  "Tool changes": "工具切換",
+  "Filament sensor": "耗材偵測"
 }

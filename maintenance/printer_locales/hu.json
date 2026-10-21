@@ -98,5 +98,13 @@
   "Tool change {count}": "Szerszámcsere {count}",
   "Must home axis first: Z": "Először állítsa alaphelyzetbe a Z tengelyt.",
   "Probe measurement error - redeploying probe ({attempt}/{total})": "Mérési hiba — szonda újbóli kinyújtása ({attempt}/{total})",
-  "Lower Z": "Z leengedése"
+  "Lower Z": "Z leengedése",
+  "Homing...": "Alaphelyzet keresése...",
+  "Print paused": "Nyomtatás szüneteltetve",
+  "Print cancelled": "Nyomtatás megszakítva",
+  "Print completed": "Nyomtatás befejezve",
+  "Screen restarts in one minute.": "A képernyő egy perc múlva újraindul.",
+  "Screen restart countdown: {seconds}": "Képernyő újraindítása {seconds} másodperc múlva",
+  "Tool changes": "Szerszámcserék",
+  "Filament sensor": "Filamentérzékelő"
 }

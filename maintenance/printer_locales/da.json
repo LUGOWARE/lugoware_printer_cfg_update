@@ -98,5 +98,13 @@
   "Tool change {count}": "Værktøjsskift {count}",
   "Must home axis first: Z": "Kør først Z-aksen til hjemmepositionen.",
   "Probe measurement error - redeploying probe ({attempt}/{total})": "Probemålefejl — proben køres ud igen ({attempt}/{total})",
-  "Lower Z": "Sænk Z"
+  "Lower Z": "Sænk Z",
+  "Homing...": "Finder hjemmeposition...",
+  "Print paused": "Udskrivning sat på pause",
+  "Print cancelled": "Udskrivning annulleret",
+  "Print completed": "Udskrivning fuldført",
+  "Screen restarts in one minute.": "Skærmen genstarter om et minut.",
+  "Screen restart countdown: {seconds}": "Skærmen genstarter om {seconds} sekunder",
+  "Tool changes": "Værktøjsskift",
+  "Filament sensor": "Filamentsensor"
 }

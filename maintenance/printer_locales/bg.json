@@ -98,5 +98,13 @@
   "Tool change {count}": "Смяна на инструмент {count}",
   "Must home axis first: Z": "Първо установете началната позиция на оста Z.",
   "Probe measurement error - redeploying probe ({attempt}/{total})": "Грешка при измерване — повторно разгъване на сондата ({attempt}/{total})",
-  "Lower Z": "Спускане на Z"
+  "Lower Z": "Спускане на Z",
+  "Homing...": "Търсене на начална позиция...",
+  "Print paused": "Печатът е на пауза",
+  "Print cancelled": "Печатът е отменен",
+  "Print completed": "Печатът е завършен",
+  "Screen restarts in one minute.": "Екранът ще се рестартира след минута.",
+  "Screen restart countdown: {seconds}": "Рестартиране на екрана след {seconds} сек",
+  "Tool changes": "Смени на инструмент",
+  "Filament sensor": "Сензор за филамент"
 }

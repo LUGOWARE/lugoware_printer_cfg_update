@@ -98,5 +98,13 @@
   "Tool change {count}": "Zmiana narzędzia {count}",
   "Must home axis first: Z": "Najpierw wykonaj bazowanie osi Z.",
   "Probe measurement error - redeploying probe ({attempt}/{total})": "Błąd pomiaru — ponowne wysuwanie sondy ({attempt}/{total})",
-  "Lower Z": "Opuść Z"
+  "Lower Z": "Opuść Z",
+  "Homing...": "Bazowanie...",
+  "Print paused": "Druk wstrzymany",
+  "Print cancelled": "Druk anulowany",
+  "Print completed": "Druk zakończony",
+  "Screen restarts in one minute.": "Ekran uruchomi się ponownie za minutę.",
+  "Screen restart countdown: {seconds}": "Ponowne uruchomienie ekranu za {seconds} s",
+  "Tool changes": "Zmiany narzędzia",
+  "Filament sensor": "Czujnik filamentu"
 }

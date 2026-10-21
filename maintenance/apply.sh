@@ -51,6 +51,12 @@ import ast, pathlib, sys
 ast.parse(pathlib.Path(sys.argv[1]).read_text())
 PY
 
+if [[ ${LUGOWARE_SYSTEM_ONLY:-0} != 1 ]]; then
+    sudo install -d -m 755 /opt/lugoware/screen-restart
+    sudo install -m 644 "$ASSET_DIR/screen_restart_schedule.py" /opt/lugoware/screen-restart/schedule.py
+elif [[ ! -f /opt/lugoware/screen-restart/schedule.py ]]; then
+    status '[안내] 재시작 사전 알림 예약은 최신 SSH 설치 명령을 한 번 실행해야 활성화됩니다.'
+fi
 # Back up cron before changing anything. Never erase an unreadable crontab.
 if sudo LC_ALL=C crontab -l > "$BACKUP_DIR/root.crontab" 2> "$BACKUP_DIR/cron.stderr"; then
     :
@@ -65,7 +71,8 @@ lines = source.read_text().splitlines()
 # Replace only this exact recurring task, preserving all unrelated jobs.
 pattern = r'^\s*0\s+\*/6\s+\*\s+\*\s+\*\s+/(?:usr/)?bin/systemctl\s+restart\s+KlipperScreen(?:\.service)?\s*(?:#.*)?$'
 lines = [line for line in lines if not re.match(pattern, line)]
-lines.append('0 */6 * * * /bin/systemctl restart KlipperScreen')
+lines = [line for line in lines if '/opt/lugoware/screen-restart/schedule.py' not in line]
+lines.append('59 5,11,17,23 * * * /usr/bin/python3 -I /opt/lugoware/screen-restart/schedule.py')
 dest.write_text('\n'.join(lines) + '\n')
 PY
 

@@ -98,5 +98,13 @@
   "Tool change {count}": "Įrankio keitimas {count}",
   "Must home axis first: Z": "Pirmiausia nustatykite Z ašies pradinę padėtį.",
   "Probe measurement error - redeploying probe ({attempt}/{total})": "Zondo matavimo klaida — zondas vėl išskleidžiamas ({attempt}/{total})",
-  "Lower Z": "Nuleisti Z"
+  "Lower Z": "Nuleisti Z",
+  "Homing...": "Ieškoma pradinės padėties...",
+  "Print paused": "Spausdinimas pristabdytas",
+  "Print cancelled": "Spausdinimas atšauktas",
+  "Print completed": "Spausdinimas baigtas",
+  "Screen restarts in one minute.": "Ekranas bus paleistas iš naujo po minutės.",
+  "Screen restart countdown: {seconds}": "Ekranas bus paleistas iš naujo po {seconds} s",
+  "Tool changes": "Įrankių keitimai",
+  "Filament sensor": "Filamento jutiklis"
 }

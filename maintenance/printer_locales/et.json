@@ -98,5 +98,13 @@
   "Tool change {count}": "Tööriistavahetus {count}",
   "Must home axis first: Z": "Viige esmalt Z-telg algasendisse.",
   "Probe measurement error - redeploying probe ({attempt}/{total})": "Anduri mõõtmisviga — anduri uuesti väljalükkamine ({attempt}/{total})",
-  "Lower Z": "Langeta Z"
+  "Lower Z": "Langeta Z",
+  "Homing...": "Algasendi otsimine...",
+  "Print paused": "Printimine peatatud",
+  "Print cancelled": "Printimine tühistatud",
+  "Print completed": "Printimine lõpetatud",
+  "Screen restarts in one minute.": "Ekraan taaskäivitub ühe minuti pärast.",
+  "Screen restart countdown: {seconds}": "Ekraani taaskäivitus {seconds} sekundi pärast",
+  "Tool changes": "Tööriistavahetused",
+  "Filament sensor": "Filamendiandur"
 }

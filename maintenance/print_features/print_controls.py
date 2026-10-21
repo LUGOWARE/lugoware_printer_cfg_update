@@ -18,6 +18,9 @@ def text(screen, key):
     en = {'sensor': 'Filament sensor', 'waiting': 'Waiting', 'on': 'ON', 'off': 'OFF',
           'lock': 'Lock screen', 'unlock': 'Hold 1s to unlock',
           'estop': 'Emergency Stop', 'confirm': 'Run Emergency Stop?', 'cancel': 'Cancel'}
+    if key == 'sensor':
+        from ks_includes.lugo_i18n import translate_text
+        return translate_text('Filament sensor')
     return (ko if lang.startswith('ko') else en)[key]
 
 
@@ -311,10 +314,12 @@ def update_controls(panel):
     total = tc.get('tc_total', 0) or panel._toolchange_total
     if not total and '/' in panel._toolchange_count:
         total = int(panel._toolchange_count.split('/')[1])
-    name = '툴체인지' if panel._screen._config.get_main_config().get('language', 'en').startswith('ko') else 'Tool changes'
+    from ks_includes.lugo_i18n import translate_text
+    name = translate_text('Tool changes')
     label = f'{name} {current}/{total if total is not None else "…"}'
     if panel._toolchange_label.get_label() != label:
-        panel._toolchange_label.set_label(label)
+        from ks_includes.KlippyGtk import find_widget
+        find_widget(panel._toolchange_label, Gtk.Label).set_label(label)
     controller = panel._screen.trial_touch_lock
     in_print = panel.state in ('printing', 'paused')
     if not in_print:
