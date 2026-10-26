@@ -13,6 +13,7 @@ import time
 from check_idle import main as check_idle, request
 from install_screen_config import merge
 from patch_print_controls import macros, feature_macros
+from preserve_sensor_pins import preserve
 
 
 def atomic(path, data):
@@ -42,6 +43,7 @@ def validate_config(text, screen, home):
 def apply_config(repo, home, backup):
     target = home / 'printer_data/config'
     base = (repo / 'printer_base.cfg').read_text(encoding='utf-8-sig')
+    base = preserve(base, target / 'printer.cfg')
     if (home / 'klipper/klippy/extras/print_sensor.py').is_file():
         base = feature_macros(base)
     template = (repo / 'KlipperScreen.conf').read_text(encoding='utf-8-sig')

@@ -128,6 +128,12 @@ if (( ! SYSTEM_ONLY )); then
     fi
 fi
 
+# Capture sensor wiring before the existing header/includes are replaced.
+if (( ! SYSTEM_ONLY )); then
+python3 "$COMMON_REPO/maintenance/preserve_sensor_pins.py" \
+    "$REPO_DIR/printer_base.cfg" "$CONFIG_DIR/printer.cfg" "$BACKUP_DIR/printer-base-prepared.cfg"
+fi
+
 # 3. .151 기준 공통 헤더 / 각 기기의 MCU·SAVE_CONFIG 보존
 echo "[3/6] printer.cfg 공통 헤더 적용 중..."
 python3 "$COMMON_REPO/maintenance/install_printer_header.py" \
@@ -150,7 +156,7 @@ fi
 # 5. 설정 파일 복사
 echo "[5/6] 설정 파일 복사 중..."
 if (( ! SYSTEM_ONLY )); then
-copy_config "$REPO_DIR/printer_base.cfg" "$CONFIG_DIR/printer_base.cfg"
+copy_config "$BACKUP_DIR/printer-base-prepared.cfg" "$CONFIG_DIR/printer_base.cfg"
 fi
 copy_config "$REPO_DIR/crowsnest.conf" "$CONFIG_DIR/crowsnest.conf"
 if (( ! SYSTEM_ONLY )); then
