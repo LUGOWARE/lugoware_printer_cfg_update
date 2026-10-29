@@ -74,7 +74,8 @@ PACKAGES = ('fonts-noto-core', 'fonts-noto-cjk', 'build-essential', 'libncurses-
             'wireless-tools', 'curl')
 # These files run as the ordinary printer user, never imported by this root policy.
 WORKER_FILES = ('channel_worker.py', 'run_worker.py', 'check_idle.py', 'install_screen_config.py',
-                'patch_print_controls.py', 'final_print_ui.py', 'wait_ready.py', 'verify_firmware.py')
+                'patch_print_controls.py', 'final_print_ui.py', 'wait_ready.py', 'verify_firmware.py',
+                'preserve_sensor_pins.py', 'october_features.py', 'stage_features.py', 'mesh_features.py')
 
 
 def validate_action(args, channel):
