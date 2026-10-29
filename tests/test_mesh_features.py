@@ -64,7 +64,7 @@ gcode:
         obj.cancelled = lambda: False
         obj.restore = lambda: restored.append(True)
         obj.audit = lambda phase: None
-        obj.gcode = NS(run_script_from_command=calls.append)
+        obj.gcode = NS(run_script_from_command=calls.append, respond_raw=calls.append)
         cmd = NS(error=RuntimeError, respond_info=lambda msg: None)
         obj.prepare(cmd)
         self.assertEqual(obj.last_action, 'loaded')
@@ -73,8 +73,21 @@ gcode:
         obj.pending = False
         def missing(): raise ValueError('missing')
         obj.restore = missing
+        saved = []
+        obj.printer = NS(lookup_object=lambda name: NS(set_mesh=lambda mesh: None))
+        obj.write_mesh = lambda: saved.append(True)
+        obj.prepare(cmd)
+        self.assertIn('BED_MESH_CALIBRATE', calls)
+        self.assertEqual(saved, [True])
+        self.assertEqual(obj.last_action, 'measured_saved')
+        self.assertTrue(any(line.startswith('echo: Unable to load') for line in calls))
+        # An unsuccessful measurement must still abort without saving.
+        obj.pending = False
+        def fail(script):
+            if script == 'BED_MESH_CALIBRATE': raise RuntimeError('probe failure')
+        obj.gcode.run_script_from_command = fail
         with self.assertRaises(RuntimeError): obj.prepare(cmd)
-        self.assertNotIn('BED_MESH_CALIBRATE', calls)
+        self.assertEqual(saved, [True])
         obj.pending = True; obj.cancelled = lambda: True
         before = list(calls); obj.prepare(cmd)
         self.assertEqual(calls, before)

@@ -126,7 +126,7 @@ class ScreenMesh:
                 self.restore()
             except Exception as exc:
                 logging.warning('Saved mesh unavailable: %s', exc)
-                raise gcmd.error('Saved mesh unavailable. Enable bed mesh and retry.')
+                self.gcode.respond_raw('echo: Unable to load saved mesh. Remeasuring before printing.')
             else:
                 self.last_action = 'loaded'
                 logging.info('Screen mesh: loaded saved mesh for print')
@@ -134,6 +134,8 @@ class ScreenMesh:
                 self.gcode.run_script_from_command('M117 Heating...')
                 gcmd.respond_info('Latest saved bed mesh loaded.')
                 return
+        if self.cancelled():
+            return
         self.gcode.run_script_from_command('M117 Bed Mesh...')
         bedmesh = self.printer.lookup_object('bed_mesh')
         bedmesh.set_mesh(None)

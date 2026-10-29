@@ -101,6 +101,7 @@
     "Toolhead Empty - PAUSE A1",
     "Toolhead Sensor Triggered!",
     "Toolhead sensor disabled by default.",
+    "Unable to load saved mesh. Remeasuring before printing.",
     "Unsupported filament diameter.",
     "Usage flags T0={v0} T1={v1} T2={v2} T3={v3}",
     "WARNING: heater duty >85% without temp rise (1 min)",
