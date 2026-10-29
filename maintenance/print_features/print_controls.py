@@ -193,6 +193,8 @@ def add_controls(panel, info):
     lock.connect('grab-broken-event', screen.trial_touch_lock.release)
     screen.trial_touch_lock.button = lock
     sensor, switch, label = sensor_row(screen)
+    sensor.set_no_show_all(True)
+    sensor.hide()
     panel._sensor_sync = False
     panel._sensor_pending = False
     def toggle(widget, _property):

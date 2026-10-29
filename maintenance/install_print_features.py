@@ -10,6 +10,11 @@ from october_features import job, notification, popup
 
 
 def patch_ui(source, name):
+    if name == "gcodes.py":
+        trials = json.loads(Path(__file__).with_name('print_features').joinpath('mesh_trial_patches.json').read_text(encoding='utf-8'))
+        for old, new in trials:
+            if old in source:
+                source = source.replace(old, new, 1)
     if name == "job_status.py":
         source = job(source, reverse=True)
     upgrades = json.loads(Path(__file__).with_name('print_features').joinpath('preprint_patches.json').read_text(encoding='utf-8')).get(name, [])
@@ -52,6 +57,7 @@ def install(home, screen, klipper, backup):
     for name in ('print_controls.py', 'toolchange_count.py', 'restart_notice.py', 'info_marquee.py'):
         changes[screen / 'ks_includes' / name] = (assets / name).read_text(encoding='utf-8')
     changes[klipper / 'klippy/extras/print_sensor.py'] = (assets / 'print_sensor.py').read_text(encoding='utf-8')
+    changes[klipper / 'klippy/extras/screen_mesh.py'] = (assets / 'screen_mesh.py').read_text(encoding='utf-8')
     for images in (screen / 'styles').glob('*/images'):
         changes[images / 'toolchanger-requested.svg'] = (assets / 'toolchanger-requested.svg').read_text(encoding='utf-8')
     p = config / 'printer.cfg'
@@ -62,10 +68,14 @@ def install(home, screen, klipper, backup):
         raise ValueError('Missing fast_cancel section')
     if '[probe_auto_recovery]' not in text:
         text = text.replace('[print_sensor]', '[print_sensor]\n\n[probe_auto_recovery]\nattempts: 2\nminimum_clearance: 1.0', 1)
-    changes[p] = text
+    from mesh_features import header
+    changes[p] = header(text, config)
     if os.environ.get('LUGOWARE_SYSTEM_ONLY') != '1':
         p = config / 'printer_base.cfg'
         changes[p] = feature_macros(p.read_text(encoding='utf-8'))
+    from mesh_features import config as mesh_config
+    p = config / 'printer_base.cfg'
+    changes[p] = mesh_config(changes.get(p, p.read_text(encoding='utf-8')))
     for p, text in changes.items():
         if p.suffix == '.py':
             compile(text, str(p), 'exec')

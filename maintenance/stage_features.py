@@ -37,8 +37,9 @@ def config(text):
         return text
     # Only change display messages; keep all movement and temperature commands.
     block = re.sub(r'(?m)^[ \t]*M117 (?:Bed Mesh\.\.\.|PRINTING\.\.\.)[ \t]*$', '', block)
+    mesh_command = 'SCREEN_MESH_PREPARE' if 'SCREEN_MESH_PREPARE' in block else 'BED_MESH_CALIBRATE'
     for command, before, after in [('HOME_CHECK', 'Homing...', None),
-                                    ('BED_MESH_CALIBRATE', 'Bed Mesh...', 'Heating...')]:
+                                    (mesh_command, 'Bed Mesh...', 'Heating...')]:
         pattern = r'(?m)^([ \t]*)' + command + r'[ \t]*$'
         def add(m):
             return m[1]+'M117 '+before+'\n'+m[0]+(('\n'+m[1]+'M117 '+after) if after else '')

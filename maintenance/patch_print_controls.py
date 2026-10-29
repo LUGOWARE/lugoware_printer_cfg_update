@@ -49,7 +49,7 @@ def prepare_macros(text):
     return text[:start] + block + text[end:]
 
 
-def feature_macros(text):
+def _feature_macros(text):
     """Add control hooks only; preserve model-specific pins and motion lines."""
     from october_features import config
     text = config(text)
@@ -106,3 +106,8 @@ def feature_macros(text):
     for name in ('END_PRINT', 'CANCEL_PRINT'):
         edit(name, lambda b: b.replace('gcode:\n', 'gcode:\n    PRINT_SENSOR_END\n', 1))
     return text
+
+
+def feature_macros(text):
+    from mesh_features import config
+    return config(_feature_macros(text))

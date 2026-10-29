@@ -34,6 +34,8 @@ def patch(source):
 
 
 def fit_preview(source):
+    if "fileinfo._preprint_fit = fit_info" in source:
+        return source
     # Preserve the existing translated key, removing only its leading blank line.
     source = source.replace('                    fileinfo_text\n'
                             '                    + _("\\nLast Duration")',

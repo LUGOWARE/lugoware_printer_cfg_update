@@ -183,6 +183,7 @@ python3 "$COMMON_REPO/maintenance/install_filament_details.py"
 python3 "$COMMON_REPO/maintenance/install_print_features.py"
 python3 "$COMMON_REPO/maintenance/install_screen_session.py"
 python3 "$COMMON_REPO/maintenance/install_mainsail_reconnect.py"
+python3 "$COMMON_REPO/maintenance/install_mainsail_mesh.py"
 if (( SYSTEM_ONLY )); then
     python3 "$COMMON_REPO/maintenance/usb/check_install.py"
 else

@@ -1,0 +1,12 @@
+const fs=require('fs'),vm=require('vm'),assert=require('assert');
+const sent=[]; let input;
+const component={startPrint(){throw Error('old method');},file:{},currentPath:'/folder',$i18n:{locale:'ko'},closeDialog(){},$socket:{emit(...args){sent.push(args)}}};
+const dialog={__vue__:component,querySelector(s){return s==='[data-lugo-mesh]'?null:{before(){}}},querySelectorAll(){return []}};
+const document={head:{append(){}},documentElement:{},querySelectorAll(){return [dialog]},createElement(tag){const el={dataset:{},style:{},setAttribute(){},append(){}};if(tag==='input')input=el;return el;}};
+vm.runInNewContext(fs.readFileSync(__dirname+'/../maintenance/mainsail_mesh.js','utf8'),{window:{},document,MutationObserver:class{observe(){}},requestAnimationFrame(){}});
+input.checked=false;component.startPrint('test.gcode');
+assert.equal(sent[0][1].script,'SCREEN_MESH_SELECT ENABLE=0\nSDCARD_PRINT_FILE FILENAME="folder/test.gcode"');
+input.checked=true;component.startPrint('test.gcode');
+assert(sent[1][1].script.startsWith('SCREEN_MESH_SELECT ENABLE=1\n'));
+component.startPrint('bad\nG28');assert.equal(sent.length,2);
+console.log('PASS ON/OFF ordered selection, path, invalid filename rejection; no printer command sent');
