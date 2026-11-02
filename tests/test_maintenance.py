@@ -119,18 +119,25 @@ class MaintenanceTests(unittest.TestCase):
             with self.assertRaises(SystemExit):
                 idle.main()
 
-    def test_heating_rejected_and_cold_idle_allowed(self):
+    def test_heating_request_is_mocked_and_cold_idle_allowed(self):
+        import io
         for target in (0, 200):
-            with patch.object(idle, 'request', side_effect=[
+            readings = [
                 {'state': 'ready'},
                 {'status': {'print_stats': {'state': 'standby'},
                             'heaters': {'available_heaters': ['extruder']}}},
-                {'status': {'extruder': {'target': target}}}]):
+                {'status': {'extruder': {'target': target}}}]
+            if target:
+                readings += [
+                    {'status': {'print_stats': {'state': 'standby'},
+                                'heaters': {'available_heaters': ['extruder']}}},
+                    {'status': {'extruder': {'target': 0}}}]
+            with patch.object(idle, 'request', side_effect=readings), \
+                 patch.object(idle.urllib.request, 'urlopen', return_value=io.BytesIO(b'{"result":"ok"}')) as post:
+                idle.main()
+                self.assertEqual(post.call_count, int(bool(target)))
                 if target:
-                    with self.assertRaises(SystemExit):
-                        idle.main()
-                else:
-                    idle.main()
+                    self.assertEqual(post.call_args.args[0].data, b'{"script": "TURN_OFF_HEATERS"}')
 
 
 if __name__ == '__main__':
