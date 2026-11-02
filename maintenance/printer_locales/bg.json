@@ -107,5 +107,9 @@
   "Wait for movement to stop before releasing motors and clearing preparation errors.": "Изчакайте движението да спре, преди да освободите двигателите и да изчистите грешките при подготовката.",
   "duty={v0} high_count={v1}": "мито={v0} high_count={v1}",
   "skip bed-off (still printing).": "пропуснете леглото (все още се печата).",
-  "skip bed-off (target={v0}).": "пропускане на почивка (target={v0})."
+  "skip bed-off (target={v0}).": "пропускане на почивка (target={v0}).",
+  "Probe tolerance exceeded ({attempt}/5) - retrying.": "Превишен толеранс ({attempt}/5) — повторно измерване.",
+  "Probe trigger error - recovering and retrying.": "Грешка при задействане на сондата — възстановяване и повторно измерване.",
+  "Object excluded. ({name})": "Обектът е изключен. ({name})",
+  "Excluded": "Изключен"
 }

@@ -107,5 +107,9 @@
   "Wait for movement to stop before releasing motors and clearing preparation errors.": "Motorları serbest bırakmadan ve hazırlık hatalarını temizlemeden önce hareketin durmasını bekleyin.",
   "duty={v0} high_count={v1}": "görev={v0} yüksek_sayım={v1}",
   "skip bed-off (still printing).": "yataktan kalkmayı atlayın (hala yazdırıyor).",
-  "skip bed-off (target={v0}).": "yatmayı atla (hedef={v0})."
+  "skip bed-off (target={v0}).": "yatmayı atla (hedef={v0}).",
+  "Probe tolerance exceeded ({attempt}/5) - retrying.": "Tolerans aşıldı ({attempt}/5) — yeniden ölçülüyor.",
+  "Probe trigger error - recovering and retrying.": "Prob tetikleme hatası — kurtarma sonrası yeniden ölçülüyor.",
+  "Object excluded. ({name})": "Nesne hariç tutuldu. ({name})",
+  "Excluded": "Hariç tutuldu"
 }

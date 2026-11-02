@@ -107,5 +107,9 @@
   "Wait for movement to stop before releasing motors and clearing preparation errors.": "Před uvolněním motorů a odstraněním chyb přípravy počkejte, až se pohyb zastaví.",
   "duty={v0} high_count={v1}": "clo={v0} high_count={v1}",
   "skip bed-off (still printing).": "přeskočit bed-off (stálý tisk).",
-  "skip bed-off (target={v0}).": "přeskočit bed-off (cíl={v0})."
+  "skip bed-off (target={v0}).": "přeskočit bed-off (cíl={v0}).",
+  "Probe tolerance exceeded ({attempt}/5) - retrying.": "Překročena tolerance ({attempt}/5) — opakování měření.",
+  "Probe trigger error - recovering and retrying.": "Chyba sepnutí sondy — obnovení a opakování měření.",
+  "Object excluded. ({name})": "Objekt byl vyloučen. ({name})",
+  "Excluded": "Vyloučeno"
 }

@@ -37,12 +37,13 @@ def main():
                 while time.time() < deadline:
                     if not idle():
                         notice.unlink(missing_ok=True)
-                        break
+                        return  # Skip this slot when printer activity resumes.
                     time.sleep(min(1, max(0, deadline-time.time())))
                 else:
                     if idle():
                         subprocess.run(['/usr/bin/systemctl', 'restart', 'KlipperScreen'], check=True)
                         return
+                    return  # Busy at the deadline: do not start another countdown.
         finally:
             notice.unlink(missing_ok=True)
 

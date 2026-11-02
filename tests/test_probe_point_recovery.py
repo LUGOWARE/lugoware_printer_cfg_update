@@ -3,8 +3,13 @@ import unittest
 from pathlib import Path
 from types import SimpleNamespace as NS
 from unittest.mock import Mock
-import sys
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'maintenance/print_features'))
+import sys, types
+module = types.ModuleType('probe_auto_recovery')
+source = (Path(__file__).resolve().parents[1] / 'maintenance/print_features/probe_auto_recovery.py').read_text().replace(
+    'from .probe import calc_probe_z_average',
+    'calc_probe_z_average = lambda positions, method: tuple(positions)')
+exec(compile(source, 'probe_auto_recovery.py', 'exec'), module.__dict__)
+sys.modules['probe_auto_recovery'] = module
 from probe_auto_recovery import ProbeAutoRecovery, ERROR
 
 @unittest.skipUnless((Path.home()/'klipper/klippy/extras/probe.py').exists(), 'Requires installed Klipper averaging implementation')
@@ -30,87 +35,96 @@ class Tests(unittest.TestCase):
   session.results=['previous point'];session.param_helper=Mock()
   session.param_helper.get_probe_params.return_value={'samples':3,'sample_retract_dist':1.5,'lift_speed':15,'samples_tolerance':.015,'samples_tolerance_retries':5,'samples_result':'median'}
   r.session=session;r.original=session.run_probe
-  self.cmd=Mock();self.cmd.get_command.return_value='BED_MESH_CALIBRATE_BASE';self.cmd.get_float.side_effect=lambda key,default:default
+  self.cmd=Mock();self.cmd.error=RuntimeError;self.cmd.get_command.return_value='BED_MESH_CALIBRATE_BASE';self.cmd.get_float.side_effect=lambda key,default:default
   self.sample=NS(bed_z=0.)
- def test_no_normal_wait_or_query(self):
-  self.r.session._probe=Mock(return_value=self.sample)
-  self.r.run_probe(self.cmd)
-  self.r.toolhead.wait_moves.assert_not_called();self.r.wrapper.query_endstop.assert_not_called()
+ def feed(self, values):
+  seq=iter(values)
+  def probe(cmd):
+   value=next(seq)
+   if isinstance(value,Exception): raise value
+   self.pos[2]=.485
+   return NS(bed_z=value)
+  self.r.session._probe=Mock(side_effect=probe)
+ def test_normal_no_extra_wait(self):
+  self.feed([0,0,0]);self.r.run_probe(self.cmd)
+  self.r.toolhead.dwell.assert_not_called()
   self.assertEqual(self.r.session._probe.call_count,3)
- def test_two_old_samples_discarded_and_three_new_samples(self):
-  calls=[]
-  def measure(cmd):
-   calls.append(1);self.pos[2]=.723
-   if len(calls)==3: raise RuntimeError(ERROR)
-   return self.sample
-  self.r.session._probe=measure
+ def test_tolerance_lift_two_wait_one(self):
+  self.feed([0,.04,0,0,.04,0]);self.r.run_probe(self.cmd)
+  self.assertEqual(self.r.session._probe.call_count,6)
+  self.r.toolhead.dwell.assert_called_once_with(1.0)
+  self.assertEqual(self.r.toolhead.manual_move.call_args_list[2].args[0],[None,None,2.485])
+ def test_all_rounds_and_failure(self):
+  self.feed([0,.1,0]*5)
+  with self.assertRaisesRegex(RuntimeError,'samples_tolerance'):self.r.run_probe(self.cmd)
+  self.assertEqual(self.r.session._probe.call_count,15)
+  self.assertEqual(self.r.toolhead.dwell.call_count,4)
+  self.assertEqual(self.r.session.results,['previous point'])
+ def test_fifth_round_success(self):
+  self.feed([0,.04,0,0,.05,0,0,.07,0,0,.08,0,0,.085,0])
   self.r.run_probe(self.cmd)
-  self.assertEqual(len(calls),6)
-  self.assertEqual(self.r.session.results,['previous point',(self.sample,)*3])
-  self.assertEqual(self.r.reactivations,1)
+  self.assertEqual(self.r.session._probe.call_count,15)
+  self.assertEqual(len(self.r.session.results),2)
+ def test_trigger_two_cycles_reset_tolerance(self):
+  # Reach second tolerance, then trigger. New .04 spread must fail .03 again.
+  self.feed([0,.04,0,RuntimeError(ERROR),0,.04,0,0,.04,0])
+  self.r.run_probe(self.cmd)
+  self.assertEqual(self.r.session._probe.call_count,10)
+  self.assertEqual(self.r.reactivations,2)
   self.assertEqual(self.r.recoveries,1)
- def test_stuck_no_retry_measurement(self):
-  self.r.session._probe=Mock(side_effect=RuntimeError(ERROR))
-  self.r.wrapper.query_endstop.return_value=True
+  self.r.wrapper._lower_probe.assert_called_with()
+  self.assertEqual(self.r.wrapper._lower_probe.call_count,2)
+  delays=[x.args[0] for x in self.r.toolhead.dwell.call_args_list]
+  self.assertEqual(delays,[1.0,2.0,.05,.05,.02,1.0])
+ def test_trigger_repeated_aborts(self):
+  self.feed([RuntimeError(ERROR),RuntimeError(ERROR)])
+  with self.assertRaisesRegex(RuntimeError,ERROR):self.r.run_probe(self.cmd)
+  self.assertEqual(self.r.reactivations,2)
+  self.assertEqual(self.r.session._probe.call_count,2)
+ def test_signal_stuck_aborts(self):
+  self.feed([RuntimeError(ERROR)]);self.r.wrapper.query_endstop.return_value=True
   with self.assertRaises(RuntimeError):self.r.run_probe(self.cmd)
-  self.assertEqual(self.r.reactivations,2);self.assertEqual(self.r.session._probe.call_count,1)
- def test_repeated_error_max_two(self):
-  self.r.session._probe=Mock(side_effect=RuntimeError(ERROR))
+  self.assertEqual(self.r.reactivations,2)
+  self.assertEqual(self.r.session._probe.call_count,1)
+ def test_g28_stock_first_and_second(self):
+  self.cmd.get_command.return_value='G28'
+  self.r.session.param_helper.get_probe_params.return_value['samples']=1
+  for attempt in (1,2):
+   self.cmd.get_int.return_value=attempt
+   self.feed([0]);self.r.run_probe(self.cmd)
+   self.assertEqual(self.r.session._probe.call_count,1)
+  self.r.toolhead.dwell.assert_not_called()
+ def test_probe_inside_homing_override_recovers(self):
+  self.cmd.get_command.return_value='PROBE';self.r.fast_cancel.homing_active=True
+  self.feed([RuntimeError(ERROR),0,0,0]);self.r.run_probe(self.cmd)
+  self.assertEqual(self.r.reactivations,2)
+ def test_cancel_prevents_lift(self):
+  self.r.fast_cancel.requested=True;self.feed([RuntimeError(ERROR)])
   with self.assertRaises(RuntimeError):self.r.run_probe(self.cmd)
-  self.assertEqual(self.r.session._probe.call_count,3);self.assertEqual(self.r.reactivations,2)
- def test_other_error(self):
-  self.r.session._probe=Mock(side_effect=RuntimeError('timeout'))
-  with self.assertRaises(RuntimeError):self.r.run_probe(self.cmd)
-  self.assertEqual(self.r.reactivations,0)
- def test_cancel(self):
-  self.r.fast_cancel.requested=True
-  self.r.session._probe=Mock(side_effect=RuntimeError(ERROR))
-  with self.assertRaises(RuntimeError):self.r.run_probe(self.cmd)
-  self.r.wrapper._lower_probe.assert_not_called()
- def test_home_never_retried(self):
-  self.cmd.get_command.return_value='G28';self.r.session._probe=Mock(side_effect=RuntimeError(ERROR))
-  with self.assertRaises(RuntimeError):self.r.run_probe(self.cmd)
-  self.r.wrapper._lower_probe.assert_not_called()
- def test_xy_change_prevents_recovery(self):
-  def fail(cmd):self.pos[0]+=1;raise RuntimeError(ERROR)
-  self.r.session._probe=fail
-  with self.assertRaises(RuntimeError):self.r.run_probe(self.cmd)
-  self.r.wrapper._lower_probe.assert_not_called()
-
- def test_high_z_kept_and_three_fresh_samples(self):
-  calls=[]
-  def measure(cmd):
-   calls.append(self.pos[2])
-   if len(calls)==1:
-    self.pos[2]=3.352244
-    raise RuntimeError(ERROR)
-   self.pos[2]=.723
-   return self.sample
-  self.r.session._probe=measure
-  self.r.run_probe(self.cmd)
-  self.assertEqual(len(calls),4)
-  self.assertAlmostEqual(calls[1],5.352244)
-  self.assertEqual(self.r.session.results,['previous point',(self.sample,)*3])
-  # Only the original sample retractions occurred, never a move back to Z=2.
-  self.assertEqual(self.r.toolhead.manual_move.call_count,3)
-  for call in self.r.toolhead.manual_move.call_args_list:
-   self.assertGreater(call.args[0][2],2.)
- def test_above_axis_maximum_rejected(self):
-  def fail(cmd):self.pos[2]=276.;raise RuntimeError(ERROR)
-  self.r.session._probe=fail
-  with self.assertRaises(RuntimeError):self.r.run_probe(self.cmd)
-  self.r.wrapper._lower_probe.assert_not_called()
   self.r.toolhead.manual_move.assert_not_called()
-
- def test_lift_capped_at_maximum(self):
-  self.pos[2]=274.
-  self.assertTrue(self.r.recover(self.cmd,[100.,100.,2.,0.]))
-  self.assertEqual(self.pos[2],275.)
- def test_each_redeployment_lifts_two(self):
-  self.assertTrue(self.r.recover(self.cmd,list(self.pos)))
-  self.assertEqual(self.pos[2],4.)
-  self.assertTrue(self.r.recover(self.cmd,[100.,100.,2.,0.]))
-  self.assertEqual(self.pos[2],6.)
-
-if __name__ == '__main__':
- unittest.main()
+  self.assertEqual(self.r.reactivations,0)
+ def test_unknown_axes_prevents_lift(self):
+  self.r.toolhead.get_status.return_value['homed_axes']='xy'
+  self.feed([RuntimeError(ERROR)])
+  with self.assertRaises(RuntimeError):self.r.run_probe(self.cmd)
+  self.r.toolhead.manual_move.assert_not_called()
+ def test_z_limit_prevents_lift(self):
+  self.pos[2]=274.;self.feed([RuntimeError(ERROR)])
+  with self.assertRaisesRegex(RuntimeError,'clearance'):self.r.run_probe(self.cmd)
+  self.r.toolhead.manual_move.assert_not_called()
+ def test_calibration_and_leveling(self):
+  for name in ('PROBE_CALIBRATE','Z_TILT_ADJUST','QUAD_GANTRY_LEVEL'):
+   self.cmd.get_command.return_value=name
+   self.feed([0,.04,0,0,.04,0]);self.r.run_probe(self.cmd)
+   self.assertEqual(self.r.session._probe.call_count,6)
+ def test_next_point_starts_at_three_hundredths(self):
+  for i in range(2):
+   self.feed([0,.04,0,0,.04,0]);self.r.run_probe(self.cmd)
+   self.assertEqual(self.r.session._probe.call_count,6)
+ def test_single_sample_accuracy_preserved(self):
+  self.cmd.get_command.return_value=''
+  self.r.session.param_helper.get_probe_params.return_value['samples']=1
+  self.feed([0]);self.r.run_probe(self.cmd)
+  self.assertEqual(self.r.session._probe.call_count,1)
+  self.r.toolhead.dwell.assert_not_called()
+if __name__=='__main__':unittest.main()

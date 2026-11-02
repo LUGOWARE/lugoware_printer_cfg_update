@@ -108,7 +108,10 @@
     "Wait for movement to stop before releasing motors and clearing preparation errors.",
     "duty={v0} high_count={v1}",
     "skip bed-off (still printing).",
-    "skip bed-off (target={v0})."
+    "skip bed-off (target={v0}).",
+    "Probe tolerance exceeded ({attempt}/5) - retrying.",
+    "Probe trigger error - recovering and retrying.",
+    "Object excluded. ({name})"
   ],
   "patterns": {
     "duty=(?P<v0>.+?)\\ high_count=(?P<v1>.+?)": "duty={v0} high_count={v1}",
@@ -127,6 +130,8 @@
     "Temperature\\ rise:\\ (?P<v0>.+?)°C": "Temperature rise: {v0}°C",
     "Temperature\\ change:\\ (?P<v0>.+?)°C": "Temperature change: {v0}°C",
     "Toolchange (?P<count>\\d+(?:/\\d+)?)": "Tool change {count}",
-    "Probe measurement error - redeploying probe \\((?P<attempt>[12])/(?P<total>2)\\)": "Probe measurement error - redeploying probe ({attempt}/{total})"
+    "Probe measurement error - redeploying probe \\((?P<attempt>[12])/(?P<total>2)\\)": "Probe measurement error - redeploying probe ({attempt}/{total})",
+    "Probe tolerance exceeded \\((?P<attempt>[1-4])/5\\) - retrying\\.": "Probe tolerance exceeded ({attempt}/5) - retrying.",
+    "Excluding object (?P<name>.+)": "Object excluded. ({name})"
   }
 }

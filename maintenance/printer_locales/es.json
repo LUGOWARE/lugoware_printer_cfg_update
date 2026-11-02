@@ -107,5 +107,9 @@
   "Wait for movement to stop before releasing motors and clearing preparation errors.": "Espere a que se detenga el movimiento antes de soltar los motores y eliminar errores de preparación.",
   "duty={v0} high_count={v1}": "deber={v0} cuenta_alta={v1}",
   "skip bed-off (still printing).": "saltarse la impresión (aún imprimiendo).",
-  "skip bed-off (target={v0}).": "saltarse la cama (objetivo={v0})."
+  "skip bed-off (target={v0}).": "saltarse la cama (objetivo={v0}).",
+  "Probe tolerance exceeded ({attempt}/5) - retrying.": "Tolerancia superada ({attempt}/5) — repitiendo la medición.",
+  "Probe trigger error - recovering and retrying.": "Error de activación de la sonda — recuperando y repitiendo la medición.",
+  "Object excluded. ({name})": "Objeto excluido. ({name})",
+  "Excluded": "Excluido"
 }

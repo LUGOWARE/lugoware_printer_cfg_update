@@ -107,5 +107,9 @@
   "Wait for movement to stop before releasing motors and clearing preparation errors.": "Enne mootorite vabastamist ja ettevalmistusvigade kõrvaldamist oodake, kuni liikumine peatub.",
   "duty={v0} high_count={v1}": "duty={v0} high_count={v1}",
   "skip bed-off (still printing).": "vahelejätmine (printimine alles).",
-  "skip bed-off (target={v0}).": "jäta voodist välja (target={v0})."
+  "skip bed-off (target={v0}).": "jäta voodist välja (target={v0}).",
+  "Probe tolerance exceeded ({attempt}/5) - retrying.": "Lubatud hälve ületatud ({attempt}/5) — uus mõõtmine.",
+  "Probe trigger error - recovering and retrying.": "Anduri rakendumise viga — taastamine ja uus mõõtmine.",
+  "Object excluded. ({name})": "Objekt on välistatud. ({name})",
+  "Excluded": "Välistatud"
 }

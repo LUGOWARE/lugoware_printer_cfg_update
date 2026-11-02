@@ -107,5 +107,9 @@
   "Wait for movement to stop before releasing motors and clearing preparation errors.": "Подождите, пока движение остановится, прежде чем отпускать двигатели и сбрасывать ошибки подготовки.",
   "duty={v0} high_count={v1}": "долг={v0} high_count={v1}",
   "skip bed-off (still printing).": "пропустить отстой (печать продолжается).",
-  "skip bed-off (target={v0}).": "пропустить отход от сна (target={v0})."
+  "skip bed-off (target={v0}).": "пропустить отход от сна (target={v0}).",
+  "Probe tolerance exceeded ({attempt}/5) - retrying.": "Превышен допуск ({attempt}/5) — повторное измерение.",
+  "Probe trigger error - recovering and retrying.": "Ошибка срабатывания датчика — восстановление и повторное измерение.",
+  "Object excluded. ({name})": "Объект исключён. ({name})",
+  "Excluded": "Исключено"
 }

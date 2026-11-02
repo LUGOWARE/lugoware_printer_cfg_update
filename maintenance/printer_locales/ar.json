@@ -107,5 +107,9 @@
   "Wait for movement to stop before releasing motors and clearing preparation errors.": "انتظر حتى تتوقف الحركة قبل إطلاق المحركات ومسح أخطاء التحضير.",
   "duty={v0} high_count={v1}": "واجب = {v0} ارتفاع_العدد = {v1}",
   "skip bed-off (still printing).": "تخطي السرير (لا تزال الطباعة).",
-  "skip bed-off (target={v0}).": "تخطي السرير (الهدف={v0})."
+  "skip bed-off (target={v0}).": "تخطي السرير (الهدف={v0}).",
+  "Probe tolerance exceeded ({attempt}/5) - retrying.": "تجاوز حد التفاوت ({attempt}/5) — جارٍ القياس مجددًا.",
+  "Probe trigger error - recovering and retrying.": "خطأ في تشغيل المسبار — جارٍ الاستعادة وإعادة القياس.",
+  "Object excluded. ({name})": "تم استبعاد العنصر. ({name})",
+  "Excluded": "مستبعد"
 }

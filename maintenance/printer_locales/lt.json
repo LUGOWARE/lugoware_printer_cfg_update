@@ -107,5 +107,9 @@
   "Wait for movement to stop before releasing motors and clearing preparation errors.": "Prieš atleisdami variklius ir pašalindami paruošimo klaidas, palaukite, kol judėjimas sustos.",
   "duty={v0} high_count={v1}": "pareiga={v0} high_count={v1}",
   "skip bed-off (still printing).": "praleisti lovą (vis dar spausdinama).",
-  "skip bed-off (target={v0}).": "praleisti lovą (target={v0})."
+  "skip bed-off (target={v0}).": "praleisti lovą (target={v0}).",
+  "Probe tolerance exceeded ({attempt}/5) - retrying.": "Viršyta tolerancija ({attempt}/5) — matuojama iš naujo.",
+  "Probe trigger error - recovering and retrying.": "Zondo suveikimo klaida — atkūrimas ir pakartotinis matavimas.",
+  "Object excluded. ({name})": "Objektas neįtrauktas. ({name})",
+  "Excluded": "Neįtrauktas"
 }

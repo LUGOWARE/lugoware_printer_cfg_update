@@ -107,5 +107,9 @@
   "Wait for movement to stop before releasing motors and clearing preparation errors.": "Počakajte, da se gibanje ustavi, preden sprostite motorje in odpravite napake pri pripravi.",
   "duty={v0} high_count={v1}": "dolžnost={v0} high_count={v1}",
   "skip bed-off (still printing).": "skip bed off (še vedno tiskanje).",
-  "skip bed-off (target={v0}).": "preskoči spanje (target={v0})."
+  "skip bed-off (target={v0}).": "preskoči spanje (target={v0}).",
+  "Probe tolerance exceeded ({attempt}/5) - retrying.": "Presežena toleranca ({attempt}/5) — ponovna meritev.",
+  "Probe trigger error - recovering and retrying.": "Napaka proženja tipala — obnovitev in ponovna meritev.",
+  "Object excluded. ({name})": "Predmet je izključen. ({name})",
+  "Excluded": "Izključeno"
 }

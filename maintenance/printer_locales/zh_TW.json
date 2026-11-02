@@ -107,5 +107,9 @@
   "Wait for movement to stop before releasing motors and clearing preparation errors.": "等待動作停止，然後再釋放馬達並清除準備錯誤。",
   "duty={v0} high_count={v1}": "職責={v0} high_count={v1}",
   "skip bed-off (still printing).": "跳過下床（仍在列印）。",
-  "skip bed-off (target={v0}).": "跳過就寢（目標={v0}）。"
+  "skip bed-off (target={v0}).": "跳過就寢（目標={v0}）。",
+  "Probe tolerance exceeded ({attempt}/5) - retrying.": "超出允許誤差（{attempt}/5）— 正在重新測量。",
+  "Probe trigger error - recovering and retrying.": "探針觸發錯誤 — 復原後重新測量。",
+  "Object excluded. ({name})": "已排除物件。({name})",
+  "Excluded": "已排除"
 }

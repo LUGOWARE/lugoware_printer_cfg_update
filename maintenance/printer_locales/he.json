@@ -107,5 +107,9 @@
   "Wait for movement to stop before releasing motors and clearing preparation errors.": "המתן עד שהתנועה תיפסק לפני שחרור מנועים וניקוי שגיאות הכנה.",
   "duty={v0} high_count={v1}": "duty={v0} high_count={v1}",
   "skip bed-off (still printing).": "דלג על מיטה (עדיין הדפסה).",
-  "skip bed-off (target={v0}).": "דלג על יציאה מהמיטה (target={v0})."
+  "skip bed-off (target={v0}).": "דלג על יציאה מהמיטה (target={v0}).",
+  "Probe tolerance exceeded ({attempt}/5) - retrying.": "חריגה מהסבילות ({attempt}/5) — מתבצעת מדידה חוזרת.",
+  "Probe trigger error - recovering and retrying.": "שגיאת הפעלת החיישן — שחזור ומדידה חוזרת.",
+  "Object excluded. ({name})": "האובייקט הוחרג. ({name})",
+  "Excluded": "הוחרג"
 }

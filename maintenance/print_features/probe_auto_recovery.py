@@ -1,6 +1,9 @@
-"""Retry a whole mesh point, without adding waits to successful probing."""
+"""Progressive multi-sample probing with bounded trigger recovery."""
 import logging
 import math
+from .probe import calc_probe_z_average
+
+TOLERANCES = (0.030, 0.045, 0.060, 0.075, 0.090)
 
 ERROR = 'Probe triggered prior to movement'
 
@@ -24,12 +27,17 @@ class ProbeAutoRecovery:
 
     def get_status(self, eventtime):
         return {'recoveries': self.recoveries, 'reactivations': self.reactivations,
-                'attempts': self.attempts, 'scope': 'bed_mesh_whole_point',
-                'normal_path_extra_wait': False, 'preserve_higher_z': True, 'recovery_lift': 2.0}
+                'attempts': self.attempts, 'scope': 'multi_sample_probe_excluding_g28',
+                'normal_path_extra_wait': False, 'recovery_lift': 2.0,
+                'sample_tolerances': list(TOLERANCES),
+                'tolerance_retry_wait': 1.0, 'trigger_recovery_wait': 2.0,
+                'trigger_recovery_batches_per_point': 1, 'g28_sampling': 'stock'}
 
     def safe(self, gcmd, start):
         fc = self.fast_cancel
-        if self.printer.is_shutdown() or fc.requested or fc.cleaning or fc.homing_active:
+        if self.printer.is_shutdown() or fc.requested or fc.cleaning:
+            return False
+        if gcmd.get_command() == 'G28':
             return False
         status = self.toolhead.get_status(self.printer.get_reactor().monotonic())
         if set('xyz') - set(status['homed_axes']):
@@ -39,83 +47,112 @@ class ProbeAutoRecovery:
             return False
         if any(abs(current[i] - start[i]) > .001 for i in (0, 1)):
             return False
-        config = self.printer.lookup_object('configfile').get_status(
-            self.printer.get_reactor().monotonic())['settings']['bed_mesh']
-        clearance = gcmd.get_float('HORIZONTAL_MOVE_Z', config['horizontal_move_z'])
-        return (start[2] >= max(clearance, self.offset + self.minimum_clearance) - .001
-                and status['axis_minimum'][2] <= current[2] <= status['axis_maximum'][2]
+        return (status['axis_minimum'][2] <= current[2] <= status['axis_maximum'][2]
                 and start[2] <= status['axis_maximum'][2])
+
+    def lift_and_wait(self, gcmd, start, delay):
+        if not self.safe(gcmd, start):
+            raise gcmd.error('Probe retry aborted: unsafe state')
+        current = self.toolhead.get_position()
+        target_z = current[2] + 2.0
+        status = self.toolhead.get_status(self.printer.get_reactor().monotonic())
+        if target_z > status['axis_maximum'][2]:
+            raise gcmd.error('Probe retry aborted: insufficient Z clearance')
+        speed = self.session.param_helper.get_probe_params(gcmd)['lift_speed']
+        self.toolhead.manual_move([None, None, target_z], speed)
+        self.toolhead.dwell(delay)
+        self.toolhead.wait_moves()
+        if not self.safe(gcmd, start):
+            raise gcmd.error('Probe retry aborted: unsafe state')
+        logging.info('Probe retry lift: command=%s from_z=%.6f to_z=%.6f wait=%.1f',
+                     gcmd.get_command(), current[2], target_z, delay)
 
     def triggered(self):
         self.toolhead.wait_moves()
         return bool(self.wrapper.query_endstop(self.toolhead.get_last_move_time()))
 
     def recover(self, gcmd, start):
-        if not self.safe(gcmd, start):
-            raise self.printer.command_error(ERROR)
-        self.wrapper._raise_probe()
-        # Only retract away from the bed at the unchanged XY coordinates.
-        status = self.toolhead.get_status(self.printer.get_reactor().monotonic())
-        current_z = self.toolhead.get_position()[2]
-        recovery_z = min(max(start[2], current_z + 2.0), status['axis_maximum'][2])
-        logging.warning('Probe recovery: start_z=%.6f current_z=%.6f recovery_z=%.6f',
-                        start[2], self.toolhead.get_position()[2], recovery_z)
-        if current_z < recovery_z - .001:
-            speed = self.session.param_helper.get_probe_params(gcmd)['lift_speed']
-            self.toolhead.manual_move([None, None, recovery_z], speed)
-        self.toolhead.dwell(.050)
-        self.toolhead.wait_moves()
-        if not self.safe(gcmd, start):
-            raise self.printer.command_error(ERROR)
-        self.wrapper._lower_probe()  # Existing activate_gcode / G4 P200
-        self.reactivations += 1
-        if self.triggered() or not self.safe(gcmd, start):
+        self.printer.lookup_object('gcode').respond_raw(
+            'echo: Probe trigger error - recovering and retrying.')
+        self.lift_and_wait(gcmd, start, 2.0)
+        for cycle in range(1, self.attempts + 1):
+            if not self.safe(gcmd, start):
+                raise gcmd.error('Probe retry aborted: unsafe state')
+            self.wrapper._raise_probe()
+            self.toolhead.dwell(.050)
+            self.wrapper._lower_probe()  # Existing activate_gcode / G4 P200
+            self.toolhead.wait_moves()
+            self.reactivations += 1
+            logging.warning('Probe recovery: redeployment %d/%d at Z=%.6f',
+                            cycle, self.attempts, self.toolhead.get_position()[2])
+        if not self.safe(gcmd, start) or self.triggered():
             return False
         self.toolhead.dwell(.020)
-        return not self.triggered() and self.safe(gcmd, start)
+        return self.safe(gcmd, start) and not self.triggered()
+
+    def sample_point(self, gcmd):
+        # Each point starts at 0.030; rejected sets never contribute samples.
+        session = self.session
+        if session.hw_probe_session is None:
+            session._probe_state_error()
+        params = session.param_helper.get_probe_params(gcmd)
+        start = list(self.toolhead.get_position())
+        xy = start[:2]
+        for attempt, tolerance in enumerate(TOLERANCES, 1):
+            positions = []
+            for sample in range(params['samples']):
+                positions.append(session._probe(gcmd))
+                # Complete all samples before deciding whether to retry this point.
+                if sample + 1 < params['samples']:
+                    z = self.toolhead.get_position()[2]
+                    self.toolhead.manual_move(
+                        xy + [z + params['sample_retract_dist']], params['lift_speed'])
+            spread = max(p.bed_z for p in positions) - min(p.bed_z for p in positions)
+            accepted = math.isfinite(spread) and spread <= tolerance + 1.e-9
+            logging.info('Probe tolerance: XY=%s attempt=%d/5 tolerance=%.3f spread=%.6f accepted=%s',
+                         xy, attempt, tolerance, spread, accepted)
+            if accepted:
+                session.results.append(calc_probe_z_average(positions, params['samples_result']))
+                return
+            if attempt == len(TOLERANCES):
+                raise gcmd.error('Probe samples exceed samples_tolerance')
+            gcmd.respond_info('Probe samples exceed tolerance. Retrying... '
+                              '(attempt %d/5, tolerance %.3f mm)' %
+                              (attempt + 1, TOLERANCES[attempt]))
+            self.printer.lookup_object('gcode').respond_raw(
+                'echo: Probe tolerance exceeded (%d/5) - retrying.' % attempt)
+            self.lift_and_wait(gcmd, start, 1.0)
+            self.printer.lookup_object('gcode').respond_raw('// PROBE_RECOVERY_SAMPLING')
 
     def run_probe(self, gcmd):
-        if gcmd.get_command() not in ('BED_MESH_CALIBRATE', 'BED_MESH_CALIBRATE_BASE'):
+        if (gcmd.get_command() == 'G28'
+                or self.session.param_helper.get_probe_params(gcmd)['samples'] < 2):
             return self.original(gcmd)
         start = list(self.toolhead.get_position())
         previous_count = len(self.session.results)
-        used = 0
+        recovered = False
         try:
             while True:
                 try:
-                    result = self.original(gcmd)
-                    if used:
+                    result = self.sample_point(gcmd)
+                    if recovered:
                         self.recoveries += 1
-                        logging.info('Probe recovery: point completed at XY=%s; samples=%s',
-                                     start[:2], self.session.param_helper.get_probe_params(gcmd)['samples'])
                     return result
                 except self.printer.command_error as exc:
-                    if str(exc) != ERROR:
+                    if (str(exc) != ERROR or recovered
+                            or len(self.session.results) != previous_count):
                         raise
-                    # The original averaging helper discards its local samples
-                    # on exception. Its completed-point results must stay intact.
-                    if len(self.session.results) != previous_count:
+                    recovered = True  # One bounded two-cycle recovery per point.
+                    self.wrapper.homing_helper.clear_trigger_positions()
+                    if not self.recover(gcmd, start):
                         raise
-                    while True:
-                        if used >= self.attempts or not self.safe(gcmd, start):
-                            raise
-                        used += 1
-                        self.printer.lookup_object('gcode').respond_raw(
-                            'echo: Probe measurement error - redeploying probe (%d/%d)'
-                            % (used, self.attempts))
-                        logging.warning('Probe recovery: point restart %d/%d at %s',
-                                        used, self.attempts, start[:3])
-                        self.wrapper.homing_helper.clear_trigger_positions()
-                        if self.recover(gcmd, start):
-                            self.printer.lookup_object('gcode').respond_raw('// PROBE_RECOVERY_SAMPLING')
-                            logging.info('Probe recovery: signal open; restarting all %s samples at XY=%s Z=%.6f',
-                                         self.session.param_helper.get_probe_params(gcmd)['samples'],
-                                         start[:2], self.toolhead.get_position()[2])
-                            break
+                    self.printer.lookup_object('gcode').respond_raw('// PROBE_RECOVERY_SAMPLING')
+                    logging.info('Probe recovery: restarting point at tolerance=0.030 XY=%s', start[:2])
         except Exception:
-            if used and not self.printer.is_shutdown():
+            if recovered and not self.printer.is_shutdown():
                 self.wrapper._raise_probe()
             raise
+
 
 def load_config(config):
     return ProbeAutoRecovery(config)

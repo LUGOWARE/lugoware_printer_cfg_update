@@ -107,5 +107,9 @@
   "Wait for movement to stop before releasing motors and clearing preparation errors.": "動きが停止するまで待ってから、モーターを解放し、準備エラーをクリアしてください。",
   "duty={v0} high_count={v1}": "義務={v0} high_count={v1}",
   "skip bed-off (still printing).": "ベッドオフをスキップします (静止印刷)。",
-  "skip bed-off (target={v0}).": "就寝をスキップします (ターゲット={v0})。"
+  "skip bed-off (target={v0}).": "就寝をスキップします (ターゲット={v0})。",
+  "Probe tolerance exceeded ({attempt}/5) - retrying.": "許容誤差を超過 ({attempt}/5) — 再測定します。",
+  "Probe trigger error - recovering and retrying.": "プローブのトリガーエラー — 復旧後に再測定します。",
+  "Object excluded. ({name})": "オブジェクトを除外しました。({name})",
+  "Excluded": "除外済み"
 }

@@ -107,5 +107,9 @@
   "Wait for movement to stop before releasing motors and clearing preparation errors.": "等待运动停止，然后再释放电机并清除准备错误。",
   "duty={v0} high_count={v1}": "职责={v0} high_count={v1}",
   "skip bed-off (still printing).": "跳过下床（仍在打印）。",
-  "skip bed-off (target={v0}).": "跳过就寝（目标={v0}）。"
+  "skip bed-off (target={v0}).": "跳过就寝（目标={v0}）。",
+  "Probe tolerance exceeded ({attempt}/5) - retrying.": "超出允许误差（{attempt}/5）— 正在重新测量。",
+  "Probe trigger error - recovering and retrying.": "探针触发错误 — 恢复后重新测量。",
+  "Object excluded. ({name})": "已排除对象。({name})",
+  "Excluded": "已排除"
 }

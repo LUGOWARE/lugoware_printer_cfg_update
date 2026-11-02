@@ -107,5 +107,9 @@
   "Wait for movement to stop before releasing motors and clearing preparation errors.": "이동이 멈춘 뒤 모터를 해제하고 준비 오류를 초기화해주세요.",
   "duty={v0} high_count={v1}": "히터 출력={v0} 고출력 횟수={v1}",
   "skip bed-off (still printing).": "출력 중이므로 베드 히터를 유지합니다.",
-  "skip bed-off (target={v0}).": "베드 히터 끄기를 생략합니다. 목표 온도: {v0}"
+  "skip bed-off (target={v0}).": "베드 히터 끄기를 생략합니다. 목표 온도: {v0}",
+  "Probe tolerance exceeded ({attempt}/5) - retrying.": "허용 오차 초과 ({attempt}/5) — 다시 측정합니다.",
+  "Probe trigger error - recovering and retrying.": "프로브 트리거 오류 — 복구 후 다시 측정합니다.",
+  "Object excluded. ({name})": "객체가 제외되었습니다. ({name})",
+  "Excluded": "제외됨"
 }

@@ -107,5 +107,9 @@
   "Wait for movement to stop before releasing motors and clearing preparation errors.": "Várja meg, amíg a mozgás leáll, mielőtt elengedi a motorokat és kiküszöböli az előkészítési hibákat.",
   "duty={v0} high_count={v1}": "duty={v0} high_count={v1}",
   "skip bed-off (still printing).": "kihagyja az ágyat (még mindig nyomtat).",
-  "skip bed-off (target={v0}).": "kihagyás (cél={v0})."
+  "skip bed-off (target={v0}).": "kihagyás (cél={v0}).",
+  "Probe tolerance exceeded ({attempt}/5) - retrying.": "Tűréshatár túllépve ({attempt}/5) — újramérés.",
+  "Probe trigger error - recovering and retrying.": "Szondaaktiválási hiba — helyreállítás és újramérés.",
+  "Object excluded. ({name})": "Objektum kizárva. ({name})",
+  "Excluded": "Kizárva"
 }

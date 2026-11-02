@@ -54,6 +54,9 @@ def install(home, screen, klipper, backup):
     handler = screen / 'ks_includes/notification_handler.py'
     changes[handler] = notification(handler.read_text(encoding='utf-8'))
     changes[klipper / 'klippy/extras/probe_auto_recovery.py'] = (assets / 'probe_auto_recovery.py').read_text(encoding='utf-8')
+    changes[klipper / 'klippy/extras/exclude_tool_guard.py'] = (assets / 'exclude_tool_guard.py').read_text(encoding='utf-8')
+    changes[screen / 'panels/exclude.py'] = (assets / 'exclude.py').read_text(encoding='utf-8')
+    changes[screen / 'ks_includes/widgets/objectmap.py'] = (assets / 'objectmap.py').read_text(encoding='utf-8')
     for name in ('print_controls.py', 'toolchange_count.py', 'restart_notice.py', 'info_marquee.py'):
         changes[screen / 'ks_includes' / name] = (assets / name).read_text(encoding='utf-8')
     changes[klipper / 'klippy/extras/print_sensor.py'] = (assets / 'print_sensor.py').read_text(encoding='utf-8')
@@ -68,6 +71,8 @@ def install(home, screen, klipper, backup):
         raise ValueError('Missing fast_cancel section')
     if '[probe_auto_recovery]' not in text:
         text = text.replace('[print_sensor]', '[print_sensor]\n\n[probe_auto_recovery]\nattempts: 2\nminimum_clearance: 1.0', 1)
+    if not re.search(r'^\[exclude_tool_guard\]\s*$', text, re.M):
+        text = text.replace('[print_sensor]', '[print_sensor]\n[exclude_tool_guard]', 1)
     from mesh_features import header
     changes[p] = header(text, config)
     if os.environ.get('LUGOWARE_SYSTEM_ONLY') != '1':

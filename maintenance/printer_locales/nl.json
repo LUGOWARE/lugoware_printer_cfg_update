@@ -107,5 +107,9 @@
   "Wait for movement to stop before releasing motors and clearing preparation errors.": "Wacht tot de beweging stopt voordat u de motoren vrijgeeft en voorbereidingsfouten verhelpt.",
   "duty={v0} high_count={v1}": "plicht={v0} high_count={v1}",
   "skip bed-off (still printing).": "bed-off overslaan (nog steeds aan het afdrukken).",
-  "skip bed-off (target={v0}).": "sla het uit bed over (target={v0})."
+  "skip bed-off (target={v0}).": "sla het uit bed over (target={v0}).",
+  "Probe tolerance exceeded ({attempt}/5) - retrying.": "Tolerantie overschreden ({attempt}/5) — opnieuw meten.",
+  "Probe trigger error - recovering and retrying.": "Triggerfout van de probe — herstellen en opnieuw meten.",
+  "Object excluded. ({name})": "Object uitgesloten. ({name})",
+  "Excluded": "Uitgesloten"
 }
