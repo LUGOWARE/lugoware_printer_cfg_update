@@ -111,5 +111,22 @@
   "Probe tolerance exceeded ({attempt}/5) - retrying.": "Presežena toleranca ({attempt}/5) — ponovna meritev.",
   "Probe trigger error - recovering and retrying.": "Napaka proženja tipala — obnovitev in ponovna meritev.",
   "Object excluded. ({name})": "Predmet je izključen. ({name})",
-  "Excluded": "Izključeno"
+  "Excluded": "Izključeno",
+  "Exclusion pending": "Čaka na izključitev",
+  "Unsupported first tool parameters": "Prvega orodja ni mogoče pripraviti. Preverite datoteko za tiskanje in nastavitve orodij.",
+  "Cannot exclude the last object; cancel the print instead": "Zadnjega objekta ni mogoče izključiti. Prekličite tiskanje.",
+  "EXCLUDE_TOOL_PREPARE is only available inside START_PRINT": "Prvega orodja ni mogoče pripraviti. Preverite datoteko za tiskanje in nastavitve orodij.",
+  "Invalid first printable tool settings": "Prvega orodja ni mogoče pripraviti. Preverite datoteko za tiskanje in nastavitve orodij.",
+  "Cancelling": "Preklicevanje",
+  "First tool preparation failed": "Prvega orodja ni mogoče pripraviti. Preverite datoteko za tiskanje in nastavitve orodij.",
+  "Calculating print time": "Izračun časa tiskanja",
+  "Cannot determine first printable tool within scan limit": "Prvega orodja ni mogoče pripraviti. Preverite datoteko za tiskanje in nastavitve orodij.",
+  "No active print": "Ni aktivnega tiskanja.",
+  "Unknown object": "Neznan objekt.",
+  "First tool selection requires an active print file": "Prvega orodja ni mogoče pripraviti. Preverite datoteko za tiskanje in nastavitve orodij.",
+  "Unknown exclusion action": "Neveljavna zahteva za izključitev objekta.",
+  "First printable tool has no matching CHANGE_TOOL settings": "Prvega orodja ni mogoče pripraviti. Preverite datoteko za tiskanje in nastavitve orodij.",
+  "No printable object remains or first tool settings are unavailable": "Prvega orodja ni mogoče pripraviti. Preverite datoteko za tiskanje in nastavitve orodij.",
+  "First printable object has no name": "Prvega orodja ni mogoče pripraviti. Preverite datoteko za tiskanje in nastavitve orodij.",
+  "Invalid first printable tool or temperature": "Prvega orodja ni mogoče pripraviti. Preverite datoteko za tiskanje in nastavitve orodij."
 }

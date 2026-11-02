@@ -15,5 +15,21 @@
   "Minimum:": "Mažiausias:",
   "Runs third-party code from the addons folder at startup. Add-ons are not provided or reviewed by the KlipperScreen developers. Takes effect after a restart.": "Paleidžiant paleidžia trečiosios šalies kodą iš priedų aplanko. KlipperScreen kūrėjai priedų nepateikia ir neperžiūrėjo. Įsigalioja po pakartotinio paleidimo.",
   "System language": "Sistemos kalba",
-  "Material usage": "Sąnaudos"
+  "Material usage": "Sąnaudos",
+  "Calculating print time": "Skaičiuojamas spausdinimo laikas",
+  "Unknown object": "Nežinomas objektas.",
+  "Cannot exclude the last object; cancel the print instead": "Paskutinio objekto pašalinti negalima. Atšaukite spausdinimą.",
+  "No active print": "Nėra aktyvaus spausdinimo.",
+  "Unknown exclusion action": "Netinkama objekto pašalinimo užklausa.",
+  "First tool preparation failed": "Nepavyko paruošti pirmojo įrankio. Patikrinkite spausdinimo failą ir įrankių nustatymus.",
+  "Unsupported first tool parameters": "Nepavyko paruošti pirmojo įrankio. Patikrinkite spausdinimo failą ir įrankių nustatymus.",
+  "First tool selection requires an active print file": "Nepavyko paruošti pirmojo įrankio. Patikrinkite spausdinimo failą ir įrankių nustatymus.",
+  "Cannot determine first printable tool within scan limit": "Nepavyko paruošti pirmojo įrankio. Patikrinkite spausdinimo failą ir įrankių nustatymus.",
+  "First printable tool has no matching CHANGE_TOOL settings": "Nepavyko paruošti pirmojo įrankio. Patikrinkite spausdinimo failą ir įrankių nustatymus.",
+  "First printable object has no name": "Nepavyko paruošti pirmojo įrankio. Patikrinkite spausdinimo failą ir įrankių nustatymus.",
+  "No printable object remains or first tool settings are unavailable": "Nepavyko paruošti pirmojo įrankio. Patikrinkite spausdinimo failą ir įrankių nustatymus.",
+  "EXCLUDE_TOOL_PREPARE is only available inside START_PRINT": "Nepavyko paruošti pirmojo įrankio. Patikrinkite spausdinimo failą ir įrankių nustatymus.",
+  "Invalid first printable tool settings": "Nepavyko paruošti pirmojo įrankio. Patikrinkite spausdinimo failą ir įrankių nustatymus.",
+  "Invalid first printable tool or temperature": "Nepavyko paruošti pirmojo įrankio. Patikrinkite spausdinimo failą ir įrankių nustatymus.",
+  "Cancelling": "Atšaukiama"
 }

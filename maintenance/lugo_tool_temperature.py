@@ -1,5 +1,11 @@
 """Print-scoped four-tool temperature overrides. Manual-test extension."""
 import csv
+import json
+import logging
+import os
+import subprocess
+import sys
+import tempfile
 import math
 import re
 
@@ -65,6 +71,12 @@ class ToolTemperature:
             'lugo_tool_temperature/set_bed', self.handle_set_bed)
 
     def reset(self, *args):
+        self._analysis_generation = getattr(self, '_analysis_generation', 0) + 1
+        self.analysis_pending = False
+        process = getattr(self, '_analysis_process', None)
+        if process is not None and process.poll() is None:
+            process.terminate()
+        self._analysis_process = None
         self.active = False
         self.materials = ['Unknown'] * 4
         self.base = [None] * 4
@@ -100,19 +112,58 @@ class ToolTemperature:
         self.reset()
         self.active = True
         sd = self.printer.lookup_object('virtual_sdcard', None)
+        path = sd.file_path() if sd else None
+        if not path:
+            return
+        reactor = self.printer.get_reactor()
+        generation = self._analysis_generation
+        output = tempfile.TemporaryFile(mode='w+b')
         try:
-            data = metadata(sd.file_path() if sd else None)
-            reactor = self.printer.get_reactor()
-            self.used = used_tools(sd.file_path() if sd else None,
-                                   lambda: reactor.pause(reactor.monotonic()))
-            for i, name in enumerate(data.get('filament_settings_id', data.get('lugo_tool_materials', data.get('filament_type', [])))[:4]):
-                self.materials[i] = name or 'Unknown'
-            for i, value in enumerate(data.get('nozzle_temperature', [])[:4]):
-                temp = float(value)
-                if math.isfinite(temp) and temp > 0:
-                    self.base[i] = temp
-        except (OSError, ValueError, csv.Error):
-            self.gcode.respond_info('Tool temperature: metadata unavailable; toolchange temperatures will be used.')
+            process = subprocess.Popen(
+                [sys.executable, '-I', __file__, '--analyze', path],
+                stdout=output, stderr=subprocess.DEVNULL, close_fds=True)
+        except OSError:
+            output.close()
+            logging.exception('Tool temperature: cannot start background analysis')
+            return
+        self._analysis_process = process
+        self.analysis_pending = True
+        started = reactor.monotonic()
+        def poll(eventtime):
+            stale = generation != self._analysis_generation
+            if (stale or eventtime - started > 180) and process.poll() is None:
+                process.terminate()
+            code = process.poll()
+            if code is None:
+                return eventtime + .25
+            try:
+                if code == 0 and not stale and self.active:
+                    output.seek(0)
+                    result = json.loads(output.read(1048576))
+                    data = result['metadata']
+                    self.used = sorted(set(result['used']) | set(self.used or []))
+                    if self.start_tool is not None and self.start_tool not in self.used:
+                        self.used.append(self.start_tool)
+                    for i, name in enumerate(data.get('filament_settings_id', data.get('lugo_tool_materials', data.get('filament_type', [])))[:4]):
+                        self.materials[i] = name or 'Unknown'
+                    for i, value in enumerate(data.get('nozzle_temperature', [])[:4]):
+                        temp = float(value)
+                        # Live START_PRINT / CHANGE_TOOL / UI temperatures win.
+                        if self.base[i] is None and math.isfinite(temp) and temp > 0:
+                            self.base[i] = temp
+                    logging.info('Tool temperature background analysis: %.3fs cache=%s file=%s',
+                                 eventtime-started, result.get('cached', False), path)
+                elif not stale:
+                    logging.warning('Tool temperature analysis unavailable; using live tool commands')
+            except (ValueError, KeyError, TypeError, csv.Error):
+                logging.exception('Tool temperature: invalid analysis result')
+            finally:
+                output.close()
+                if generation == self._analysis_generation:
+                    self.analysis_pending = False
+                    self._analysis_process = None
+            return reactor.NEVER
+        reactor.register_timer(poll, reactor.monotonic() + .25)
 
     def dispatch(self, name, cmd):
         if name == 'START_PRINT':
@@ -262,7 +313,7 @@ class ToolTemperature:
         if self.active and stats and stats.get_status(eventtime)['state'] in ('complete', 'cancelled', 'error'):
             self.reset()
         used = [None if self.used is None else i in self.used for i in range(4)]
-        return {'active': self.active, 'used': used, 'live_api': True, 'live_bed_api': True,
+        return {'analysis_pending': self.analysis_pending, 'active': self.active, 'used': used, 'live_api': True, 'live_bed_api': True,
                 'bed_ready': self.active and self.bed_ready,
                 'materials': [name if used[i] is not False else '' for i, name in enumerate(self.materials)],
                 'base': list(self.base), 'overrides': list(self.overrides),
@@ -272,3 +323,47 @@ class ToolTemperature:
 
 def load_config(config):
     return ToolTemperature(config)
+
+def analyze_file(path, cache_dir=None):
+    """Worker-only file I/O; cache invalidates when file identity or content stamp changes."""
+    from pathlib import Path
+    import hashlib
+    path = Path(path).resolve()
+    def signature():
+        st = path.stat()
+        return [str(path), st.st_dev, st.st_ino, st.st_size, st.st_mtime_ns, st.st_ctime_ns]
+    stamp = signature()
+    folder = Path(cache_dir) if cache_dir else Path.home()/'.cache/lugoware-tool-analysis'
+    key = hashlib.sha256(str(path).encode()).hexdigest()
+    cached = folder/(key+'.json')
+    try:
+        result = json.loads(cached.read_text())
+        if result.get('signature') == stamp and result.get('version') == 1:
+            result['cached'] = True
+            return result
+    except (OSError, ValueError):
+        pass
+    result = {'version':1, 'signature':stamp, 'metadata':metadata(path),
+              'used':used_tools(path), 'cached':False}
+    if signature() != stamp:
+        raise ValueError('Print file changed during analysis')
+    try:
+        folder.mkdir(parents=True, exist_ok=True)
+        fd, name = tempfile.mkstemp(dir=str(folder), prefix=key+'.', suffix='.tmp')
+        try:
+            with os.fdopen(fd, 'w') as stream:
+                json.dump(result, stream)
+            os.replace(name, cached)
+        finally:
+            if os.path.exists(name):
+                os.unlink(name)
+    except OSError:
+        pass  # Cache storage is optional, never block printing on it.
+    return result
+
+
+if __name__ == '__main__':
+    if len(sys.argv) != 3 or sys.argv[1] != '--analyze':
+        raise SystemExit('Expected --analyze PATH')
+    os.nice(10)
+    print(json.dumps(analyze_file(sys.argv[2])))

@@ -141,6 +141,8 @@ class ObjectMap(Gtk.DrawingArea):
             # change the color depending on the status
             if obj["name"] in (self.printer.get_stat("exclude_object", "excluded_objects") or []):
                 ctx.set_source_rgb(.38, .14, .14)
+            elif obj['name'] in (self.printer.get_stat('exclude_tool_guard') or {}).get('pending_excludes', []):
+                ctx.set_source_rgb(.65, .43, .12)
             elif obj["name"] == self.printer.get_stat("exclude_object", "current_object"):
                 ctx.set_source_rgb(.15, .65, .85)
             else:
@@ -167,6 +169,7 @@ class ObjectMap(Gtk.DrawingArea):
             x = self.x_bed_to_graph(da.get_allocated_width(), center[0])
             y = self.y_bed_to_graph(da.get_allocated_height(), center[1])
             excluded = obj['name'] in (self.printer.get_stat('exclude_object', 'excluded_objects') or [])
+            pending = obj['name'] in (self.printer.get_stat('exclude_tool_guard') or {}).get('pending_excludes', [])
             radius = max(10, round(self.font_size * .8))
             # Compact rounded tiles matching the dark KlipperScreen controls.
             ctx.new_path()

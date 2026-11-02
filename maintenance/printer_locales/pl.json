@@ -111,5 +111,22 @@
   "Probe tolerance exceeded ({attempt}/5) - retrying.": "Przekroczono tolerancję ({attempt}/5) — ponowny pomiar.",
   "Probe trigger error - recovering and retrying.": "Błąd wyzwolenia sondy — przywracanie i ponowny pomiar.",
   "Object excluded. ({name})": "Obiekt został wykluczony. ({name})",
-  "Excluded": "Wykluczony"
+  "Excluded": "Wykluczony",
+  "Exclusion pending": "Oczekuje na wykluczenie",
+  "Unsupported first tool parameters": "Nie można przygotować pierwszego narzędzia. Sprawdź plik wydruku i ustawienia narzędzi.",
+  "Cannot exclude the last object; cancel the print instead": "Nie można wykluczyć ostatniego obiektu. Anuluj druk.",
+  "EXCLUDE_TOOL_PREPARE is only available inside START_PRINT": "Nie można przygotować pierwszego narzędzia. Sprawdź plik wydruku i ustawienia narzędzi.",
+  "Invalid first printable tool settings": "Nie można przygotować pierwszego narzędzia. Sprawdź plik wydruku i ustawienia narzędzi.",
+  "Cancelling": "Anulowanie",
+  "First tool preparation failed": "Nie można przygotować pierwszego narzędzia. Sprawdź plik wydruku i ustawienia narzędzi.",
+  "Calculating print time": "Obliczanie czasu druku",
+  "Cannot determine first printable tool within scan limit": "Nie można przygotować pierwszego narzędzia. Sprawdź plik wydruku i ustawienia narzędzi.",
+  "No active print": "Brak aktywnego wydruku.",
+  "Unknown object": "Nieznany obiekt.",
+  "First tool selection requires an active print file": "Nie można przygotować pierwszego narzędzia. Sprawdź plik wydruku i ustawienia narzędzi.",
+  "Unknown exclusion action": "Nieprawidłowe żądanie wykluczenia obiektu.",
+  "First printable tool has no matching CHANGE_TOOL settings": "Nie można przygotować pierwszego narzędzia. Sprawdź plik wydruku i ustawienia narzędzi.",
+  "No printable object remains or first tool settings are unavailable": "Nie można przygotować pierwszego narzędzia. Sprawdź plik wydruku i ustawienia narzędzi.",
+  "First printable object has no name": "Nie można przygotować pierwszego narzędzia. Sprawdź plik wydruku i ustawienia narzędzi.",
+  "Invalid first printable tool or temperature": "Nie można przygotować pierwszego narzędzia. Sprawdź plik wydruku i ustawienia narzędzi."
 }

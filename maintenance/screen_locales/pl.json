@@ -25,5 +25,21 @@
   "System": "System",
   "System:": "Układ:",
   "System language": "Język systemu",
-  "Material usage": "Zużycie"
+  "Material usage": "Zużycie",
+  "Calculating print time": "Obliczanie czasu druku",
+  "Unknown object": "Nieznany obiekt.",
+  "Cannot exclude the last object; cancel the print instead": "Nie można wykluczyć ostatniego obiektu. Anuluj druk.",
+  "No active print": "Brak aktywnego wydruku.",
+  "Unknown exclusion action": "Nieprawidłowe żądanie wykluczenia obiektu.",
+  "First tool preparation failed": "Nie można przygotować pierwszego narzędzia. Sprawdź plik wydruku i ustawienia narzędzi.",
+  "Unsupported first tool parameters": "Nie można przygotować pierwszego narzędzia. Sprawdź plik wydruku i ustawienia narzędzi.",
+  "First tool selection requires an active print file": "Nie można przygotować pierwszego narzędzia. Sprawdź plik wydruku i ustawienia narzędzi.",
+  "Cannot determine first printable tool within scan limit": "Nie można przygotować pierwszego narzędzia. Sprawdź plik wydruku i ustawienia narzędzi.",
+  "First printable tool has no matching CHANGE_TOOL settings": "Nie można przygotować pierwszego narzędzia. Sprawdź plik wydruku i ustawienia narzędzi.",
+  "First printable object has no name": "Nie można przygotować pierwszego narzędzia. Sprawdź plik wydruku i ustawienia narzędzi.",
+  "No printable object remains or first tool settings are unavailable": "Nie można przygotować pierwszego narzędzia. Sprawdź plik wydruku i ustawienia narzędzi.",
+  "EXCLUDE_TOOL_PREPARE is only available inside START_PRINT": "Nie można przygotować pierwszego narzędzia. Sprawdź plik wydruku i ustawienia narzędzi.",
+  "Invalid first printable tool settings": "Nie można przygotować pierwszego narzędzia. Sprawdź plik wydruku i ustawienia narzędzi.",
+  "Invalid first printable tool or temperature": "Nie można przygotować pierwszego narzędzia. Sprawdź plik wydruku i ustawienia narzędzi.",
+  "Cancelling": "Anulowanie"
 }

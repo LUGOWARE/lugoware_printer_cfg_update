@@ -85,7 +85,8 @@ class Panel(ScreenPanel):
     def update_object_row(self, name, button):
         excluded = name in self.excluded_objects
         button.object_title.set_text(self.object_label(name))
-        button.object_status.set_text('✕ ' + _('Excluded') if excluded else '')
+        pending = name in self.pending_objects()
+        button.object_status.set_text('✕ ' + _('Excluded') if excluded else (_('Exclusion pending') if pending else ''))
         button.set_sensitive(not excluded)
 
     def object_label(self, name):
@@ -93,11 +94,19 @@ class Panel(ScreenPanel):
         text = f"[{number}] {name.replace('_', ' ')}"
         return text
 
+    def pending_objects(self):
+        return (self._printer.get_stat('exclude_tool_guard') or {}).get('pending_excludes', [])
+
     def exclude_object(self, widget, name):
         if name in self.excluded_objects:
             return
 
-        if len(self.excluded_objects) == len(self.objects) - 1:
+        if name in self.pending_objects():
+            self._screen._send_action(widget, 'printer.exclude_tool_guard.request',
+                                      {'name': name, 'action': 'cancel'})
+            return
+
+        if len(set(self.excluded_objects) | set(self.pending_objects())) >= len(self.objects) - 1:
             # Do not exclude the last object, this is a workaround for a bug of klipper that starts
             # to move the toolhead really fast skipping gcode until the file ends
             # Remove this if they fix it.
@@ -107,11 +116,11 @@ class Panel(ScreenPanel):
                 "printer.print.cancel",
             )
             return
-        script = {"script": f"EXCLUDE_OBJECT NAME={name}"}
+        script = {"name": name, "action": "exclude"}
         self._screen._confirm_send_action(
             widget,
             _("Are you sure do you want to exclude the object?") + f"\n\n{self.object_label(name)}",
-            "printer.gcode.script",
+            "printer.exclude_tool_guard.request",
             script,
         )
 
@@ -123,6 +132,10 @@ class Panel(ScreenPanel):
 
     def process_update(self, action, data):
         if action == "notify_status_update":
+            if 'exclude_tool_guard' in data:
+                for name, button in self.buttons.items():
+                    self.update_object_row(name, button)
+                self.update_graph()
             if "exclude_object" in data:
                 if "objects" in data["exclude_object"]:  # Update objects
                     self.objects = data["exclude_object"]["objects"]

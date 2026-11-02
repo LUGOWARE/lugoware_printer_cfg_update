@@ -111,5 +111,22 @@
   "Probe tolerance exceeded ({attempt}/5) - retrying.": "تجاوز حد التفاوت ({attempt}/5) — جارٍ القياس مجددًا.",
   "Probe trigger error - recovering and retrying.": "خطأ في تشغيل المسبار — جارٍ الاستعادة وإعادة القياس.",
   "Object excluded. ({name})": "تم استبعاد العنصر. ({name})",
-  "Excluded": "مستبعد"
+  "Excluded": "مستبعد",
+  "Exclusion pending": "الاستبعاد قيد الانتظار",
+  "EXCLUDE_TOOL_PREPARE is only available inside START_PRINT": "تعذّر تجهيز الأداة الأولى. تحقّق من ملف الطباعة وإعدادات الأدوات.",
+  "First printable tool has no matching CHANGE_TOOL settings": "تعذّر تجهيز الأداة الأولى. تحقّق من ملف الطباعة وإعدادات الأدوات.",
+  "Invalid first printable tool settings": "تعذّر تجهيز الأداة الأولى. تحقّق من ملف الطباعة وإعدادات الأدوات.",
+  "Cannot exclude the last object; cancel the print instead": "لا يمكن استبعاد العنصر الأخير. ألغِ الطباعة بدلاً من ذلك.",
+  "No printable object remains or first tool settings are unavailable": "تعذّر تجهيز الأداة الأولى. تحقّق من ملف الطباعة وإعدادات الأدوات.",
+  "Calculating print time": "جارٍ حساب وقت الطباعة",
+  "Unsupported first tool parameters": "تعذّر تجهيز الأداة الأولى. تحقّق من ملف الطباعة وإعدادات الأدوات.",
+  "First tool preparation failed": "تعذّر تجهيز الأداة الأولى. تحقّق من ملف الطباعة وإعدادات الأدوات.",
+  "Unknown object": "عنصر غير معروف.",
+  "First printable object has no name": "تعذّر تجهيز الأداة الأولى. تحقّق من ملف الطباعة وإعدادات الأدوات.",
+  "No active print": "لا توجد طباعة نشطة.",
+  "Invalid first printable tool or temperature": "تعذّر تجهيز الأداة الأولى. تحقّق من ملف الطباعة وإعدادات الأدوات.",
+  "First tool selection requires an active print file": "تعذّر تجهيز الأداة الأولى. تحقّق من ملف الطباعة وإعدادات الأدوات.",
+  "Cannot determine first printable tool within scan limit": "تعذّر تجهيز الأداة الأولى. تحقّق من ملف الطباعة وإعدادات الأدوات.",
+  "Unknown exclusion action": "طلب استبعاد العنصر غير صالح.",
+  "Cancelling": "جارٍ الإلغاء"
 }

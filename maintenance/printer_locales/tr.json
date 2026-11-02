@@ -111,5 +111,22 @@
   "Probe tolerance exceeded ({attempt}/5) - retrying.": "Tolerans aşıldı ({attempt}/5) — yeniden ölçülüyor.",
   "Probe trigger error - recovering and retrying.": "Prob tetikleme hatası — kurtarma sonrası yeniden ölçülüyor.",
   "Object excluded. ({name})": "Nesne hariç tutuldu. ({name})",
-  "Excluded": "Hariç tutuldu"
+  "Excluded": "Hariç tutuldu",
+  "Exclusion pending": "Hariç tutma bekliyor",
+  "Unsupported first tool parameters": "İlk takım hazırlanamadı. Baskı dosyasını ve takım ayarlarını kontrol edin.",
+  "Cannot exclude the last object; cancel the print instead": "Son nesne hariç tutulamaz. Baskıyı iptal edin.",
+  "EXCLUDE_TOOL_PREPARE is only available inside START_PRINT": "İlk takım hazırlanamadı. Baskı dosyasını ve takım ayarlarını kontrol edin.",
+  "Invalid first printable tool settings": "İlk takım hazırlanamadı. Baskı dosyasını ve takım ayarlarını kontrol edin.",
+  "Cancelling": "İptal ediliyor",
+  "First tool preparation failed": "İlk takım hazırlanamadı. Baskı dosyasını ve takım ayarlarını kontrol edin.",
+  "Calculating print time": "Baskı süresi hesaplanıyor",
+  "Cannot determine first printable tool within scan limit": "İlk takım hazırlanamadı. Baskı dosyasını ve takım ayarlarını kontrol edin.",
+  "No active print": "Etkin baskı yok.",
+  "Unknown object": "Bilinmeyen nesne.",
+  "First tool selection requires an active print file": "İlk takım hazırlanamadı. Baskı dosyasını ve takım ayarlarını kontrol edin.",
+  "Unknown exclusion action": "Geçersiz nesne hariç tutma isteği.",
+  "First printable tool has no matching CHANGE_TOOL settings": "İlk takım hazırlanamadı. Baskı dosyasını ve takım ayarlarını kontrol edin.",
+  "No printable object remains or first tool settings are unavailable": "İlk takım hazırlanamadı. Baskı dosyasını ve takım ayarlarını kontrol edin.",
+  "First printable object has no name": "İlk takım hazırlanamadı. Baskı dosyasını ve takım ayarlarını kontrol edin.",
+  "Invalid first printable tool or temperature": "İlk takım hazırlanamadı. Baskı dosyasını ve takım ayarlarını kontrol edin."
 }

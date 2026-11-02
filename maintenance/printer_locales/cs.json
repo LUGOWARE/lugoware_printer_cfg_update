@@ -111,5 +111,22 @@
   "Probe tolerance exceeded ({attempt}/5) - retrying.": "Překročena tolerance ({attempt}/5) — opakování měření.",
   "Probe trigger error - recovering and retrying.": "Chyba sepnutí sondy — obnovení a opakování měření.",
   "Object excluded. ({name})": "Objekt byl vyloučen. ({name})",
-  "Excluded": "Vyloučeno"
+  "Excluded": "Vyloučeno",
+  "Exclusion pending": "Čeká na vyloučení",
+  "EXCLUDE_TOOL_PREPARE is only available inside START_PRINT": "Nelze připravit první nástroj. Zkontrolujte tiskový soubor a nastavení nástrojů.",
+  "First printable tool has no matching CHANGE_TOOL settings": "Nelze připravit první nástroj. Zkontrolujte tiskový soubor a nastavení nástrojů.",
+  "Invalid first printable tool settings": "Nelze připravit první nástroj. Zkontrolujte tiskový soubor a nastavení nástrojů.",
+  "Cannot exclude the last object; cancel the print instead": "Poslední objekt nelze vyřadit. Zrušte tisk.",
+  "No printable object remains or first tool settings are unavailable": "Nelze připravit první nástroj. Zkontrolujte tiskový soubor a nastavení nástrojů.",
+  "Calculating print time": "Výpočet doby tisku",
+  "Unsupported first tool parameters": "Nelze připravit první nástroj. Zkontrolujte tiskový soubor a nastavení nástrojů.",
+  "First tool preparation failed": "Nelze připravit první nástroj. Zkontrolujte tiskový soubor a nastavení nástrojů.",
+  "Unknown object": "Neznámý objekt.",
+  "First printable object has no name": "Nelze připravit první nástroj. Zkontrolujte tiskový soubor a nastavení nástrojů.",
+  "No active print": "Žádný aktivní tisk.",
+  "Invalid first printable tool or temperature": "Nelze připravit první nástroj. Zkontrolujte tiskový soubor a nastavení nástrojů.",
+  "First tool selection requires an active print file": "Nelze připravit první nástroj. Zkontrolujte tiskový soubor a nastavení nástrojů.",
+  "Cannot determine first printable tool within scan limit": "Nelze připravit první nástroj. Zkontrolujte tiskový soubor a nastavení nástrojů.",
+  "Unknown exclusion action": "Neplatný požadavek na vyřazení objektu.",
+  "Cancelling": "Rušení"
 }

@@ -111,5 +111,22 @@
   "Probe tolerance exceeded ({attempt}/5) - retrying.": "Toleransen överskriden ({attempt}/5) — mäter igen.",
   "Probe trigger error - recovering and retrying.": "Fel vid probutlösning — återställer och mäter igen.",
   "Object excluded. ({name})": "Objektet har uteslutits. ({name})",
-  "Excluded": "Utesluten"
+  "Excluded": "Utesluten",
+  "Exclusion pending": "Väntar på uteslutning",
+  "Unsupported first tool parameters": "Det första verktyget kan inte förberedas. Kontrollera utskriftsfilen och verktygsinställningarna.",
+  "Cannot exclude the last object; cancel the print instead": "Det sista objektet kan inte uteslutas. Avbryt utskriften.",
+  "EXCLUDE_TOOL_PREPARE is only available inside START_PRINT": "Det första verktyget kan inte förberedas. Kontrollera utskriftsfilen och verktygsinställningarna.",
+  "Invalid first printable tool settings": "Det första verktyget kan inte förberedas. Kontrollera utskriftsfilen och verktygsinställningarna.",
+  "Cancelling": "Avbryter",
+  "First tool preparation failed": "Det första verktyget kan inte förberedas. Kontrollera utskriftsfilen och verktygsinställningarna.",
+  "Calculating print time": "Beräknar utskriftstid",
+  "Cannot determine first printable tool within scan limit": "Det första verktyget kan inte förberedas. Kontrollera utskriftsfilen och verktygsinställningarna.",
+  "No active print": "Ingen aktiv utskrift.",
+  "Unknown object": "Okänt objekt.",
+  "First tool selection requires an active print file": "Det första verktyget kan inte förberedas. Kontrollera utskriftsfilen och verktygsinställningarna.",
+  "Unknown exclusion action": "Ogiltig begäran om att utesluta objekt.",
+  "First printable tool has no matching CHANGE_TOOL settings": "Det första verktyget kan inte förberedas. Kontrollera utskriftsfilen och verktygsinställningarna.",
+  "No printable object remains or first tool settings are unavailable": "Det första verktyget kan inte förberedas. Kontrollera utskriftsfilen och verktygsinställningarna.",
+  "First printable object has no name": "Det första verktyget kan inte förberedas. Kontrollera utskriftsfilen och verktygsinställningarna.",
+  "Invalid first printable tool or temperature": "Det första verktyget kan inte förberedas. Kontrollera utskriftsfilen och verktygsinställningarna."
 }

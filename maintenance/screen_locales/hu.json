@@ -57,5 +57,21 @@
   "Waiting for Moonraker connection to close": "Várakozás a Moonraker kapcsolat bezárására",
   "Yes": "Igen",
   "System language": "Rendszernyelv",
-  "Material usage": "Felhasználás"
+  "Material usage": "Felhasználás",
+  "Calculating print time": "Nyomtatási idő számítása",
+  "Unknown object": "Ismeretlen objektum.",
+  "Cannot exclude the last object; cancel the print instead": "Az utolsó objektum nem zárható ki. Szakítsa meg a nyomtatást.",
+  "No active print": "Nincs aktív nyomtatás.",
+  "Unknown exclusion action": "Érvénytelen objektumkizárási kérés.",
+  "First tool preparation failed": "Az első szerszám nem készíthető elő. Ellenőrizze a nyomtatási fájlt és a szerszámbeállításokat.",
+  "Unsupported first tool parameters": "Az első szerszám nem készíthető elő. Ellenőrizze a nyomtatási fájlt és a szerszámbeállításokat.",
+  "First tool selection requires an active print file": "Az első szerszám nem készíthető elő. Ellenőrizze a nyomtatási fájlt és a szerszámbeállításokat.",
+  "Cannot determine first printable tool within scan limit": "Az első szerszám nem készíthető elő. Ellenőrizze a nyomtatási fájlt és a szerszámbeállításokat.",
+  "First printable tool has no matching CHANGE_TOOL settings": "Az első szerszám nem készíthető elő. Ellenőrizze a nyomtatási fájlt és a szerszámbeállításokat.",
+  "First printable object has no name": "Az első szerszám nem készíthető elő. Ellenőrizze a nyomtatási fájlt és a szerszámbeállításokat.",
+  "No printable object remains or first tool settings are unavailable": "Az első szerszám nem készíthető elő. Ellenőrizze a nyomtatási fájlt és a szerszámbeállításokat.",
+  "EXCLUDE_TOOL_PREPARE is only available inside START_PRINT": "Az első szerszám nem készíthető elő. Ellenőrizze a nyomtatási fájlt és a szerszámbeállításokat.",
+  "Invalid first printable tool settings": "Az első szerszám nem készíthető elő. Ellenőrizze a nyomtatási fájlt és a szerszámbeállításokat.",
+  "Invalid first printable tool or temperature": "Az első szerszám nem készíthető elő. Ellenőrizze a nyomtatási fájlt és a szerszámbeállításokat.",
+  "Cancelling": "Megszakítás folyamatban"
 }

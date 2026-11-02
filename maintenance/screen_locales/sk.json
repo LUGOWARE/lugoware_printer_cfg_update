@@ -57,5 +57,21 @@
   "Yes": "áno",
   "Z offset:": "Posun Z:",
   "System language": "Systémový jazyk",
-  "Material usage": "Spotreba"
+  "Material usage": "Spotreba",
+  "Calculating print time": "Výpočet času tlače",
+  "Unknown object": "Neznámy objekt.",
+  "Cannot exclude the last object; cancel the print instead": "Posledný objekt nemožno vylúčiť. Zrušte tlač.",
+  "No active print": "Žiadna aktívna tlač.",
+  "Unknown exclusion action": "Neplatná požiadavka na vylúčenie objektu.",
+  "First tool preparation failed": "Prvý nástroj nemožno pripraviť. Skontrolujte tlačový súbor a nastavenia nástrojov.",
+  "Unsupported first tool parameters": "Prvý nástroj nemožno pripraviť. Skontrolujte tlačový súbor a nastavenia nástrojov.",
+  "First tool selection requires an active print file": "Prvý nástroj nemožno pripraviť. Skontrolujte tlačový súbor a nastavenia nástrojov.",
+  "Cannot determine first printable tool within scan limit": "Prvý nástroj nemožno pripraviť. Skontrolujte tlačový súbor a nastavenia nástrojov.",
+  "First printable tool has no matching CHANGE_TOOL settings": "Prvý nástroj nemožno pripraviť. Skontrolujte tlačový súbor a nastavenia nástrojov.",
+  "First printable object has no name": "Prvý nástroj nemožno pripraviť. Skontrolujte tlačový súbor a nastavenia nástrojov.",
+  "No printable object remains or first tool settings are unavailable": "Prvý nástroj nemožno pripraviť. Skontrolujte tlačový súbor a nastavenia nástrojov.",
+  "EXCLUDE_TOOL_PREPARE is only available inside START_PRINT": "Prvý nástroj nemožno pripraviť. Skontrolujte tlačový súbor a nastavenia nástrojov.",
+  "Invalid first printable tool settings": "Prvý nástroj nemožno pripraviť. Skontrolujte tlačový súbor a nastavenia nástrojov.",
+  "Invalid first printable tool or temperature": "Prvý nástroj nemožno pripraviť. Skontrolujte tlačový súbor a nastavenia nástrojov.",
+  "Cancelling": "Rušenie"
 }

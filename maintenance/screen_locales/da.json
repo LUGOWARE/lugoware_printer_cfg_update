@@ -85,5 +85,21 @@
   "Yes": "Ja",
   "Z offset:": "Z-forskydning:",
   "System language": "Systemsprog",
-  "Material usage": "Forbrug"
+  "Material usage": "Forbrug",
+  "Calculating print time": "Beregner printtid",
+  "Unknown object": "Ukendt objekt.",
+  "Cannot exclude the last object; cancel the print instead": "Det sidste objekt kan ikke udelukkes. Annuller printet.",
+  "No active print": "Intet aktivt print.",
+  "Unknown exclusion action": "Ugyldig anmodning om udelukkelse af objekt.",
+  "First tool preparation failed": "Det første værktøj kan ikke klargøres. Kontrollér printfilen og værktøjsindstillingerne.",
+  "Unsupported first tool parameters": "Det første værktøj kan ikke klargøres. Kontrollér printfilen og værktøjsindstillingerne.",
+  "First tool selection requires an active print file": "Det første værktøj kan ikke klargøres. Kontrollér printfilen og værktøjsindstillingerne.",
+  "Cannot determine first printable tool within scan limit": "Det første værktøj kan ikke klargøres. Kontrollér printfilen og værktøjsindstillingerne.",
+  "First printable tool has no matching CHANGE_TOOL settings": "Det første værktøj kan ikke klargøres. Kontrollér printfilen og værktøjsindstillingerne.",
+  "First printable object has no name": "Det første værktøj kan ikke klargøres. Kontrollér printfilen og værktøjsindstillingerne.",
+  "No printable object remains or first tool settings are unavailable": "Det første værktøj kan ikke klargøres. Kontrollér printfilen og værktøjsindstillingerne.",
+  "EXCLUDE_TOOL_PREPARE is only available inside START_PRINT": "Det første værktøj kan ikke klargøres. Kontrollér printfilen og værktøjsindstillingerne.",
+  "Invalid first printable tool settings": "Det første værktøj kan ikke klargøres. Kontrollér printfilen og værktøjsindstillingerne.",
+  "Invalid first printable tool or temperature": "Det første værktøj kan ikke klargøres. Kontrollér printfilen og værktøjsindstillingerne.",
+  "Cancelling": "Annullerer"
 }

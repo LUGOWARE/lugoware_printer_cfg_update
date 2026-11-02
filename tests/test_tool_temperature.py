@@ -127,8 +127,22 @@ class Tests(unittest.TestCase):
             serialized = ';'.join('"' + n.replace('"', '\\"') + '"' for n in names)
             p.write_text('; filament_settings_id = ' + serialized + '\n; filament_type = PLA;TPU;PLA;PETG\n', encoding='utf-8')
             self.objects['virtual_sdcard'] = SimpleNamespace(file_path=lambda: str(p))
+            import time
+            callbacks=[]
+            reactor=SimpleNamespace(monotonic=time.monotonic, NEVER=float('inf'), register_timer=lambda fn, at:callbacks.append(fn))
+            self.obj.printer.get_reactor=lambda:reactor
+            started=time.monotonic()
             self.obj.begin()
-            self.assertEqual(self.obj.materials, names)
+            self.assertLess(time.monotonic()-started, .5)
+            try:
+                deadline=time.monotonic()+10
+                while self.obj.analysis_pending and time.monotonic()<deadline:
+                    callbacks[0](time.monotonic())
+                    time.sleep(.01)
+                self.assertFalse(self.obj.analysis_pending)
+                self.assertEqual(self.obj.materials, names)
+            finally:
+                self.obj.reset()
 
     def test_scan_only_executable_commands_preserves_tool_numbers(self):
         with tempfile.TemporaryDirectory() as temp:

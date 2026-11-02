@@ -111,5 +111,22 @@
   "Probe tolerance exceeded ({attempt}/5) - retrying.": "Прекорачена толеранција ({attempt}/5) — поновно мерење.",
   "Probe trigger error - recovering and retrying.": "Грешка активирања сонде — опоравак и поновно мерење.",
   "Object excluded. ({name})": "Објекат је искључен. ({name})",
-  "Excluded": "Искључено"
+  "Excluded": "Искључено",
+  "Exclusion pending": "Чека на искључење",
+  "Unsupported first tool parameters": "Није могуће припремити први алат. Проверите датотеку за штампу и подешавања алата.",
+  "Cannot exclude the last object; cancel the print instead": "Последњи објекат није могуће искључити. Откажите штампу.",
+  "EXCLUDE_TOOL_PREPARE is only available inside START_PRINT": "Није могуће припремити први алат. Проверите датотеку за штампу и подешавања алата.",
+  "Invalid first printable tool settings": "Није могуће припремити први алат. Проверите датотеку за штампу и подешавања алата.",
+  "Cancelling": "Отказивање",
+  "First tool preparation failed": "Није могуће припремити први алат. Проверите датотеку за штампу и подешавања алата.",
+  "Calculating print time": "Израчунавање времена штампе",
+  "Cannot determine first printable tool within scan limit": "Није могуће припремити први алат. Проверите датотеку за штампу и подешавања алата.",
+  "No active print": "Нема активне штампе.",
+  "Unknown object": "Непознат објекат.",
+  "First tool selection requires an active print file": "Није могуће припремити први алат. Проверите датотеку за штампу и подешавања алата.",
+  "Unknown exclusion action": "Неважећи захтев за искључивање објекта.",
+  "First printable tool has no matching CHANGE_TOOL settings": "Није могуће припремити први алат. Проверите датотеку за штампу и подешавања алата.",
+  "No printable object remains or first tool settings are unavailable": "Није могуће припремити први алат. Проверите датотеку за штампу и подешавања алата.",
+  "First printable object has no name": "Није могуће припремити први алат. Проверите датотеку за штампу и подешавања алата.",
+  "Invalid first printable tool or temperature": "Није могуће припремити први алат. Проверите датотеку за штампу и подешавања алата."
 }

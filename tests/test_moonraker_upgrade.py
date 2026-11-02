@@ -23,6 +23,8 @@ class MoonrakerUpgradeTests(unittest.TestCase):
     def test_interrupted_install_resumes(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
+            (root / 'scripts').mkdir()
+            (root / 'scripts/install-moonraker.sh').write_text('SRCDIR=/tmp/source\nsudo apt-get update\nsudo apt-get install -y python3\n')
             marker = root / 'lugoware-moonraker-pending'
             marker.touch()
             with patch.object(moon, 'output', side_effect=['v0.11.0-0-g68db047', tmp]), patch.object(moon, 'run') as run, patch.object(moon, 'wait_server'):
@@ -34,6 +36,8 @@ class MoonrakerUpgradeTests(unittest.TestCase):
     def test_failure_keeps_marker(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
+            (root / 'scripts').mkdir()
+            (root / 'scripts/install-moonraker.sh').write_text('SRCDIR=/tmp/source\nsudo apt-get update\nsudo apt-get install -y python3\n')
             marker = root / 'lugoware-moonraker-pending'
             marker.touch()
             with patch.object(moon, 'output', side_effect=['v0.11.0-0-g68db047', tmp]), patch.object(moon, 'run', side_effect=[None, RuntimeError('install failed')]):

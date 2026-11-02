@@ -74,5 +74,21 @@
   "Waiting for Moonraker connection to close": "En attente de la fermeture de la connexion Moonraker",
   "Yes": "Oui",
   "System language": "Langue du système",
-  "Material usage": "Consommation"
+  "Material usage": "Consommation",
+  "Calculating print time": "Calcul du temps d’impression",
+  "Unknown object": "Objet inconnu.",
+  "Cannot exclude the last object; cancel the print instead": "Impossible d’exclure le dernier objet. Annulez l’impression.",
+  "No active print": "Aucune impression en cours.",
+  "Unknown exclusion action": "Demande d’exclusion d’objet non valide.",
+  "First tool preparation failed": "Impossible de préparer le premier outil. Vérifiez le fichier et les réglages des outils.",
+  "Unsupported first tool parameters": "Impossible de préparer le premier outil. Vérifiez le fichier et les réglages des outils.",
+  "First tool selection requires an active print file": "Impossible de préparer le premier outil. Vérifiez le fichier et les réglages des outils.",
+  "Cannot determine first printable tool within scan limit": "Impossible de préparer le premier outil. Vérifiez le fichier et les réglages des outils.",
+  "First printable tool has no matching CHANGE_TOOL settings": "Impossible de préparer le premier outil. Vérifiez le fichier et les réglages des outils.",
+  "First printable object has no name": "Impossible de préparer le premier outil. Vérifiez le fichier et les réglages des outils.",
+  "No printable object remains or first tool settings are unavailable": "Impossible de préparer le premier outil. Vérifiez le fichier et les réglages des outils.",
+  "EXCLUDE_TOOL_PREPARE is only available inside START_PRINT": "Impossible de préparer le premier outil. Vérifiez le fichier et les réglages des outils.",
+  "Invalid first printable tool settings": "Impossible de préparer le premier outil. Vérifiez le fichier et les réglages des outils.",
+  "Invalid first printable tool or temperature": "Impossible de préparer le premier outil. Vérifiez le fichier et les réglages des outils.",
+  "Cancelling": "Annulation en cours"
 }

@@ -111,5 +111,22 @@
   "Probe tolerance exceeded ({attempt}/5) - retrying.": "Tolerance overskredet ({attempt}/5) — måler igen.",
   "Probe trigger error - recovering and retrying.": "Fejl ved probeudløsning — genopretter og måler igen.",
   "Object excluded. ({name})": "Objekt udelukket. ({name})",
-  "Excluded": "Udelukket"
+  "Excluded": "Udelukket",
+  "Exclusion pending": "Afventer udelukkelse",
+  "EXCLUDE_TOOL_PREPARE is only available inside START_PRINT": "Det første værktøj kan ikke klargøres. Kontrollér printfilen og værktøjsindstillingerne.",
+  "First printable tool has no matching CHANGE_TOOL settings": "Det første værktøj kan ikke klargøres. Kontrollér printfilen og værktøjsindstillingerne.",
+  "Invalid first printable tool settings": "Det første værktøj kan ikke klargøres. Kontrollér printfilen og værktøjsindstillingerne.",
+  "Cannot exclude the last object; cancel the print instead": "Det sidste objekt kan ikke udelukkes. Annuller printet.",
+  "No printable object remains or first tool settings are unavailable": "Det første værktøj kan ikke klargøres. Kontrollér printfilen og værktøjsindstillingerne.",
+  "Calculating print time": "Beregner printtid",
+  "Unsupported first tool parameters": "Det første værktøj kan ikke klargøres. Kontrollér printfilen og værktøjsindstillingerne.",
+  "First tool preparation failed": "Det første værktøj kan ikke klargøres. Kontrollér printfilen og værktøjsindstillingerne.",
+  "Unknown object": "Ukendt objekt.",
+  "First printable object has no name": "Det første værktøj kan ikke klargøres. Kontrollér printfilen og værktøjsindstillingerne.",
+  "No active print": "Intet aktivt print.",
+  "Invalid first printable tool or temperature": "Det første værktøj kan ikke klargøres. Kontrollér printfilen og værktøjsindstillingerne.",
+  "First tool selection requires an active print file": "Det første værktøj kan ikke klargøres. Kontrollér printfilen og værktøjsindstillingerne.",
+  "Cannot determine first printable tool within scan limit": "Det første værktøj kan ikke klargøres. Kontrollér printfilen og værktøjsindstillingerne.",
+  "Unknown exclusion action": "Ugyldig anmodning om udelukkelse af objekt.",
+  "Cancelling": "Annullerer"
 }

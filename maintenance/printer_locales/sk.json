@@ -111,5 +111,22 @@
   "Probe tolerance exceeded ({attempt}/5) - retrying.": "Prekročená tolerancia ({attempt}/5) — opakovanie merania.",
   "Probe trigger error - recovering and retrying.": "Chyba zopnutia sondy — obnovenie a opakovanie merania.",
   "Object excluded. ({name})": "Objekt bol vylúčený. ({name})",
-  "Excluded": "Vylúčené"
+  "Excluded": "Vylúčené",
+  "Exclusion pending": "Čaká na vylúčenie",
+  "Unsupported first tool parameters": "Prvý nástroj nemožno pripraviť. Skontrolujte tlačový súbor a nastavenia nástrojov.",
+  "Cannot exclude the last object; cancel the print instead": "Posledný objekt nemožno vylúčiť. Zrušte tlač.",
+  "EXCLUDE_TOOL_PREPARE is only available inside START_PRINT": "Prvý nástroj nemožno pripraviť. Skontrolujte tlačový súbor a nastavenia nástrojov.",
+  "Invalid first printable tool settings": "Prvý nástroj nemožno pripraviť. Skontrolujte tlačový súbor a nastavenia nástrojov.",
+  "Cancelling": "Rušenie",
+  "First tool preparation failed": "Prvý nástroj nemožno pripraviť. Skontrolujte tlačový súbor a nastavenia nástrojov.",
+  "Calculating print time": "Výpočet času tlače",
+  "Cannot determine first printable tool within scan limit": "Prvý nástroj nemožno pripraviť. Skontrolujte tlačový súbor a nastavenia nástrojov.",
+  "No active print": "Žiadna aktívna tlač.",
+  "Unknown object": "Neznámy objekt.",
+  "First tool selection requires an active print file": "Prvý nástroj nemožno pripraviť. Skontrolujte tlačový súbor a nastavenia nástrojov.",
+  "Unknown exclusion action": "Neplatná požiadavka na vylúčenie objektu.",
+  "First printable tool has no matching CHANGE_TOOL settings": "Prvý nástroj nemožno pripraviť. Skontrolujte tlačový súbor a nastavenia nástrojov.",
+  "No printable object remains or first tool settings are unavailable": "Prvý nástroj nemožno pripraviť. Skontrolujte tlačový súbor a nastavenia nástrojov.",
+  "First printable object has no name": "Prvý nástroj nemožno pripraviť. Skontrolujte tlačový súbor a nastavenia nástrojov.",
+  "Invalid first printable tool or temperature": "Prvý nástroj nemožno pripraviť. Skontrolujte tlačový súbor a nastavenia nástrojov."
 }

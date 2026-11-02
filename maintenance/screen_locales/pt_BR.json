@@ -65,5 +65,21 @@
   "Waiting for Moonraker connection to close": "Aguardando o fechamento da conexão do Moonraker",
   "Yes": "Sim",
   "System language": "Idioma do sistema",
-  "Material usage": "Consumo"
+  "Material usage": "Consumo",
+  "Calculating print time": "Calculando o tempo de impressão",
+  "Unknown object": "Objeto desconhecido.",
+  "Cannot exclude the last object; cancel the print instead": "Não é possível excluir o último objeto. Cancele a impressão.",
+  "No active print": "Nenhuma impressão ativa.",
+  "Unknown exclusion action": "Solicitação de exclusão de objeto inválida.",
+  "First tool preparation failed": "Não é possível preparar a primeira ferramenta. Verifique o arquivo e as configurações das ferramentas.",
+  "Unsupported first tool parameters": "Não é possível preparar a primeira ferramenta. Verifique o arquivo e as configurações das ferramentas.",
+  "First tool selection requires an active print file": "Não é possível preparar a primeira ferramenta. Verifique o arquivo e as configurações das ferramentas.",
+  "Cannot determine first printable tool within scan limit": "Não é possível preparar a primeira ferramenta. Verifique o arquivo e as configurações das ferramentas.",
+  "First printable tool has no matching CHANGE_TOOL settings": "Não é possível preparar a primeira ferramenta. Verifique o arquivo e as configurações das ferramentas.",
+  "First printable object has no name": "Não é possível preparar a primeira ferramenta. Verifique o arquivo e as configurações das ferramentas.",
+  "No printable object remains or first tool settings are unavailable": "Não é possível preparar a primeira ferramenta. Verifique o arquivo e as configurações das ferramentas.",
+  "EXCLUDE_TOOL_PREPARE is only available inside START_PRINT": "Não é possível preparar a primeira ferramenta. Verifique o arquivo e as configurações das ferramentas.",
+  "Invalid first printable tool settings": "Não é possível preparar a primeira ferramenta. Verifique o arquivo e as configurações das ferramentas.",
+  "Invalid first printable tool or temperature": "Não é possível preparar a primeira ferramenta. Verifique o arquivo e as configurações das ferramentas.",
+  "Cancelling": "Cancelando"
 }

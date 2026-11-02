@@ -111,5 +111,22 @@
   "Probe tolerance exceeded ({attempt}/5) - retrying.": "Tolerancia superada ({attempt}/5) — repitiendo la medición.",
   "Probe trigger error - recovering and retrying.": "Error de activación de la sonda — recuperando y repitiendo la medición.",
   "Object excluded. ({name})": "Objeto excluido. ({name})",
-  "Excluded": "Excluido"
+  "Excluded": "Excluido",
+  "Exclusion pending": "Exclusión pendiente",
+  "EXCLUDE_TOOL_PREPARE is only available inside START_PRINT": "No se puede preparar la primera herramienta. Revisa el archivo y la configuración de herramientas.",
+  "First printable tool has no matching CHANGE_TOOL settings": "No se puede preparar la primera herramienta. Revisa el archivo y la configuración de herramientas.",
+  "Invalid first printable tool settings": "No se puede preparar la primera herramienta. Revisa el archivo y la configuración de herramientas.",
+  "Cannot exclude the last object; cancel the print instead": "No se puede excluir el último objeto. Cancela la impresión.",
+  "No printable object remains or first tool settings are unavailable": "No se puede preparar la primera herramienta. Revisa el archivo y la configuración de herramientas.",
+  "Calculating print time": "Calculando tiempo de impresión",
+  "Unsupported first tool parameters": "No se puede preparar la primera herramienta. Revisa el archivo y la configuración de herramientas.",
+  "First tool preparation failed": "No se puede preparar la primera herramienta. Revisa el archivo y la configuración de herramientas.",
+  "Unknown object": "Objeto desconocido.",
+  "First printable object has no name": "No se puede preparar la primera herramienta. Revisa el archivo y la configuración de herramientas.",
+  "No active print": "No hay ninguna impresión activa.",
+  "Invalid first printable tool or temperature": "No se puede preparar la primera herramienta. Revisa el archivo y la configuración de herramientas.",
+  "First tool selection requires an active print file": "No se puede preparar la primera herramienta. Revisa el archivo y la configuración de herramientas.",
+  "Cannot determine first printable tool within scan limit": "No se puede preparar la primera herramienta. Revisa el archivo y la configuración de herramientas.",
+  "Unknown exclusion action": "Solicitud de exclusión de objeto no válida.",
+  "Cancelling": "Cancelando"
 }

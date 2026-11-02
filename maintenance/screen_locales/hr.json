@@ -34,5 +34,21 @@
   "Waiting connection closure": "Čeka se zatvaranje veze",
   "Waiting for Moonraker connection to close": "Čeka se da se Moonraker veza zatvori",
   "System language": "Jezik sustava",
-  "Material usage": "Potrošnja"
+  "Material usage": "Potrošnja",
+  "Calculating print time": "Izračun vremena ispisa",
+  "Unknown object": "Nepoznat objekt.",
+  "Cannot exclude the last object; cancel the print instead": "Posljednji objekt nije moguće isključiti. Otkažite ispis.",
+  "No active print": "Nema aktivnog ispisa.",
+  "Unknown exclusion action": "Nevažeći zahtjev za isključivanje objekta.",
+  "First tool preparation failed": "Nije moguće pripremiti prvi alat. Provjerite datoteku ispisa i postavke alata.",
+  "Unsupported first tool parameters": "Nije moguće pripremiti prvi alat. Provjerite datoteku ispisa i postavke alata.",
+  "First tool selection requires an active print file": "Nije moguće pripremiti prvi alat. Provjerite datoteku ispisa i postavke alata.",
+  "Cannot determine first printable tool within scan limit": "Nije moguće pripremiti prvi alat. Provjerite datoteku ispisa i postavke alata.",
+  "First printable tool has no matching CHANGE_TOOL settings": "Nije moguće pripremiti prvi alat. Provjerite datoteku ispisa i postavke alata.",
+  "First printable object has no name": "Nije moguće pripremiti prvi alat. Provjerite datoteku ispisa i postavke alata.",
+  "No printable object remains or first tool settings are unavailable": "Nije moguće pripremiti prvi alat. Provjerite datoteku ispisa i postavke alata.",
+  "EXCLUDE_TOOL_PREPARE is only available inside START_PRINT": "Nije moguće pripremiti prvi alat. Provjerite datoteku ispisa i postavke alata.",
+  "Invalid first printable tool settings": "Nije moguće pripremiti prvi alat. Provjerite datoteku ispisa i postavke alata.",
+  "Invalid first printable tool or temperature": "Nije moguće pripremiti prvi alat. Provjerite datoteku ispisa i postavke alata.",
+  "Cancelling": "Otkazivanje"
 }

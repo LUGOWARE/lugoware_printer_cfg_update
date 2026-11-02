@@ -37,5 +37,21 @@
   "Waiting connection closure": "Чека се затварање везе",
   "Waiting for Moonraker connection to close": "Чека се затварање везе са Мунрејкером",
   "System language": "Системски језик",
-  "Material usage": "Потрошња"
+  "Material usage": "Потрошња",
+  "Calculating print time": "Израчунавање времена штампе",
+  "Unknown object": "Непознат објекат.",
+  "Cannot exclude the last object; cancel the print instead": "Последњи објекат није могуће искључити. Откажите штампу.",
+  "No active print": "Нема активне штампе.",
+  "Unknown exclusion action": "Неважећи захтев за искључивање објекта.",
+  "First tool preparation failed": "Није могуће припремити први алат. Проверите датотеку за штампу и подешавања алата.",
+  "Unsupported first tool parameters": "Није могуће припремити први алат. Проверите датотеку за штампу и подешавања алата.",
+  "First tool selection requires an active print file": "Није могуће припремити први алат. Проверите датотеку за штампу и подешавања алата.",
+  "Cannot determine first printable tool within scan limit": "Није могуће припремити први алат. Проверите датотеку за штампу и подешавања алата.",
+  "First printable tool has no matching CHANGE_TOOL settings": "Није могуће припремити први алат. Проверите датотеку за штампу и подешавања алата.",
+  "First printable object has no name": "Није могуће припремити први алат. Проверите датотеку за штампу и подешавања алата.",
+  "No printable object remains or first tool settings are unavailable": "Није могуће припремити први алат. Проверите датотеку за штампу и подешавања алата.",
+  "EXCLUDE_TOOL_PREPARE is only available inside START_PRINT": "Није могуће припремити први алат. Проверите датотеку за штампу и подешавања алата.",
+  "Invalid first printable tool settings": "Није могуће припремити први алат. Проверите датотеку за штампу и подешавања алата.",
+  "Invalid first printable tool or temperature": "Није могуће припремити први алат. Проверите датотеку за штампу и подешавања алата.",
+  "Cancelling": "Отказивање"
 }

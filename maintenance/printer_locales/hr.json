@@ -111,5 +111,22 @@
   "Probe tolerance exceeded ({attempt}/5) - retrying.": "Prekoračena tolerancija ({attempt}/5) — ponovno mjerenje.",
   "Probe trigger error - recovering and retrying.": "Pogreška aktiviranja sonde — oporavak i ponovno mjerenje.",
   "Object excluded. ({name})": "Objekt je isključen. ({name})",
-  "Excluded": "Isključeno"
+  "Excluded": "Isključeno",
+  "Exclusion pending": "Isključenje na čekanju",
+  "EXCLUDE_TOOL_PREPARE is only available inside START_PRINT": "Nije moguće pripremiti prvi alat. Provjerite datoteku ispisa i postavke alata.",
+  "First printable tool has no matching CHANGE_TOOL settings": "Nije moguće pripremiti prvi alat. Provjerite datoteku ispisa i postavke alata.",
+  "Invalid first printable tool settings": "Nije moguće pripremiti prvi alat. Provjerite datoteku ispisa i postavke alata.",
+  "Cannot exclude the last object; cancel the print instead": "Posljednji objekt nije moguće isključiti. Otkažite ispis.",
+  "No printable object remains or first tool settings are unavailable": "Nije moguće pripremiti prvi alat. Provjerite datoteku ispisa i postavke alata.",
+  "Calculating print time": "Izračun vremena ispisa",
+  "Unsupported first tool parameters": "Nije moguće pripremiti prvi alat. Provjerite datoteku ispisa i postavke alata.",
+  "First tool preparation failed": "Nije moguće pripremiti prvi alat. Provjerite datoteku ispisa i postavke alata.",
+  "Unknown object": "Nepoznat objekt.",
+  "First printable object has no name": "Nije moguće pripremiti prvi alat. Provjerite datoteku ispisa i postavke alata.",
+  "No active print": "Nema aktivnog ispisa.",
+  "Invalid first printable tool or temperature": "Nije moguće pripremiti prvi alat. Provjerite datoteku ispisa i postavke alata.",
+  "First tool selection requires an active print file": "Nije moguće pripremiti prvi alat. Provjerite datoteku ispisa i postavke alata.",
+  "Cannot determine first printable tool within scan limit": "Nije moguće pripremiti prvi alat. Provjerite datoteku ispisa i postavke alata.",
+  "Unknown exclusion action": "Nevažeći zahtjev za isključivanje objekta.",
+  "Cancelling": "Otkazivanje"
 }

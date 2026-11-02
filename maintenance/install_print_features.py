@@ -10,6 +10,8 @@ from october_features import job, notification, popup
 
 
 def patch_ui(source, name):
+    from followup_features import ui
+    source = ui(source, name, reverse=True)
     if name == "gcodes.py":
         trials = json.loads(Path(__file__).with_name('print_features').joinpath('mesh_trial_patches.json').read_text(encoding='utf-8'))
         for old, new in trials:
@@ -39,6 +41,7 @@ def patch_ui(source, name):
         source = job(source)
     if name == "screen.py":
         source = popup(source)
+    source = ui(source, name)
     compile(source, name, 'exec')
     return source
 
@@ -57,7 +60,7 @@ def install(home, screen, klipper, backup):
     changes[klipper / 'klippy/extras/exclude_tool_guard.py'] = (assets / 'exclude_tool_guard.py').read_text(encoding='utf-8')
     changes[screen / 'panels/exclude.py'] = (assets / 'exclude.py').read_text(encoding='utf-8')
     changes[screen / 'ks_includes/widgets/objectmap.py'] = (assets / 'objectmap.py').read_text(encoding='utf-8')
-    for name in ('print_controls.py', 'toolchange_count.py', 'restart_notice.py', 'info_marquee.py'):
+    for name in ('print_controls.py', 'toolchange_count.py', 'restart_notice.py', 'info_marquee.py', 'exclusion_eta.py'):
         changes[screen / 'ks_includes' / name] = (assets / name).read_text(encoding='utf-8')
     changes[klipper / 'klippy/extras/print_sensor.py'] = (assets / 'print_sensor.py').read_text(encoding='utf-8')
     changes[klipper / 'klippy/extras/screen_mesh.py'] = (assets / 'screen_mesh.py').read_text(encoding='utf-8')
@@ -81,6 +84,8 @@ def install(home, screen, klipper, backup):
     from mesh_features import config as mesh_config
     p = config / 'printer_base.cfg'
     changes[p] = mesh_config(changes.get(p, p.read_text(encoding='utf-8')))
+    from followup_features import first_tool
+    changes[p] = first_tool(changes[p])
     for p, text in changes.items():
         if p.suffix == '.py':
             compile(text, str(p), 'exec')

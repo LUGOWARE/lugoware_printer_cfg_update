@@ -111,5 +111,22 @@
   "Probe tolerance exceeded ({attempt}/5) - retrying.": "超出允许误差（{attempt}/5）— 正在重新测量。",
   "Probe trigger error - recovering and retrying.": "探针触发错误 — 恢复后重新测量。",
   "Object excluded. ({name})": "已排除对象。({name})",
-  "Excluded": "已排除"
+  "Excluded": "已排除",
+  "Exclusion pending": "等待排除",
+  "Unsupported first tool parameters": "无法准备首个工具，请检查打印文件和工具设置。",
+  "Cannot exclude the last object; cancel the print instead": "无法排除最后一个对象，请取消打印。",
+  "EXCLUDE_TOOL_PREPARE is only available inside START_PRINT": "无法准备首个工具，请检查打印文件和工具设置。",
+  "Invalid first printable tool settings": "无法准备首个工具，请检查打印文件和工具设置。",
+  "Cancelling": "正在取消",
+  "First tool preparation failed": "无法准备首个工具，请检查打印文件和工具设置。",
+  "Calculating print time": "正在计算打印时间",
+  "Cannot determine first printable tool within scan limit": "无法准备首个工具，请检查打印文件和工具设置。",
+  "No active print": "当前没有打印任务。",
+  "Unknown object": "未知对象。",
+  "First tool selection requires an active print file": "无法准备首个工具，请检查打印文件和工具设置。",
+  "Unknown exclusion action": "对象排除请求无效。",
+  "First printable tool has no matching CHANGE_TOOL settings": "无法准备首个工具，请检查打印文件和工具设置。",
+  "No printable object remains or first tool settings are unavailable": "无法准备首个工具，请检查打印文件和工具设置。",
+  "First printable object has no name": "无法准备首个工具，请检查打印文件和工具设置。",
+  "Invalid first printable tool or temperature": "无法准备首个工具，请检查打印文件和工具设置。"
 }

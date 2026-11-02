@@ -48,5 +48,21 @@
   "Waiting for Moonraker connection to close": "Очікування закриття з’єднання Moonraker",
   "Yes": "Так",
   "System language": "Системна мова",
-  "Material usage": "Витрата"
+  "Material usage": "Витрата",
+  "Calculating print time": "Обчислення часу друку",
+  "Unknown object": "Невідомий об’єкт.",
+  "Cannot exclude the last object; cancel the print instead": "Неможливо виключити останній об’єкт. Скасуйте друк.",
+  "No active print": "Немає активного друку.",
+  "Unknown exclusion action": "Некоректний запит на виключення об’єкта.",
+  "First tool preparation failed": "Не вдалося підготувати перший інструмент. Перевірте файл друку та налаштування інструментів.",
+  "Unsupported first tool parameters": "Не вдалося підготувати перший інструмент. Перевірте файл друку та налаштування інструментів.",
+  "First tool selection requires an active print file": "Не вдалося підготувати перший інструмент. Перевірте файл друку та налаштування інструментів.",
+  "Cannot determine first printable tool within scan limit": "Не вдалося підготувати перший інструмент. Перевірте файл друку та налаштування інструментів.",
+  "First printable tool has no matching CHANGE_TOOL settings": "Не вдалося підготувати перший інструмент. Перевірте файл друку та налаштування інструментів.",
+  "First printable object has no name": "Не вдалося підготувати перший інструмент. Перевірте файл друку та налаштування інструментів.",
+  "No printable object remains or first tool settings are unavailable": "Не вдалося підготувати перший інструмент. Перевірте файл друку та налаштування інструментів.",
+  "EXCLUDE_TOOL_PREPARE is only available inside START_PRINT": "Не вдалося підготувати перший інструмент. Перевірте файл друку та налаштування інструментів.",
+  "Invalid first printable tool settings": "Не вдалося підготувати перший інструмент. Перевірте файл друку та налаштування інструментів.",
+  "Invalid first printable tool or temperature": "Не вдалося підготувати перший інструмент. Перевірте файл друку та налаштування інструментів.",
+  "Cancelling": "Скасування"
 }

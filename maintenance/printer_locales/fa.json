@@ -111,5 +111,22 @@
   "Probe tolerance exceeded ({attempt}/5) - retrying.": "تلرانس بیش از حد مجاز ({attempt}/5) — اندازه‌گیری مجدد.",
   "Probe trigger error - recovering and retrying.": "خطای تحریک پروب — بازیابی و اندازه‌گیری مجدد.",
   "Object excluded. ({name})": "شیء حذف شد. ({name})",
-  "Excluded": "حذف شده"
+  "Excluded": "حذف شده",
+  "Exclusion pending": "در انتظار حذف",
+  "EXCLUDE_TOOL_PREPARE is only available inside START_PRINT": "آماده‌سازی ابزار اول ممکن نیست. فایل چاپ و تنظیمات ابزارها را بررسی کنید.",
+  "First printable tool has no matching CHANGE_TOOL settings": "آماده‌سازی ابزار اول ممکن نیست. فایل چاپ و تنظیمات ابزارها را بررسی کنید.",
+  "Invalid first printable tool settings": "آماده‌سازی ابزار اول ممکن نیست. فایل چاپ و تنظیمات ابزارها را بررسی کنید.",
+  "Cannot exclude the last object; cancel the print instead": "نمی‌توان آخرین شیء را حذف کرد. چاپ را لغو کنید.",
+  "No printable object remains or first tool settings are unavailable": "آماده‌سازی ابزار اول ممکن نیست. فایل چاپ و تنظیمات ابزارها را بررسی کنید.",
+  "Calculating print time": "در حال محاسبه زمان چاپ",
+  "Unsupported first tool parameters": "آماده‌سازی ابزار اول ممکن نیست. فایل چاپ و تنظیمات ابزارها را بررسی کنید.",
+  "First tool preparation failed": "آماده‌سازی ابزار اول ممکن نیست. فایل چاپ و تنظیمات ابزارها را بررسی کنید.",
+  "Unknown object": "شیء ناشناخته است.",
+  "First printable object has no name": "آماده‌سازی ابزار اول ممکن نیست. فایل چاپ و تنظیمات ابزارها را بررسی کنید.",
+  "No active print": "چاپ فعالی وجود ندارد.",
+  "Invalid first printable tool or temperature": "آماده‌سازی ابزار اول ممکن نیست. فایل چاپ و تنظیمات ابزارها را بررسی کنید.",
+  "First tool selection requires an active print file": "آماده‌سازی ابزار اول ممکن نیست. فایل چاپ و تنظیمات ابزارها را بررسی کنید.",
+  "Cannot determine first printable tool within scan limit": "آماده‌سازی ابزار اول ممکن نیست. فایل چاپ و تنظیمات ابزارها را بررسی کنید.",
+  "Unknown exclusion action": "درخواست حذف شیء نامعتبر است.",
+  "Cancelling": "در حال لغو"
 }

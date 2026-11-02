@@ -132,5 +132,21 @@
   "Working": "Arbetar",
   "Yes": "Ja",
   "System language": "Systemspråk",
-  "Material usage": "Förbrukning"
+  "Material usage": "Förbrukning",
+  "Calculating print time": "Beräknar utskriftstid",
+  "Unknown object": "Okänt objekt.",
+  "Cannot exclude the last object; cancel the print instead": "Det sista objektet kan inte uteslutas. Avbryt utskriften.",
+  "No active print": "Ingen aktiv utskrift.",
+  "Unknown exclusion action": "Ogiltig begäran om att utesluta objekt.",
+  "First tool preparation failed": "Det första verktyget kan inte förberedas. Kontrollera utskriftsfilen och verktygsinställningarna.",
+  "Unsupported first tool parameters": "Det första verktyget kan inte förberedas. Kontrollera utskriftsfilen och verktygsinställningarna.",
+  "First tool selection requires an active print file": "Det första verktyget kan inte förberedas. Kontrollera utskriftsfilen och verktygsinställningarna.",
+  "Cannot determine first printable tool within scan limit": "Det första verktyget kan inte förberedas. Kontrollera utskriftsfilen och verktygsinställningarna.",
+  "First printable tool has no matching CHANGE_TOOL settings": "Det första verktyget kan inte förberedas. Kontrollera utskriftsfilen och verktygsinställningarna.",
+  "First printable object has no name": "Det första verktyget kan inte förberedas. Kontrollera utskriftsfilen och verktygsinställningarna.",
+  "No printable object remains or first tool settings are unavailable": "Det första verktyget kan inte förberedas. Kontrollera utskriftsfilen och verktygsinställningarna.",
+  "EXCLUDE_TOOL_PREPARE is only available inside START_PRINT": "Det första verktyget kan inte förberedas. Kontrollera utskriftsfilen och verktygsinställningarna.",
+  "Invalid first printable tool settings": "Det första verktyget kan inte förberedas. Kontrollera utskriftsfilen och verktygsinställningarna.",
+  "Invalid first printable tool or temperature": "Det första verktyget kan inte förberedas. Kontrollera utskriftsfilen och verktygsinställningarna.",
+  "Cancelling": "Avbryter"
 }

@@ -7,5 +7,21 @@
   "Initiate an MPC calibration for:": "Иницииране на MPC калибриране за:",
   "Runs third-party code from the addons folder at startup. Add-ons are not provided or reviewed by the KlipperScreen developers. Takes effect after a restart.": "Изпълнява код на трета страна от папката addons при стартиране. Добавките не се предоставят или преглеждат от разработчиците на KlipperScreen. Влиза в сила след рестартиране.",
   "System language": "Системен език",
-  "Material usage": "Разход"
+  "Material usage": "Разход",
+  "Calculating print time": "Изчисляване на времето за печат",
+  "Unknown object": "Непознат обект.",
+  "Cannot exclude the last object; cancel the print instead": "Последният обект не може да бъде изключен. Отменете печата.",
+  "No active print": "Няма активен печат.",
+  "Unknown exclusion action": "Невалидна заявка за изключване на обект.",
+  "First tool preparation failed": "Първият инструмент не може да бъде подготвен. Проверете файла за печат и настройките на инструментите.",
+  "Unsupported first tool parameters": "Първият инструмент не може да бъде подготвен. Проверете файла за печат и настройките на инструментите.",
+  "First tool selection requires an active print file": "Първият инструмент не може да бъде подготвен. Проверете файла за печат и настройките на инструментите.",
+  "Cannot determine first printable tool within scan limit": "Първият инструмент не може да бъде подготвен. Проверете файла за печат и настройките на инструментите.",
+  "First printable tool has no matching CHANGE_TOOL settings": "Първият инструмент не може да бъде подготвен. Проверете файла за печат и настройките на инструментите.",
+  "First printable object has no name": "Първият инструмент не може да бъде подготвен. Проверете файла за печат и настройките на инструментите.",
+  "No printable object remains or first tool settings are unavailable": "Първият инструмент не може да бъде подготвен. Проверете файла за печат и настройките на инструментите.",
+  "EXCLUDE_TOOL_PREPARE is only available inside START_PRINT": "Първият инструмент не може да бъде подготвен. Проверете файла за печат и настройките на инструментите.",
+  "Invalid first printable tool settings": "Първият инструмент не може да бъде подготвен. Проверете файла за печат и настройките на инструментите.",
+  "Invalid first printable tool or temperature": "Първият инструмент не може да бъде подготвен. Проверете файла за печат и настройките на инструментите.",
+  "Cancelling": "Отменяне"
 }

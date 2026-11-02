@@ -5,6 +5,16 @@ from ks_includes.KlippyGtk import find_widget
 
 
 def tick(panel):
+    # Preserve the original left-aligned icon and reserve width for text only.
+    elapsed_button = panel.buttons['elapsed']
+    elapsed_button.set_halign(Gtk.Align.START)
+    elapsed_label = find_widget(elapsed_button, Gtk.Label)
+    if elapsed_label is not None and not getattr(elapsed_label, '_elapsed_width_set', False):
+        elapsed_label.set_hexpand(False)
+        elapsed_label.set_halign(Gtk.Align.START)
+        elapsed_label.set_xalign(0)
+        elapsed_label.set_size_request(max(20, panel._screen.width // 2 - 44), -1)
+        elapsed_label._elapsed_width_set = True
     targets = [(find_widget(panel.buttons['elapsed'], Gtk.Label),
                 panel.labels['elapsed'].get_text() + ' ', panel._screen.width // 2 - 44)]
     if hasattr(panel, '_toolchange_label'):
@@ -26,7 +36,8 @@ def tick(panel):
         delta = min(.1, now-state['last'])
         state['last'] = now
         _, body, _, available = layouts(label)
-        maximum = max(0, body.get_pixel_size()[0]-available)
+        overflow = body.get_pixel_size()[0]-available
+        maximum = overflow if overflow > 3 else 0
         if maximum == 0:
             state['offset'] = 0.
             state['wait'] = now+2
@@ -65,7 +76,9 @@ def draw(label, cr):
     PangoCairo.show_layout(cr, pre)
     cr.rectangle(pw, 0, available, label.get_allocated_height())
     cr.clip()
-    cr.move_to(pw-state['offset'], y)
+    overflow = body.get_pixel_size()[0]-available
+    offset = min(state['offset'], max(0, overflow)) if overflow > 3 else 0
+    cr.move_to(pw-offset, y)
     PangoCairo.show_layout(cr, body)
     cr.restore()
     return True

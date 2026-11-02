@@ -111,5 +111,22 @@
   "Probe tolerance exceeded ({attempt}/5) - retrying.": "Viršyta tolerancija ({attempt}/5) — matuojama iš naujo.",
   "Probe trigger error - recovering and retrying.": "Zondo suveikimo klaida — atkūrimas ir pakartotinis matavimas.",
   "Object excluded. ({name})": "Objektas neįtrauktas. ({name})",
-  "Excluded": "Neįtrauktas"
+  "Excluded": "Neįtrauktas",
+  "Exclusion pending": "Laukiama pašalinimo",
+  "Unsupported first tool parameters": "Nepavyko paruošti pirmojo įrankio. Patikrinkite spausdinimo failą ir įrankių nustatymus.",
+  "Cannot exclude the last object; cancel the print instead": "Paskutinio objekto pašalinti negalima. Atšaukite spausdinimą.",
+  "EXCLUDE_TOOL_PREPARE is only available inside START_PRINT": "Nepavyko paruošti pirmojo įrankio. Patikrinkite spausdinimo failą ir įrankių nustatymus.",
+  "Invalid first printable tool settings": "Nepavyko paruošti pirmojo įrankio. Patikrinkite spausdinimo failą ir įrankių nustatymus.",
+  "Cancelling": "Atšaukiama",
+  "First tool preparation failed": "Nepavyko paruošti pirmojo įrankio. Patikrinkite spausdinimo failą ir įrankių nustatymus.",
+  "Calculating print time": "Skaičiuojamas spausdinimo laikas",
+  "Cannot determine first printable tool within scan limit": "Nepavyko paruošti pirmojo įrankio. Patikrinkite spausdinimo failą ir įrankių nustatymus.",
+  "No active print": "Nėra aktyvaus spausdinimo.",
+  "Unknown object": "Nežinomas objektas.",
+  "First tool selection requires an active print file": "Nepavyko paruošti pirmojo įrankio. Patikrinkite spausdinimo failą ir įrankių nustatymus.",
+  "Unknown exclusion action": "Netinkama objekto pašalinimo užklausa.",
+  "First printable tool has no matching CHANGE_TOOL settings": "Nepavyko paruošti pirmojo įrankio. Patikrinkite spausdinimo failą ir įrankių nustatymus.",
+  "No printable object remains or first tool settings are unavailable": "Nepavyko paruošti pirmojo įrankio. Patikrinkite spausdinimo failą ir įrankių nustatymus.",
+  "First printable object has no name": "Nepavyko paruošti pirmojo įrankio. Patikrinkite spausdinimo failą ir įrankių nustatymus.",
+  "Invalid first printable tool or temperature": "Nepavyko paruošti pirmojo įrankio. Patikrinkite spausdinimo failą ir įrankių nustatymus."
 }

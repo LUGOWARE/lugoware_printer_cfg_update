@@ -111,5 +111,22 @@
   "Probe tolerance exceeded ({attempt}/5) - retrying.": "חריגה מהסבילות ({attempt}/5) — מתבצעת מדידה חוזרת.",
   "Probe trigger error - recovering and retrying.": "שגיאת הפעלת החיישן — שחזור ומדידה חוזרת.",
   "Object excluded. ({name})": "האובייקט הוחרג. ({name})",
-  "Excluded": "הוחרג"
+  "Excluded": "הוחרג",
+  "Exclusion pending": "ממתין להחרגה",
+  "EXCLUDE_TOOL_PREPARE is only available inside START_PRINT": "לא ניתן להכין את הכלי הראשון. יש לבדוק את קובץ ההדפסה ואת הגדרות הכלים.",
+  "First printable tool has no matching CHANGE_TOOL settings": "לא ניתן להכין את הכלי הראשון. יש לבדוק את קובץ ההדפסה ואת הגדרות הכלים.",
+  "Invalid first printable tool settings": "לא ניתן להכין את הכלי הראשון. יש לבדוק את קובץ ההדפסה ואת הגדרות הכלים.",
+  "Cannot exclude the last object; cancel the print instead": "לא ניתן להחריג את האובייקט האחרון. יש לבטל את ההדפסה.",
+  "No printable object remains or first tool settings are unavailable": "לא ניתן להכין את הכלי הראשון. יש לבדוק את קובץ ההדפסה ואת הגדרות הכלים.",
+  "Calculating print time": "מחשב את זמן ההדפסה",
+  "Unsupported first tool parameters": "לא ניתן להכין את הכלי הראשון. יש לבדוק את קובץ ההדפסה ואת הגדרות הכלים.",
+  "First tool preparation failed": "לא ניתן להכין את הכלי הראשון. יש לבדוק את קובץ ההדפסה ואת הגדרות הכלים.",
+  "Unknown object": "אובייקט לא מוכר.",
+  "First printable object has no name": "לא ניתן להכין את הכלי הראשון. יש לבדוק את קובץ ההדפסה ואת הגדרות הכלים.",
+  "No active print": "אין הדפסה פעילה.",
+  "Invalid first printable tool or temperature": "לא ניתן להכין את הכלי הראשון. יש לבדוק את קובץ ההדפסה ואת הגדרות הכלים.",
+  "First tool selection requires an active print file": "לא ניתן להכין את הכלי הראשון. יש לבדוק את קובץ ההדפסה ואת הגדרות הכלים.",
+  "Cannot determine first printable tool within scan limit": "לא ניתן להכין את הכלי הראשון. יש לבדוק את קובץ ההדפסה ואת הגדרות הכלים.",
+  "Unknown exclusion action": "בקשה לא תקינה להחרגת אובייקט.",
+  "Cancelling": "מבטל"
 }

@@ -1,4 +1,20 @@
 {
   "System language": "System language",
-  "Material usage": "Usage"
+  "Material usage": "Usage",
+  "Calculating print time": "Calculating print time",
+  "Unknown object": "Unknown object.",
+  "Cannot exclude the last object; cancel the print instead": "Cannot exclude the last object. Cancel the print instead.",
+  "No active print": "No active print.",
+  "Unknown exclusion action": "Invalid object exclusion request.",
+  "First tool preparation failed": "Cannot prepare the first tool. Check the print file and tool settings.",
+  "Unsupported first tool parameters": "Cannot prepare the first tool. Check the print file and tool settings.",
+  "First tool selection requires an active print file": "Cannot prepare the first tool. Check the print file and tool settings.",
+  "Cannot determine first printable tool within scan limit": "Cannot prepare the first tool. Check the print file and tool settings.",
+  "First printable tool has no matching CHANGE_TOOL settings": "Cannot prepare the first tool. Check the print file and tool settings.",
+  "First printable object has no name": "Cannot prepare the first tool. Check the print file and tool settings.",
+  "No printable object remains or first tool settings are unavailable": "Cannot prepare the first tool. Check the print file and tool settings.",
+  "EXCLUDE_TOOL_PREPARE is only available inside START_PRINT": "Cannot prepare the first tool. Check the print file and tool settings.",
+  "Invalid first printable tool settings": "Cannot prepare the first tool. Check the print file and tool settings.",
+  "Invalid first printable tool or temperature": "Cannot prepare the first tool. Check the print file and tool settings.",
+  "Cancelling": "Cancelling"
 }

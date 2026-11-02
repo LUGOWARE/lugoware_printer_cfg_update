@@ -92,5 +92,21 @@
   "Waiting for Moonraker connection to close": "Warten darauf, dass die Moonraker-Verbindung geschlossen wird",
   "Yes": "Ja",
   "System language": "Systemsprache",
-  "Material usage": "Verbrauch"
+  "Material usage": "Verbrauch",
+  "Calculating print time": "Druckzeit wird berechnet",
+  "Unknown object": "Unbekanntes Objekt.",
+  "Cannot exclude the last object; cancel the print instead": "Das letzte Objekt kann nicht ausgeschlossen werden. Druck abbrechen.",
+  "No active print": "Kein aktiver Druck.",
+  "Unknown exclusion action": "Ungültige Anfrage zum Objektausschluss.",
+  "First tool preparation failed": "Erstes Werkzeug kann nicht vorbereitet werden. Druckdatei und Werkzeugeinstellungen prüfen.",
+  "Unsupported first tool parameters": "Erstes Werkzeug kann nicht vorbereitet werden. Druckdatei und Werkzeugeinstellungen prüfen.",
+  "First tool selection requires an active print file": "Erstes Werkzeug kann nicht vorbereitet werden. Druckdatei und Werkzeugeinstellungen prüfen.",
+  "Cannot determine first printable tool within scan limit": "Erstes Werkzeug kann nicht vorbereitet werden. Druckdatei und Werkzeugeinstellungen prüfen.",
+  "First printable tool has no matching CHANGE_TOOL settings": "Erstes Werkzeug kann nicht vorbereitet werden. Druckdatei und Werkzeugeinstellungen prüfen.",
+  "First printable object has no name": "Erstes Werkzeug kann nicht vorbereitet werden. Druckdatei und Werkzeugeinstellungen prüfen.",
+  "No printable object remains or first tool settings are unavailable": "Erstes Werkzeug kann nicht vorbereitet werden. Druckdatei und Werkzeugeinstellungen prüfen.",
+  "EXCLUDE_TOOL_PREPARE is only available inside START_PRINT": "Erstes Werkzeug kann nicht vorbereitet werden. Druckdatei und Werkzeugeinstellungen prüfen.",
+  "Invalid first printable tool settings": "Erstes Werkzeug kann nicht vorbereitet werden. Druckdatei und Werkzeugeinstellungen prüfen.",
+  "Invalid first printable tool or temperature": "Erstes Werkzeug kann nicht vorbereitet werden. Druckdatei und Werkzeugeinstellungen prüfen.",
+  "Cancelling": "Wird abgebrochen"
 }

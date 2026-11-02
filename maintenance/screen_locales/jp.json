@@ -83,5 +83,21 @@
   "Waiting for Moonraker connection to close": "Moonraker 接続が閉じるのを待っています",
   "Yes": "はい",
   "System language": "システム言語",
-  "Material usage": "使用量"
+  "Material usage": "使用量",
+  "Calculating print time": "印刷時間を計算中",
+  "Unknown object": "不明なオブジェクトです。",
+  "Cannot exclude the last object; cancel the print instead": "最後のオブジェクトは除外できません。印刷をキャンセルしてください。",
+  "No active print": "印刷中のジョブがありません。",
+  "Unknown exclusion action": "オブジェクト除外の要求が無効です。",
+  "First tool preparation failed": "最初のツールを準備できません。印刷ファイルとツール設定を確認してください。",
+  "Unsupported first tool parameters": "最初のツールを準備できません。印刷ファイルとツール設定を確認してください。",
+  "First tool selection requires an active print file": "最初のツールを準備できません。印刷ファイルとツール設定を確認してください。",
+  "Cannot determine first printable tool within scan limit": "最初のツールを準備できません。印刷ファイルとツール設定を確認してください。",
+  "First printable tool has no matching CHANGE_TOOL settings": "最初のツールを準備できません。印刷ファイルとツール設定を確認してください。",
+  "First printable object has no name": "最初のツールを準備できません。印刷ファイルとツール設定を確認してください。",
+  "No printable object remains or first tool settings are unavailable": "最初のツールを準備できません。印刷ファイルとツール設定を確認してください。",
+  "EXCLUDE_TOOL_PREPARE is only available inside START_PRINT": "最初のツールを準備できません。印刷ファイルとツール設定を確認してください。",
+  "Invalid first printable tool settings": "最初のツールを準備できません。印刷ファイルとツール設定を確認してください。",
+  "Invalid first printable tool or temperature": "最初のツールを準備できません。印刷ファイルとツール設定を確認してください。",
+  "Cancelling": "キャンセル中"
 }

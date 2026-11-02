@@ -46,5 +46,21 @@
   "Waiting for Moonraker connection to close": "Ожидание закрытия соединения с Moonraker",
   "Yes": "Да",
   "System language": "Системный язык",
-  "Material usage": "Расход"
+  "Material usage": "Расход",
+  "Calculating print time": "Расчёт времени печати",
+  "Unknown object": "Неизвестный объект.",
+  "Cannot exclude the last object; cancel the print instead": "Нельзя исключить последний объект. Отмените печать.",
+  "No active print": "Нет активной печати.",
+  "Unknown exclusion action": "Недопустимый запрос на исключение объекта.",
+  "First tool preparation failed": "Не удалось подготовить первый инструмент. Проверьте файл печати и настройки инструментов.",
+  "Unsupported first tool parameters": "Не удалось подготовить первый инструмент. Проверьте файл печати и настройки инструментов.",
+  "First tool selection requires an active print file": "Не удалось подготовить первый инструмент. Проверьте файл печати и настройки инструментов.",
+  "Cannot determine first printable tool within scan limit": "Не удалось подготовить первый инструмент. Проверьте файл печати и настройки инструментов.",
+  "First printable tool has no matching CHANGE_TOOL settings": "Не удалось подготовить первый инструмент. Проверьте файл печати и настройки инструментов.",
+  "First printable object has no name": "Не удалось подготовить первый инструмент. Проверьте файл печати и настройки инструментов.",
+  "No printable object remains or first tool settings are unavailable": "Не удалось подготовить первый инструмент. Проверьте файл печати и настройки инструментов.",
+  "EXCLUDE_TOOL_PREPARE is only available inside START_PRINT": "Не удалось подготовить первый инструмент. Проверьте файл печати и настройки инструментов.",
+  "Invalid first printable tool settings": "Не удалось подготовить первый инструмент. Проверьте файл печати и настройки инструментов.",
+  "Invalid first printable tool or temperature": "Не удалось подготовить первый инструмент. Проверьте файл печати и настройки инструментов.",
+  "Cancelling": "Отмена"
 }

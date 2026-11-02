@@ -111,5 +111,22 @@
   "Probe tolerance exceeded ({attempt}/5) - retrying.": "Tolerance exceeded ({attempt}/5) — measuring again.",
   "Probe trigger error - recovering and retrying.": "Probe trigger error — recovering and measuring again.",
   "Object excluded. ({name})": "Object excluded. ({name})",
-  "Excluded": "Excluded"
+  "Excluded": "Excluded",
+  "Exclusion pending": "Exclusion pending",
+  "EXCLUDE_TOOL_PREPARE is only available inside START_PRINT": "Cannot prepare the first tool. Check the print file and tool settings.",
+  "First printable tool has no matching CHANGE_TOOL settings": "Cannot prepare the first tool. Check the print file and tool settings.",
+  "Invalid first printable tool settings": "Cannot prepare the first tool. Check the print file and tool settings.",
+  "Cannot exclude the last object; cancel the print instead": "Cannot exclude the last object. Cancel the print instead.",
+  "No printable object remains or first tool settings are unavailable": "Cannot prepare the first tool. Check the print file and tool settings.",
+  "Calculating print time": "Calculating print time",
+  "Unsupported first tool parameters": "Cannot prepare the first tool. Check the print file and tool settings.",
+  "First tool preparation failed": "Cannot prepare the first tool. Check the print file and tool settings.",
+  "Unknown object": "Unknown object.",
+  "First printable object has no name": "Cannot prepare the first tool. Check the print file and tool settings.",
+  "No active print": "No active print.",
+  "Invalid first printable tool or temperature": "Cannot prepare the first tool. Check the print file and tool settings.",
+  "First tool selection requires an active print file": "Cannot prepare the first tool. Check the print file and tool settings.",
+  "Cannot determine first printable tool within scan limit": "Cannot prepare the first tool. Check the print file and tool settings.",
+  "Unknown exclusion action": "Invalid object exclusion request.",
+  "Cancelling": "Cancelling"
 }

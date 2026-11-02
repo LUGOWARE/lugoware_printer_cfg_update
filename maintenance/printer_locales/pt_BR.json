@@ -111,5 +111,22 @@
   "Probe tolerance exceeded ({attempt}/5) - retrying.": "Tolerância excedida ({attempt}/5) — medindo novamente.",
   "Probe trigger error - recovering and retrying.": "Erro de acionamento da sonda — recuperando e medindo novamente.",
   "Object excluded. ({name})": "Objeto excluído. ({name})",
-  "Excluded": "Excluído"
+  "Excluded": "Excluído",
+  "Exclusion pending": "Exclusão pendente",
+  "Unsupported first tool parameters": "Não é possível preparar a primeira ferramenta. Verifique o arquivo e as configurações das ferramentas.",
+  "Cannot exclude the last object; cancel the print instead": "Não é possível excluir o último objeto. Cancele a impressão.",
+  "EXCLUDE_TOOL_PREPARE is only available inside START_PRINT": "Não é possível preparar a primeira ferramenta. Verifique o arquivo e as configurações das ferramentas.",
+  "Invalid first printable tool settings": "Não é possível preparar a primeira ferramenta. Verifique o arquivo e as configurações das ferramentas.",
+  "Cancelling": "Cancelando",
+  "First tool preparation failed": "Não é possível preparar a primeira ferramenta. Verifique o arquivo e as configurações das ferramentas.",
+  "Calculating print time": "Calculando o tempo de impressão",
+  "Cannot determine first printable tool within scan limit": "Não é possível preparar a primeira ferramenta. Verifique o arquivo e as configurações das ferramentas.",
+  "No active print": "Nenhuma impressão ativa.",
+  "Unknown object": "Objeto desconhecido.",
+  "First tool selection requires an active print file": "Não é possível preparar a primeira ferramenta. Verifique o arquivo e as configurações das ferramentas.",
+  "Unknown exclusion action": "Solicitação de exclusão de objeto inválida.",
+  "First printable tool has no matching CHANGE_TOOL settings": "Não é possível preparar a primeira ferramenta. Verifique o arquivo e as configurações das ferramentas.",
+  "No printable object remains or first tool settings are unavailable": "Não é possível preparar a primeira ferramenta. Verifique o arquivo e as configurações das ferramentas.",
+  "First printable object has no name": "Não é possível preparar a primeira ferramenta. Verifique o arquivo e as configurações das ferramentas.",
+  "Invalid first printable tool or temperature": "Não é possível preparar a primeira ferramenta. Verifique o arquivo e as configurações das ferramentas."
 }

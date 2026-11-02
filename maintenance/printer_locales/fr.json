@@ -111,5 +111,22 @@
   "Probe tolerance exceeded ({attempt}/5) - retrying.": "Tolérance dépassée ({attempt}/5) — nouvelle mesure.",
   "Probe trigger error - recovering and retrying.": "Erreur de déclenchement de la sonde — réinitialisation puis nouvelle mesure.",
   "Object excluded. ({name})": "Objet exclu. ({name})",
-  "Excluded": "Exclu"
+  "Excluded": "Exclu",
+  "Exclusion pending": "Exclusion en attente",
+  "EXCLUDE_TOOL_PREPARE is only available inside START_PRINT": "Impossible de préparer le premier outil. Vérifiez le fichier et les réglages des outils.",
+  "First printable tool has no matching CHANGE_TOOL settings": "Impossible de préparer le premier outil. Vérifiez le fichier et les réglages des outils.",
+  "Invalid first printable tool settings": "Impossible de préparer le premier outil. Vérifiez le fichier et les réglages des outils.",
+  "Cannot exclude the last object; cancel the print instead": "Impossible d’exclure le dernier objet. Annulez l’impression.",
+  "No printable object remains or first tool settings are unavailable": "Impossible de préparer le premier outil. Vérifiez le fichier et les réglages des outils.",
+  "Calculating print time": "Calcul du temps d’impression",
+  "Unsupported first tool parameters": "Impossible de préparer le premier outil. Vérifiez le fichier et les réglages des outils.",
+  "First tool preparation failed": "Impossible de préparer le premier outil. Vérifiez le fichier et les réglages des outils.",
+  "Unknown object": "Objet inconnu.",
+  "First printable object has no name": "Impossible de préparer le premier outil. Vérifiez le fichier et les réglages des outils.",
+  "No active print": "Aucune impression en cours.",
+  "Invalid first printable tool or temperature": "Impossible de préparer le premier outil. Vérifiez le fichier et les réglages des outils.",
+  "First tool selection requires an active print file": "Impossible de préparer le premier outil. Vérifiez le fichier et les réglages des outils.",
+  "Cannot determine first printable tool within scan limit": "Impossible de préparer le premier outil. Vérifiez le fichier et les réglages des outils.",
+  "Unknown exclusion action": "Demande d’exclusion d’objet non valide.",
+  "Cancelling": "Annulation en cours"
 }

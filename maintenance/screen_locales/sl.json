@@ -137,5 +137,21 @@
   "Working": "Deluje",
   "Yes": "Da",
   "System language": "Sistemski jezik",
-  "Material usage": "Poraba"
+  "Material usage": "Poraba",
+  "Calculating print time": "Izračun časa tiskanja",
+  "Unknown object": "Neznan objekt.",
+  "Cannot exclude the last object; cancel the print instead": "Zadnjega objekta ni mogoče izključiti. Prekličite tiskanje.",
+  "No active print": "Ni aktivnega tiskanja.",
+  "Unknown exclusion action": "Neveljavna zahteva za izključitev objekta.",
+  "First tool preparation failed": "Prvega orodja ni mogoče pripraviti. Preverite datoteko za tiskanje in nastavitve orodij.",
+  "Unsupported first tool parameters": "Prvega orodja ni mogoče pripraviti. Preverite datoteko za tiskanje in nastavitve orodij.",
+  "First tool selection requires an active print file": "Prvega orodja ni mogoče pripraviti. Preverite datoteko za tiskanje in nastavitve orodij.",
+  "Cannot determine first printable tool within scan limit": "Prvega orodja ni mogoče pripraviti. Preverite datoteko za tiskanje in nastavitve orodij.",
+  "First printable tool has no matching CHANGE_TOOL settings": "Prvega orodja ni mogoče pripraviti. Preverite datoteko za tiskanje in nastavitve orodij.",
+  "First printable object has no name": "Prvega orodja ni mogoče pripraviti. Preverite datoteko za tiskanje in nastavitve orodij.",
+  "No printable object remains or first tool settings are unavailable": "Prvega orodja ni mogoče pripraviti. Preverite datoteko za tiskanje in nastavitve orodij.",
+  "EXCLUDE_TOOL_PREPARE is only available inside START_PRINT": "Prvega orodja ni mogoče pripraviti. Preverite datoteko za tiskanje in nastavitve orodij.",
+  "Invalid first printable tool settings": "Prvega orodja ni mogoče pripraviti. Preverite datoteko za tiskanje in nastavitve orodij.",
+  "Invalid first printable tool or temperature": "Prvega orodja ni mogoče pripraviti. Preverite datoteko za tiskanje in nastavitve orodij.",
+  "Cancelling": "Preklicevanje"
 }

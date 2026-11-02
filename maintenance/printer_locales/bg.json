@@ -111,5 +111,22 @@
   "Probe tolerance exceeded ({attempt}/5) - retrying.": "Превишен толеранс ({attempt}/5) — повторно измерване.",
   "Probe trigger error - recovering and retrying.": "Грешка при задействане на сондата — възстановяване и повторно измерване.",
   "Object excluded. ({name})": "Обектът е изключен. ({name})",
-  "Excluded": "Изключен"
+  "Excluded": "Изключен",
+  "Exclusion pending": "Изчаква изключване",
+  "EXCLUDE_TOOL_PREPARE is only available inside START_PRINT": "Първият инструмент не може да бъде подготвен. Проверете файла за печат и настройките на инструментите.",
+  "First printable tool has no matching CHANGE_TOOL settings": "Първият инструмент не може да бъде подготвен. Проверете файла за печат и настройките на инструментите.",
+  "Invalid first printable tool settings": "Първият инструмент не може да бъде подготвен. Проверете файла за печат и настройките на инструментите.",
+  "Cannot exclude the last object; cancel the print instead": "Последният обект не може да бъде изключен. Отменете печата.",
+  "No printable object remains or first tool settings are unavailable": "Първият инструмент не може да бъде подготвен. Проверете файла за печат и настройките на инструментите.",
+  "Calculating print time": "Изчисляване на времето за печат",
+  "Unsupported first tool parameters": "Първият инструмент не може да бъде подготвен. Проверете файла за печат и настройките на инструментите.",
+  "First tool preparation failed": "Първият инструмент не може да бъде подготвен. Проверете файла за печат и настройките на инструментите.",
+  "Unknown object": "Непознат обект.",
+  "First printable object has no name": "Първият инструмент не може да бъде подготвен. Проверете файла за печат и настройките на инструментите.",
+  "No active print": "Няма активен печат.",
+  "Invalid first printable tool or temperature": "Първият инструмент не може да бъде подготвен. Проверете файла за печат и настройките на инструментите.",
+  "First tool selection requires an active print file": "Първият инструмент не може да бъде подготвен. Проверете файла за печат и настройките на инструментите.",
+  "Cannot determine first printable tool within scan limit": "Първият инструмент не може да бъде подготвен. Проверете файла за печат и настройките на инструментите.",
+  "Unknown exclusion action": "Невалидна заявка за изключване на обект.",
+  "Cancelling": "Отменяне"
 }

@@ -78,5 +78,21 @@
   "Waiting for Moonraker connection to close": "In attesa della chiusura della connessione Moonraker",
   "Yes": "Sì",
   "System language": "Lingua del sistema",
-  "Material usage": "Consumo"
+  "Material usage": "Consumo",
+  "Calculating print time": "Calcolo del tempo di stampa",
+  "Unknown object": "Oggetto sconosciuto.",
+  "Cannot exclude the last object; cancel the print instead": "Impossibile escludere l’ultimo oggetto. Annullare la stampa.",
+  "No active print": "Nessuna stampa attiva.",
+  "Unknown exclusion action": "Richiesta di esclusione oggetto non valida.",
+  "First tool preparation failed": "Impossibile preparare il primo utensile. Controllare il file e le impostazioni degli utensili.",
+  "Unsupported first tool parameters": "Impossibile preparare il primo utensile. Controllare il file e le impostazioni degli utensili.",
+  "First tool selection requires an active print file": "Impossibile preparare il primo utensile. Controllare il file e le impostazioni degli utensili.",
+  "Cannot determine first printable tool within scan limit": "Impossibile preparare il primo utensile. Controllare il file e le impostazioni degli utensili.",
+  "First printable tool has no matching CHANGE_TOOL settings": "Impossibile preparare il primo utensile. Controllare il file e le impostazioni degli utensili.",
+  "First printable object has no name": "Impossibile preparare il primo utensile. Controllare il file e le impostazioni degli utensili.",
+  "No printable object remains or first tool settings are unavailable": "Impossibile preparare il primo utensile. Controllare il file e le impostazioni degli utensili.",
+  "EXCLUDE_TOOL_PREPARE is only available inside START_PRINT": "Impossibile preparare il primo utensile. Controllare il file e le impostazioni degli utensili.",
+  "Invalid first printable tool settings": "Impossibile preparare il primo utensile. Controllare il file e le impostazioni degli utensili.",
+  "Invalid first printable tool or temperature": "Impossibile preparare il primo utensile. Controllare il file e le impostazioni degli utensili.",
+  "Cancelling": "Annullamento in corso"
 }

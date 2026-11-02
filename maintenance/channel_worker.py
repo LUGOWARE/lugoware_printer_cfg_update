@@ -46,6 +46,10 @@ def apply_config(repo, home, backup):
     base = preserve(base, target / 'printer.cfg')
     if (home / 'klipper/klippy/extras/print_sensor.py').is_file():
         base = feature_macros(base)
+        guard = home / 'klipper/klippy/extras/exclude_tool_guard.py'
+        if guard.is_file() and 'def prepare_first(' in guard.read_text(encoding='utf-8'):
+            from followup_features import first_tool
+            base = first_tool(base)
     template = (repo / 'KlipperScreen.conf').read_text(encoding='utf-8-sig')
     previous_screen = (target / 'KlipperScreen.conf').read_text(encoding='utf-8')
     if (home / 'klipper/klippy/extras/print_sensor.py').is_file() and '[menu __print lock]' not in template:

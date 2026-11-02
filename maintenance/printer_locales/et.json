@@ -111,5 +111,22 @@
   "Probe tolerance exceeded ({attempt}/5) - retrying.": "Lubatud hälve ületatud ({attempt}/5) — uus mõõtmine.",
   "Probe trigger error - recovering and retrying.": "Anduri rakendumise viga — taastamine ja uus mõõtmine.",
   "Object excluded. ({name})": "Objekt on välistatud. ({name})",
-  "Excluded": "Välistatud"
+  "Excluded": "Välistatud",
+  "Exclusion pending": "Välistamine ootel",
+  "EXCLUDE_TOOL_PREPARE is only available inside START_PRINT": "Esimest tööriista ei saa ette valmistada. Kontrolli prindifaili ja tööriistade seadeid.",
+  "First printable tool has no matching CHANGE_TOOL settings": "Esimest tööriista ei saa ette valmistada. Kontrolli prindifaili ja tööriistade seadeid.",
+  "Invalid first printable tool settings": "Esimest tööriista ei saa ette valmistada. Kontrolli prindifaili ja tööriistade seadeid.",
+  "Cannot exclude the last object; cancel the print instead": "Viimast objekti ei saa välja jätta. Tühista printimine.",
+  "No printable object remains or first tool settings are unavailable": "Esimest tööriista ei saa ette valmistada. Kontrolli prindifaili ja tööriistade seadeid.",
+  "Calculating print time": "Printimisaja arvutamine",
+  "Unsupported first tool parameters": "Esimest tööriista ei saa ette valmistada. Kontrolli prindifaili ja tööriistade seadeid.",
+  "First tool preparation failed": "Esimest tööriista ei saa ette valmistada. Kontrolli prindifaili ja tööriistade seadeid.",
+  "Unknown object": "Tundmatu objekt.",
+  "First printable object has no name": "Esimest tööriista ei saa ette valmistada. Kontrolli prindifaili ja tööriistade seadeid.",
+  "No active print": "Aktiivne printimine puudub.",
+  "Invalid first printable tool or temperature": "Esimest tööriista ei saa ette valmistada. Kontrolli prindifaili ja tööriistade seadeid.",
+  "First tool selection requires an active print file": "Esimest tööriista ei saa ette valmistada. Kontrolli prindifaili ja tööriistade seadeid.",
+  "Cannot determine first printable tool within scan limit": "Esimest tööriista ei saa ette valmistada. Kontrolli prindifaili ja tööriistade seadeid.",
+  "Unknown exclusion action": "Vigane objekti väljajätmise taotlus.",
+  "Cancelling": "Tühistamine"
 }

@@ -111,5 +111,22 @@
   "Probe tolerance exceeded ({attempt}/5) - retrying.": "Tolerantie overschreden ({attempt}/5) — opnieuw meten.",
   "Probe trigger error - recovering and retrying.": "Triggerfout van de probe — herstellen en opnieuw meten.",
   "Object excluded. ({name})": "Object uitgesloten. ({name})",
-  "Excluded": "Uitgesloten"
+  "Excluded": "Uitgesloten",
+  "Exclusion pending": "Uitsluiting in afwachting",
+  "Unsupported first tool parameters": "Het eerste gereedschap kan niet worden voorbereid. Controleer het printbestand en de gereedschapsinstellingen.",
+  "Cannot exclude the last object; cancel the print instead": "Het laatste object kan niet worden uitgesloten. Annuleer de print.",
+  "EXCLUDE_TOOL_PREPARE is only available inside START_PRINT": "Het eerste gereedschap kan niet worden voorbereid. Controleer het printbestand en de gereedschapsinstellingen.",
+  "Invalid first printable tool settings": "Het eerste gereedschap kan niet worden voorbereid. Controleer het printbestand en de gereedschapsinstellingen.",
+  "Cancelling": "Annuleren",
+  "First tool preparation failed": "Het eerste gereedschap kan niet worden voorbereid. Controleer het printbestand en de gereedschapsinstellingen.",
+  "Calculating print time": "Printtijd berekenen",
+  "Cannot determine first printable tool within scan limit": "Het eerste gereedschap kan niet worden voorbereid. Controleer het printbestand en de gereedschapsinstellingen.",
+  "No active print": "Geen actieve print.",
+  "Unknown object": "Onbekend object.",
+  "First tool selection requires an active print file": "Het eerste gereedschap kan niet worden voorbereid. Controleer het printbestand en de gereedschapsinstellingen.",
+  "Unknown exclusion action": "Ongeldig verzoek om een object uit te sluiten.",
+  "First printable tool has no matching CHANGE_TOOL settings": "Het eerste gereedschap kan niet worden voorbereid. Controleer het printbestand en de gereedschapsinstellingen.",
+  "No printable object remains or first tool settings are unavailable": "Het eerste gereedschap kan niet worden voorbereid. Controleer het printbestand en de gereedschapsinstellingen.",
+  "First printable object has no name": "Het eerste gereedschap kan niet worden voorbereid. Controleer het printbestand en de gereedschapsinstellingen.",
+  "Invalid first printable tool or temperature": "Het eerste gereedschap kan niet worden voorbereid. Controleer het printbestand en de gereedschapsinstellingen."
 }

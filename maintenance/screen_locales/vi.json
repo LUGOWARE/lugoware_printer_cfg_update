@@ -93,5 +93,21 @@
   "Working": "Đang làm việc",
   "Yes": "Có",
   "System language": "Ngôn ngữ hệ thống",
-  "Material usage": "Lượng dùng"
+  "Material usage": "Lượng dùng",
+  "Calculating print time": "Đang tính thời gian in",
+  "Unknown object": "Đối tượng không xác định.",
+  "Cannot exclude the last object; cancel the print instead": "Không thể loại bỏ đối tượng cuối cùng. Hãy hủy bản in.",
+  "No active print": "Không có bản in đang chạy.",
+  "Unknown exclusion action": "Yêu cầu loại bỏ đối tượng không hợp lệ.",
+  "First tool preparation failed": "Không thể chuẩn bị công cụ đầu tiên. Hãy kiểm tra tệp in và cài đặt công cụ.",
+  "Unsupported first tool parameters": "Không thể chuẩn bị công cụ đầu tiên. Hãy kiểm tra tệp in và cài đặt công cụ.",
+  "First tool selection requires an active print file": "Không thể chuẩn bị công cụ đầu tiên. Hãy kiểm tra tệp in và cài đặt công cụ.",
+  "Cannot determine first printable tool within scan limit": "Không thể chuẩn bị công cụ đầu tiên. Hãy kiểm tra tệp in và cài đặt công cụ.",
+  "First printable tool has no matching CHANGE_TOOL settings": "Không thể chuẩn bị công cụ đầu tiên. Hãy kiểm tra tệp in và cài đặt công cụ.",
+  "First printable object has no name": "Không thể chuẩn bị công cụ đầu tiên. Hãy kiểm tra tệp in và cài đặt công cụ.",
+  "No printable object remains or first tool settings are unavailable": "Không thể chuẩn bị công cụ đầu tiên. Hãy kiểm tra tệp in và cài đặt công cụ.",
+  "EXCLUDE_TOOL_PREPARE is only available inside START_PRINT": "Không thể chuẩn bị công cụ đầu tiên. Hãy kiểm tra tệp in và cài đặt công cụ.",
+  "Invalid first printable tool settings": "Không thể chuẩn bị công cụ đầu tiên. Hãy kiểm tra tệp in và cài đặt công cụ.",
+  "Invalid first printable tool or temperature": "Không thể chuẩn bị công cụ đầu tiên. Hãy kiểm tra tệp in và cài đặt công cụ.",
+  "Cancelling": "Đang hủy"
 }

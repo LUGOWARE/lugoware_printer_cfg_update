@@ -111,5 +111,22 @@
   "Probe tolerance exceeded ({attempt}/5) - retrying.": "Превышен допуск ({attempt}/5) — повторное измерение.",
   "Probe trigger error - recovering and retrying.": "Ошибка срабатывания датчика — восстановление и повторное измерение.",
   "Object excluded. ({name})": "Объект исключён. ({name})",
-  "Excluded": "Исключено"
+  "Excluded": "Исключено",
+  "Exclusion pending": "Ожидает исключения",
+  "Unsupported first tool parameters": "Не удалось подготовить первый инструмент. Проверьте файл печати и настройки инструментов.",
+  "Cannot exclude the last object; cancel the print instead": "Нельзя исключить последний объект. Отмените печать.",
+  "EXCLUDE_TOOL_PREPARE is only available inside START_PRINT": "Не удалось подготовить первый инструмент. Проверьте файл печати и настройки инструментов.",
+  "Invalid first printable tool settings": "Не удалось подготовить первый инструмент. Проверьте файл печати и настройки инструментов.",
+  "Cancelling": "Отмена",
+  "First tool preparation failed": "Не удалось подготовить первый инструмент. Проверьте файл печати и настройки инструментов.",
+  "Calculating print time": "Расчёт времени печати",
+  "Cannot determine first printable tool within scan limit": "Не удалось подготовить первый инструмент. Проверьте файл печати и настройки инструментов.",
+  "No active print": "Нет активной печати.",
+  "Unknown object": "Неизвестный объект.",
+  "First tool selection requires an active print file": "Не удалось подготовить первый инструмент. Проверьте файл печати и настройки инструментов.",
+  "Unknown exclusion action": "Недопустимый запрос на исключение объекта.",
+  "First printable tool has no matching CHANGE_TOOL settings": "Не удалось подготовить первый инструмент. Проверьте файл печати и настройки инструментов.",
+  "No printable object remains or first tool settings are unavailable": "Не удалось подготовить первый инструмент. Проверьте файл печати и настройки инструментов.",
+  "First printable object has no name": "Не удалось подготовить первый инструмент. Проверьте файл печати и настройки инструментов.",
+  "Invalid first printable tool or temperature": "Не удалось подготовить первый инструмент. Проверьте файл печати и настройки инструментов."
 }

@@ -61,5 +61,21 @@
   "Waiting for Moonraker connection to close": "Esperando que se cierre la conexión con Moonraker",
   "Yes": "Sí",
   "System language": "Idioma del sistema",
-  "Material usage": "Consumo"
+  "Material usage": "Consumo",
+  "Calculating print time": "Calculando tiempo de impresión",
+  "Unknown object": "Objeto desconocido.",
+  "Cannot exclude the last object; cancel the print instead": "No se puede excluir el último objeto. Cancela la impresión.",
+  "No active print": "No hay ninguna impresión activa.",
+  "Unknown exclusion action": "Solicitud de exclusión de objeto no válida.",
+  "First tool preparation failed": "No se puede preparar la primera herramienta. Revisa el archivo y la configuración de herramientas.",
+  "Unsupported first tool parameters": "No se puede preparar la primera herramienta. Revisa el archivo y la configuración de herramientas.",
+  "First tool selection requires an active print file": "No se puede preparar la primera herramienta. Revisa el archivo y la configuración de herramientas.",
+  "Cannot determine first printable tool within scan limit": "No se puede preparar la primera herramienta. Revisa el archivo y la configuración de herramientas.",
+  "First printable tool has no matching CHANGE_TOOL settings": "No se puede preparar la primera herramienta. Revisa el archivo y la configuración de herramientas.",
+  "First printable object has no name": "No se puede preparar la primera herramienta. Revisa el archivo y la configuración de herramientas.",
+  "No printable object remains or first tool settings are unavailable": "No se puede preparar la primera herramienta. Revisa el archivo y la configuración de herramientas.",
+  "EXCLUDE_TOOL_PREPARE is only available inside START_PRINT": "No se puede preparar la primera herramienta. Revisa el archivo y la configuración de herramientas.",
+  "Invalid first printable tool settings": "No se puede preparar la primera herramienta. Revisa el archivo y la configuración de herramientas.",
+  "Invalid first printable tool or temperature": "No se puede preparar la primera herramienta. Revisa el archivo y la configuración de herramientas.",
+  "Cancelling": "Cancelando"
 }

@@ -111,5 +111,22 @@
   "Probe tolerance exceeded ({attempt}/5) - retrying.": "Tűréshatár túllépve ({attempt}/5) — újramérés.",
   "Probe trigger error - recovering and retrying.": "Szondaaktiválási hiba — helyreállítás és újramérés.",
   "Object excluded. ({name})": "Objektum kizárva. ({name})",
-  "Excluded": "Kizárva"
+  "Excluded": "Kizárva",
+  "Exclusion pending": "Kizárásra vár",
+  "EXCLUDE_TOOL_PREPARE is only available inside START_PRINT": "Az első szerszám nem készíthető elő. Ellenőrizze a nyomtatási fájlt és a szerszámbeállításokat.",
+  "First printable tool has no matching CHANGE_TOOL settings": "Az első szerszám nem készíthető elő. Ellenőrizze a nyomtatási fájlt és a szerszámbeállításokat.",
+  "Invalid first printable tool settings": "Az első szerszám nem készíthető elő. Ellenőrizze a nyomtatási fájlt és a szerszámbeállításokat.",
+  "Cannot exclude the last object; cancel the print instead": "Az utolsó objektum nem zárható ki. Szakítsa meg a nyomtatást.",
+  "No printable object remains or first tool settings are unavailable": "Az első szerszám nem készíthető elő. Ellenőrizze a nyomtatási fájlt és a szerszámbeállításokat.",
+  "Calculating print time": "Nyomtatási idő számítása",
+  "Unsupported first tool parameters": "Az első szerszám nem készíthető elő. Ellenőrizze a nyomtatási fájlt és a szerszámbeállításokat.",
+  "First tool preparation failed": "Az első szerszám nem készíthető elő. Ellenőrizze a nyomtatási fájlt és a szerszámbeállításokat.",
+  "Unknown object": "Ismeretlen objektum.",
+  "First printable object has no name": "Az első szerszám nem készíthető elő. Ellenőrizze a nyomtatási fájlt és a szerszámbeállításokat.",
+  "No active print": "Nincs aktív nyomtatás.",
+  "Invalid first printable tool or temperature": "Az első szerszám nem készíthető elő. Ellenőrizze a nyomtatási fájlt és a szerszámbeállításokat.",
+  "First tool selection requires an active print file": "Az első szerszám nem készíthető elő. Ellenőrizze a nyomtatási fájlt és a szerszámbeállításokat.",
+  "Cannot determine first printable tool within scan limit": "Az első szerszám nem készíthető elő. Ellenőrizze a nyomtatási fájlt és a szerszámbeállításokat.",
+  "Unknown exclusion action": "Érvénytelen objektumkizárási kérés.",
+  "Cancelling": "Megszakítás folyamatban"
 }

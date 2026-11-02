@@ -48,5 +48,21 @@
   "Waiting for Moonraker connection to close": "في انتظار إغلاق اتصال Moonraker",
   "Yes": "نعم",
   "System language": "لغة النظام",
-  "Material usage": "الاستهلاك"
+  "Material usage": "الاستهلاك",
+  "Calculating print time": "جارٍ حساب وقت الطباعة",
+  "Unknown object": "عنصر غير معروف.",
+  "Cannot exclude the last object; cancel the print instead": "لا يمكن استبعاد العنصر الأخير. ألغِ الطباعة بدلاً من ذلك.",
+  "No active print": "لا توجد طباعة نشطة.",
+  "Unknown exclusion action": "طلب استبعاد العنصر غير صالح.",
+  "First tool preparation failed": "تعذّر تجهيز الأداة الأولى. تحقّق من ملف الطباعة وإعدادات الأدوات.",
+  "Unsupported first tool parameters": "تعذّر تجهيز الأداة الأولى. تحقّق من ملف الطباعة وإعدادات الأدوات.",
+  "First tool selection requires an active print file": "تعذّر تجهيز الأداة الأولى. تحقّق من ملف الطباعة وإعدادات الأدوات.",
+  "Cannot determine first printable tool within scan limit": "تعذّر تجهيز الأداة الأولى. تحقّق من ملف الطباعة وإعدادات الأدوات.",
+  "First printable tool has no matching CHANGE_TOOL settings": "تعذّر تجهيز الأداة الأولى. تحقّق من ملف الطباعة وإعدادات الأدوات.",
+  "First printable object has no name": "تعذّر تجهيز الأداة الأولى. تحقّق من ملف الطباعة وإعدادات الأدوات.",
+  "No printable object remains or first tool settings are unavailable": "تعذّر تجهيز الأداة الأولى. تحقّق من ملف الطباعة وإعدادات الأدوات.",
+  "EXCLUDE_TOOL_PREPARE is only available inside START_PRINT": "تعذّر تجهيز الأداة الأولى. تحقّق من ملف الطباعة وإعدادات الأدوات.",
+  "Invalid first printable tool settings": "تعذّر تجهيز الأداة الأولى. تحقّق من ملف الطباعة وإعدادات الأدوات.",
+  "Invalid first printable tool or temperature": "تعذّر تجهيز الأداة الأولى. تحقّق من ملف الطباعة وإعدادات الأدوات.",
+  "Cancelling": "جارٍ الإلغاء"
 }

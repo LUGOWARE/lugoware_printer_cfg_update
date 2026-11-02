@@ -111,5 +111,22 @@
   "Probe tolerance exceeded ({attempt}/5) - retrying.": "허용 오차 초과 ({attempt}/5) — 다시 측정합니다.",
   "Probe trigger error - recovering and retrying.": "프로브 트리거 오류 — 복구 후 다시 측정합니다.",
   "Object excluded. ({name})": "객체가 제외되었습니다. ({name})",
-  "Excluded": "제외됨"
+  "Excluded": "제외됨",
+  "Cancelling": "취소 중",
+  "Exclusion pending": "제외 대기",
+  "Unsupported first tool parameters": "첫 툴을 준비할 수 없습니다. 출력 파일과 툴 설정을 확인해 주세요.",
+  "Cannot exclude the last object; cancel the print instead": "마지막 개체는 제외할 수 없습니다. 출력을 취소해 주세요.",
+  "EXCLUDE_TOOL_PREPARE is only available inside START_PRINT": "첫 툴을 준비할 수 없습니다. 출력 파일과 툴 설정을 확인해 주세요.",
+  "Invalid first printable tool settings": "첫 툴을 준비할 수 없습니다. 출력 파일과 툴 설정을 확인해 주세요.",
+  "First tool preparation failed": "첫 툴을 준비할 수 없습니다. 출력 파일과 툴 설정을 확인해 주세요.",
+  "Cannot determine first printable tool within scan limit": "첫 툴을 준비할 수 없습니다. 출력 파일과 툴 설정을 확인해 주세요.",
+  "Calculating print time": "출력시간 계산 중",
+  "No active print": "진행 중인 출력이 없습니다.",
+  "Unknown object": "알 수 없는 개체입니다.",
+  "First tool selection requires an active print file": "첫 툴을 준비할 수 없습니다. 출력 파일과 툴 설정을 확인해 주세요.",
+  "Unknown exclusion action": "잘못된 개체 제외 요청입니다.",
+  "First printable tool has no matching CHANGE_TOOL settings": "첫 툴을 준비할 수 없습니다. 출력 파일과 툴 설정을 확인해 주세요.",
+  "No printable object remains or first tool settings are unavailable": "첫 툴을 준비할 수 없습니다. 출력 파일과 툴 설정을 확인해 주세요.",
+  "First printable object has no name": "첫 툴을 준비할 수 없습니다. 출력 파일과 툴 설정을 확인해 주세요.",
+  "Invalid first printable tool or temperature": "첫 툴을 준비할 수 없습니다. 출력 파일과 툴 설정을 확인해 주세요."
 }

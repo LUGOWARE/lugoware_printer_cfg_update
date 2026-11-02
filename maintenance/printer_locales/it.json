@@ -111,5 +111,22 @@
   "Probe tolerance exceeded ({attempt}/5) - retrying.": "Tolleranza superata ({attempt}/5) — nuova misurazione.",
   "Probe trigger error - recovering and retrying.": "Errore di attivazione della sonda — ripristino e nuova misurazione.",
   "Object excluded. ({name})": "Oggetto escluso. ({name})",
-  "Excluded": "Escluso"
+  "Excluded": "Escluso",
+  "Exclusion pending": "Esclusione in attesa",
+  "EXCLUDE_TOOL_PREPARE is only available inside START_PRINT": "Impossibile preparare il primo utensile. Controllare il file e le impostazioni degli utensili.",
+  "First printable tool has no matching CHANGE_TOOL settings": "Impossibile preparare il primo utensile. Controllare il file e le impostazioni degli utensili.",
+  "Invalid first printable tool settings": "Impossibile preparare il primo utensile. Controllare il file e le impostazioni degli utensili.",
+  "Cannot exclude the last object; cancel the print instead": "Impossibile escludere l’ultimo oggetto. Annullare la stampa.",
+  "No printable object remains or first tool settings are unavailable": "Impossibile preparare il primo utensile. Controllare il file e le impostazioni degli utensili.",
+  "Calculating print time": "Calcolo del tempo di stampa",
+  "Unsupported first tool parameters": "Impossibile preparare il primo utensile. Controllare il file e le impostazioni degli utensili.",
+  "First tool preparation failed": "Impossibile preparare il primo utensile. Controllare il file e le impostazioni degli utensili.",
+  "Unknown object": "Oggetto sconosciuto.",
+  "First printable object has no name": "Impossibile preparare il primo utensile. Controllare il file e le impostazioni degli utensili.",
+  "No active print": "Nessuna stampa attiva.",
+  "Invalid first printable tool or temperature": "Impossibile preparare il primo utensile. Controllare il file e le impostazioni degli utensili.",
+  "First tool selection requires an active print file": "Impossibile preparare il primo utensile. Controllare il file e le impostazioni degli utensili.",
+  "Cannot determine first printable tool within scan limit": "Impossibile preparare il primo utensile. Controllare il file e le impostazioni degli utensili.",
+  "Unknown exclusion action": "Richiesta di esclusione oggetto non valida.",
+  "Cancelling": "Annullamento in corso"
 }

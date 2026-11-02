@@ -68,5 +68,21 @@
   "Waiting for Moonraker connection to close": "Moonrakeri ühenduse sulgemise ootel",
   "Yes": "Jah",
   "System language": "Süsteemi keel",
-  "Material usage": "Kulu"
+  "Material usage": "Kulu",
+  "Calculating print time": "Printimisaja arvutamine",
+  "Unknown object": "Tundmatu objekt.",
+  "Cannot exclude the last object; cancel the print instead": "Viimast objekti ei saa välja jätta. Tühista printimine.",
+  "No active print": "Aktiivne printimine puudub.",
+  "Unknown exclusion action": "Vigane objekti väljajätmise taotlus.",
+  "First tool preparation failed": "Esimest tööriista ei saa ette valmistada. Kontrolli prindifaili ja tööriistade seadeid.",
+  "Unsupported first tool parameters": "Esimest tööriista ei saa ette valmistada. Kontrolli prindifaili ja tööriistade seadeid.",
+  "First tool selection requires an active print file": "Esimest tööriista ei saa ette valmistada. Kontrolli prindifaili ja tööriistade seadeid.",
+  "Cannot determine first printable tool within scan limit": "Esimest tööriista ei saa ette valmistada. Kontrolli prindifaili ja tööriistade seadeid.",
+  "First printable tool has no matching CHANGE_TOOL settings": "Esimest tööriista ei saa ette valmistada. Kontrolli prindifaili ja tööriistade seadeid.",
+  "First printable object has no name": "Esimest tööriista ei saa ette valmistada. Kontrolli prindifaili ja tööriistade seadeid.",
+  "No printable object remains or first tool settings are unavailable": "Esimest tööriista ei saa ette valmistada. Kontrolli prindifaili ja tööriistade seadeid.",
+  "EXCLUDE_TOOL_PREPARE is only available inside START_PRINT": "Esimest tööriista ei saa ette valmistada. Kontrolli prindifaili ja tööriistade seadeid.",
+  "Invalid first printable tool settings": "Esimest tööriista ei saa ette valmistada. Kontrolli prindifaili ja tööriistade seadeid.",
+  "Invalid first printable tool or temperature": "Esimest tööriista ei saa ette valmistada. Kontrolli prindifaili ja tööriistade seadeid.",
+  "Cancelling": "Tühistamine"
 }

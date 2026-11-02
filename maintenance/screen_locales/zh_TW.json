@@ -53,5 +53,21 @@
   "Waiting for Moonraker connection to close": "等待 Moonraker 連線關閉",
   "Yes": "是的",
   "System language": "系統語言",
-  "Material usage": "用量"
+  "Material usage": "用量",
+  "Calculating print time": "正在計算列印時間",
+  "Unknown object": "未知物件。",
+  "Cannot exclude the last object; cancel the print instead": "無法排除最後一個物件，請取消列印。",
+  "No active print": "目前沒有列印工作。",
+  "Unknown exclusion action": "物件排除要求無效。",
+  "First tool preparation failed": "無法準備第一個工具，請檢查列印檔案與工具設定。",
+  "Unsupported first tool parameters": "無法準備第一個工具，請檢查列印檔案與工具設定。",
+  "First tool selection requires an active print file": "無法準備第一個工具，請檢查列印檔案與工具設定。",
+  "Cannot determine first printable tool within scan limit": "無法準備第一個工具，請檢查列印檔案與工具設定。",
+  "First printable tool has no matching CHANGE_TOOL settings": "無法準備第一個工具，請檢查列印檔案與工具設定。",
+  "First printable object has no name": "無法準備第一個工具，請檢查列印檔案與工具設定。",
+  "No printable object remains or first tool settings are unavailable": "無法準備第一個工具，請檢查列印檔案與工具設定。",
+  "EXCLUDE_TOOL_PREPARE is only available inside START_PRINT": "無法準備第一個工具，請檢查列印檔案與工具設定。",
+  "Invalid first printable tool settings": "無法準備第一個工具，請檢查列印檔案與工具設定。",
+  "Invalid first printable tool or temperature": "無法準備第一個工具，請檢查列印檔案與工具設定。",
+  "Cancelling": "正在取消"
 }

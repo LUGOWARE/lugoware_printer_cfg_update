@@ -111,5 +111,22 @@
   "Probe tolerance exceeded ({attempt}/5) - retrying.": "Toleranz überschritten ({attempt}/5) — erneute Messung.",
   "Probe trigger error - recovering and retrying.": "Sondenauslösefehler — Wiederherstellung und erneute Messung.",
   "Object excluded. ({name})": "Objekt ausgeschlossen. ({name})",
-  "Excluded": "Ausgeschlossen"
+  "Excluded": "Ausgeschlossen",
+  "Exclusion pending": "Ausschluss ausstehend",
+  "EXCLUDE_TOOL_PREPARE is only available inside START_PRINT": "Erstes Werkzeug kann nicht vorbereitet werden. Druckdatei und Werkzeugeinstellungen prüfen.",
+  "First printable tool has no matching CHANGE_TOOL settings": "Erstes Werkzeug kann nicht vorbereitet werden. Druckdatei und Werkzeugeinstellungen prüfen.",
+  "Invalid first printable tool settings": "Erstes Werkzeug kann nicht vorbereitet werden. Druckdatei und Werkzeugeinstellungen prüfen.",
+  "Cannot exclude the last object; cancel the print instead": "Das letzte Objekt kann nicht ausgeschlossen werden. Druck abbrechen.",
+  "No printable object remains or first tool settings are unavailable": "Erstes Werkzeug kann nicht vorbereitet werden. Druckdatei und Werkzeugeinstellungen prüfen.",
+  "Calculating print time": "Druckzeit wird berechnet",
+  "Unsupported first tool parameters": "Erstes Werkzeug kann nicht vorbereitet werden. Druckdatei und Werkzeugeinstellungen prüfen.",
+  "First tool preparation failed": "Erstes Werkzeug kann nicht vorbereitet werden. Druckdatei und Werkzeugeinstellungen prüfen.",
+  "Unknown object": "Unbekanntes Objekt.",
+  "First printable object has no name": "Erstes Werkzeug kann nicht vorbereitet werden. Druckdatei und Werkzeugeinstellungen prüfen.",
+  "No active print": "Kein aktiver Druck.",
+  "Invalid first printable tool or temperature": "Erstes Werkzeug kann nicht vorbereitet werden. Druckdatei und Werkzeugeinstellungen prüfen.",
+  "First tool selection requires an active print file": "Erstes Werkzeug kann nicht vorbereitet werden. Druckdatei und Werkzeugeinstellungen prüfen.",
+  "Cannot determine first printable tool within scan limit": "Erstes Werkzeug kann nicht vorbereitet werden. Druckdatei und Werkzeugeinstellungen prüfen.",
+  "Unknown exclusion action": "Ungültige Anfrage zum Objektausschluss.",
+  "Cancelling": "Wird abgebrochen"
 }
