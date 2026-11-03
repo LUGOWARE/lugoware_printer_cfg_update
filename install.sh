@@ -76,6 +76,11 @@ echo '[확인] 이전 설치에서 중단된 Moonraker 복구'
 python3 "$COMMON_REPO/maintenance/upgrade_moonraker.py" --recover-only 2>&1 | tee -a "$BACKUP_DIR/install.log"
 python3 "$COMMON_REPO/maintenance/check_idle.py"
 cp -a "$CONFIG_DIR" "$BACKUP_DIR/config"
+if (( SYSTEM_ONLY )); then
+    echo '[시간 동기화] 최초 자동 시간 설정은 최신 SSH 설치 명령을 한 번 실행해야 적용됩니다.'
+else
+    sudo python3 "$COMMON_REPO/maintenance/install_time_sync.py" "$BACKUP_DIR/time-sync"
+fi
 
 echo '[업데이트 1/6] Klipper 버전 확인 및 업데이트'
 python3 -u "$COMMON_REPO/maintenance/upgrade_klipper.py" 2>&1 | tee -a "$BACKUP_DIR/install.log"
