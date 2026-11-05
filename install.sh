@@ -79,6 +79,7 @@ cp -a "$CONFIG_DIR" "$BACKUP_DIR/config"
 if (( SYSTEM_ONLY )); then
     echo '[시간 동기화] 최초 자동 시간 설정은 최신 SSH 설치 명령을 한 번 실행해야 적용됩니다.'
 else
+    python3 "$COMMON_REPO/maintenance/switch_source.py" "$BRANCH" "$REPO_URL"
     sudo python3 "$COMMON_REPO/maintenance/install_time_sync.py" "$BACKUP_DIR/time-sync"
 fi
 

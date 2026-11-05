@@ -48,6 +48,10 @@ def install(user):
     shutil.copyfile(rule, target)
     os.chown(target, 0, 0)
     target.chmod(0o440)
+    marker = Path('/var/lib/lugoware-updates/active-release')
+    if marker.exists():
+        shutil.copy2(marker, marker.with_name('active-release.before-bootstrap'))
+        marker.unlink()
 
 
 if __name__ == '__main__':
