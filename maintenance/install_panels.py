@@ -3,7 +3,7 @@ import argparse
 from pathlib import Path
 import shutil
 
-FILES = ('extrude.py', 'nozzle_temperature.py', 'tool_prepare.py', 'tool_temperature.py')
+FILES = ('extrude.py', 'nozzle_temperature.py', 'tool_prepare.py', 'tool_temperature.py', 'fan.py', 'fine_tune.py')
 
 
 def install(source, target, backup, check=False):

@@ -15,6 +15,20 @@ TITLES = {
 SAVED = '#~# --- Do not edit below this line. This section is auto generated --- #~#'
 
 
+
+def hide_advanced_menus(text):
+    body, marker, saved = text.partition(SAVED)
+    for section in ('menu __main more macros', 'menu __print macros',
+                    'menu __main more limits', 'menu __print limits'):
+        pattern = r'(?ms)^\[' + re.escape(section) + r'\][^\n]*\n.*?(?=^\[|\Z)'
+        block = '[' + section + ']\nenable: False\n\n'
+        if re.search(pattern, body):
+            body = re.sub(pattern, lambda match: block, body)
+        else:
+            body = body.rstrip() + '\n\n' + block
+    return body + marker + saved
+
+
 def blocks(text):
     return list(re.finditer(r'(?ms)^\[([^\]\n]+)\][^\n]*\n.*?(?=^\[|\Z)', text))
 
@@ -50,7 +64,7 @@ def merge(existing, template):
         block = match[0]
         block = re.sub(r'(?m)^\s*name\s*[:=].*$',lambda m:value,block) if re.search(r'(?m)^\s*name\s*[:=]',block) else block.rstrip()+'\n'+value+'\n\n'
         body=body[:match.start()]+block+body[match.end():]
-    return body + marker + saved
+    return hide_advanced_menus(body + marker + saved)
 
 
 def install(template, target, backup):
