@@ -23,6 +23,9 @@ def inspect(data):
             continue
         config = identity.get('config', {})
         if config.get('MCU') == 'stm32g0b1xx' and config.get('RESERVE_PINS_USB') == 'PA11,PA12':
+            if not config.get('STEPPER_STEP_BOTH_EDGE') or not any(
+                    command.startswith('spi_set_sw_bus ') for command in identity.get('commands', {})):
+                raise ValueError('Bundled firmware lacks required SPI/stepper features')
             return identity
     raise ValueError('M5P STM32G0B1 USB identity not found')
 

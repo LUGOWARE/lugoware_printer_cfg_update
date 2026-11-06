@@ -60,6 +60,10 @@ class UpgradePolicyTests(unittest.TestCase):
 
     def test_live_firmware_policy(self):
         ready = {'state': 'ready', 'software_version': 'v0.13.0-745-gabc'}
+        old = {'mcu': {'mcu_version': 'v0.12.0-249-ga19d64fe'}}
+        self.assertEqual(firmware.decide(ready, old, 'new'), 'flash')
+        self.assertEqual(firmware.decide({'state':'ready', 'software_version':'v0.12.0-1263-gce7002bed'}, old, 'new', True), 'flash')
+        self.assertEqual(firmware.decide(ready, {'mcu':{'mcu_version':'v0.12.0-1263-gce7002bed'}}, 'new', True), 'keep')
         self.assertEqual(firmware.decide(ready, {'mcu': {'mcu_version': 'exact'}}, 'exact'), 'skip')
         self.assertEqual(firmware.decide(ready, {'mcu': {'mcu_version': 'newer'}}, 'exact'), 'keep')
         self.assertEqual(firmware.decide({'state': 'error'}, {}, 'exact'), 'flash')

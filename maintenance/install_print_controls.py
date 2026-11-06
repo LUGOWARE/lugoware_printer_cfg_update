@@ -41,6 +41,13 @@ MHZ_PATTERN = r"(?i)(?:Klipper:\s*)?(?://\s*)?MCU '[^'\n]+' configured for \d+(?
 
 
 def screen_patch(text):
+    # Klipper may report structured shutdown messages; preserve their details.
+    old = '        msg = self.printer.get_stat("webhooks", "state_message")\n'
+    new = old + ('        if isinstance(msg, dict):\n'
+                 '            import json\n'
+                 '            msg = msg.get("message") or json.dumps(msg, ensure_ascii=False)\n'
+                 '        msg = str(msg or "")\n')
+    text = replace_once(text, old, new)
     text = replace_once(text, '    def state_paused(self):\n        self.state_printing()\n',
                         '    def state_paused(self):\n        self.state_printing()\n        if getattr(self, "_lugo_cancel_pending", False):\n            return\n')
     text = replace_once(text, '    def state_ready(self, wait=True):\n',

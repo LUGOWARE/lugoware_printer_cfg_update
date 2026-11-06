@@ -27,8 +27,19 @@ class Tests(unittest.TestCase):
 
     def test_screen_popup_filter_selective(self):
         source = 'class Screen:\n    def state_paused(self):\n        self.state_printing()\n        self.open_extrude()\n    def state_ready(self, wait=True):\n        pass\n    def show_popup_message(self, message, level=3, from_ws=False):\n        pass\n'
+        source += '    def state_shutdown(self):\n        msg = self.printer.get_stat("webhooks", "state_message")\n        self.result = "shutdown: " + msg\n'
         result = screen_patch(source)
         compile(result,'screen.py','exec')
+        namespace = {}
+        exec(result, namespace)
+        from types import SimpleNamespace
+        for payload in ('Timer too close', {'message':'Timer too close'}, {'reason':'fault'}, None):
+            obj = namespace['Screen']()
+            obj.printer = SimpleNamespace(get_stat=lambda *args: payload)
+            obj.state_shutdown()
+            self.assertIsInstance(obj.result, str)
+            if payload:
+                self.assertTrue('Timer too close' in obj.result or 'fault' in obj.result)
         self.assertEqual(screen_patch(result),result)
         self.assertTrue(re.fullmatch(MHZ_PATTERN,"Klipper: MCU 'CB2' configured for 50MHz but running at 46MHz!"))
         self.assertTrue(re.fullmatch(MHZ_PATTERN,"Klipper: MCU 'CB2' configured for 50Mhz but running at 46Mhz!"))

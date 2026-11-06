@@ -234,11 +234,11 @@ class UpdateStatus:
             logging.exception('LUGOWARE update dialog delivery failed; retry on next poll')
         signature = tuple((c, d.get('run_id'), d.get('state')) for c, d in sorted(states.items()))
         if signature != getattr(self, '_retry_signature', None):
-            self._retry_signature = signature
             manager = self.server.lookup_component('update_manager', None)
-            if manager is not None:
+            if manager is not None and getattr(manager, 'initial_refresh_complete', False):
                 try:
                     manager.cmd_helper.notify_update_refreshed()
+                    self._retry_signature = signature
                 except Exception:
                     self._retry_signature = None
                     logging.exception('LUGOWARE retry-button refresh failed; retry on next poll')

@@ -49,3 +49,20 @@ class RetryTests(unittest.TestCase):
                 obj.enable_retry(updater,'config')
                 asyncio.run(updater.update())
                 original.assert_awaited_once();updater.restart_service.assert_not_awaited()
+
+    def test_startup_refresh_waits_and_retries(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            obj = UpdateStatus.__new__(UpdateStatus)
+            obj.folder = Path(tmp)
+            obj.update_dialog = Mock()
+            manager = SimpleNamespace(initial_refresh_complete=False,
+                cmd_helper=SimpleNamespace(notify_update_refreshed=Mock()))
+            obj.server = SimpleNamespace(lookup_component=lambda *args: manager)
+            obj.poll(1.)
+            manager.cmd_helper.notify_update_refreshed.assert_not_called()
+            self.assertIsNone(getattr(obj, '_retry_signature', None))
+            manager.initial_refresh_complete = True
+            obj.poll(3.)
+            manager.cmd_helper.notify_update_refreshed.assert_called_once()
+            obj.poll(5.)
+            manager.cmd_helper.notify_update_refreshed.assert_called_once()

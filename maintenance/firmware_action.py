@@ -11,6 +11,10 @@ def decide(info, status, expected, baseline_host=False):
         actual = status.get('mcu', {}).get('mcu_version')
         if actual == expected:
             return 'skip'
+        # READY does not imply current MCU capabilities (old MCU uses fallbacks).
+        if (actual and actual.startswith('v') and release(actual) < (0, 13, 0)
+                and '-g' + BASELINE[:8] not in actual):
+            return 'flash'
         # Preserve a working different firmware on an already compatible host.
         if actual and (baseline_host or release(info.get('software_version', '')) >= (0, 13, 0)):
             return 'keep'
