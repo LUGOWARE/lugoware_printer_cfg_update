@@ -17,20 +17,7 @@ class TemperatureControl(Gtk.Box):
         self.set_size_request(196, -1)
         self.get_style_context().add_class('lugo-temperature-control')
         provider = Gtk.CssProvider()
-        provider.load_from_data(b'''
-            .lugo-temperature-control { background-color: #242424; border-radius: 8px; }
-            .lugo-temperature-control button { min-width: 0; min-height: 0;
-                padding: 0; margin: 0; border: 1px solid #505050;
-                border-radius: 7px; background-image: none; background-color: #303030; }
-            .lugo-temperature-control button { box-shadow: none; text-shadow: none; transition: none; }
-            .lugo-temperature-control button:active,
-            .lugo-temperature-control button.lugo-tapped {
-                background-color: #087da5; border-color: #66dcff; }
-            .lugo-temperature-control button label { color: #ffffff; }
-            .lugo-temperature-control:disabled { background-color: #1c1c1c; }
-            .lugo-temperature-control:disabled label { color: #777777; }
-            .lugo-temperature-control button:disabled { background-color: #202020; border-color: #303030; }
-        ''')
+        provider.load_from_data(b'\n            .lugo-temperature-info { background-color: #252525;\n                   border: 0; border-radius: .25em; }\n            .lugo-temperature-info label { padding: 6px; }\n            .lugo-temperature-control { background-color: #252525;\n                   border: 0; border-radius: .25em; }\n            .lugo-temperature-control button { min-width: 0; min-height: 0;\n                padding: 0; margin: 0; \n                 background-image: none; background-color: #252525;   border-radius: .25em;   }\n            .lugo-temperature-control button { box-shadow: none; text-shadow: none; transition: none;   border-radius: .25em;   }\n            .lugo-temperature-control button:active,\n            .lugo-temperature-control button.lugo-tapped {\n                background-color: #087da5;    border-radius: .25em;  border-color: #66dcff; }\n            .lugo-temperature-control button label { color: #ffffff; }\n            .lugo-temperature-control:disabled { background-color: #1c1c1c; }\n            .lugo-temperature-control:disabled label { color: #777777; }\n            .lugo-temperature-control button:disabled { background-color: #202020;    border-radius: .25em;  border-color: #303030; }\n        \n.lugo-temperature-control button { border: 1px solid #505050; }\n.lugo-temperature-control button:active, .lugo-temperature-control button.lugo-tapped { border-color: #66dcff; }\n')
         if TemperatureControl._provider is None:
             TemperatureControl._provider = provider
             Gtk.StyleContext.add_provider_for_screen(
@@ -88,30 +75,47 @@ class Panel(ScreenPanel):
         self.socket = None
         self.state = {}
         self.rows = []
-        self.layout = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
+        self.layout = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
         self.layout.set_margin_start(4)
         self.layout.set_margin_end(4)
         self.status = Gtk.Label(label=_('Checking printer status…'))
         wrap_label(self.status, 32)
+        self.status.set_margin_bottom(0)
+        self.status.set_no_show_all(True)
         self.layout.pack_start(self.status, False, False, 0)
-        grid = Gtk.Grid(column_spacing=6, row_spacing=6, row_homogeneous=True)
+        grid = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8, vexpand=True)
+        grid.set_margin_top(8)
+        groups = [Gtk.SizeGroup(mode=Gtk.SizeGroupMode.HORIZONTAL) for column in range(3)]
+        row_heights = Gtk.SizeGroup(mode=Gtk.SizeGroupMode.VERTICAL)
+        def add_row(widgets, card=True):
+            row = Gtk.Box(spacing=6)
+            if card:
+                row.get_style_context().add_class('lugo-temperature-info')
+                row.set_vexpand(True)
+                row_heights.add_widget(row)
+            for column, widget in enumerate(widgets):
+                groups[column].add_widget(widget)
+                row.pack_start(widget, column == 1, column == 1, 0)
+            grid.pack_start(row, card, card, 0)
+        headings = []
+        for column, title in enumerate((_('Tool'), _('Filament'), _('Target temperature'))):
+            heading = Gtk.Label(label=title, wrap=True)
+            headings.append(heading)
+        add_row(headings, card=False)
         for tool in range(4):
-            grid.attach(Gtk.Label(label=f'T{tool + 1}'), 0, tool, 1, 1)
+            tool_label = Gtk.Label(label=f'T{tool + 1}')
             material = Gtk.Label(label='—', hexpand=True)
             wrap_label(material, 16)
             button = TemperatureControl(self._gtk, self.adjust_temperature, tool)
             button.set_sensitive(False)
-            grid.attach(material, 1, tool, 1, 1)
-            grid.attach(button, 2, tool, 1, 1)
+            add_row((tool_label, material, button))
             self.rows.append((material, button))
         bed_label = Gtk.Label(label=_('Bed'))
         wrap_label(bed_label, 6)
-        grid.attach(bed_label, 0, 4, 1, 1)
         self.bed_current = Gtk.Label(label='—', hexpand=True)
         self.bed_button = TemperatureControl(self._gtk, self.adjust_temperature, 'bed')
         self.bed_button.set_sensitive(False)
-        grid.attach(self.bed_current, 1, 4, 1, 1)
-        grid.attach(self.bed_button, 2, 4, 1, 1)
+        add_row((bed_label, self.bed_current, self.bed_button))
         self.bed_target = 0
         scroll = Gtk.ScrolledWindow()
         scroll.set_overlay_scrolling(False)
@@ -157,6 +161,7 @@ class Panel(ScreenPanel):
             logging.warning('Tool temperature response timed out; refreshing printer state')
             self.reset_request()
             self.status.set_text(_('Temperature response delayed; refreshing status.'))
+            self.status.show()
         if self.pending and now - self.pending < 5:
             return True
         self.pending = now
@@ -174,10 +179,10 @@ class Panel(ScreenPanel):
         self.state = status.get('lugo_tool_temperature', {})
         active = self.state.get('active', False)
         heater = status.get('extruder', {})
-        message = (('' if active else _('Available during printing · ')) +
-                   f"{heater.get('temperature', 0):.1f} / {heater.get('target', 0):.0f} °C")
+        message = '' if active else _('Available during printing · ').rstrip(' ·')
         if not self.state:
             message = _('Check tool temperature extension connection.')
+        self.status.set_visible(bool(message))
         if self.status.get_text() != message:
             self.status.set_text(message)
         for tool, (material, button) in enumerate(self.rows):

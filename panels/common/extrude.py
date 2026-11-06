@@ -27,14 +27,7 @@ class Panel(ScreenPanel):
         self.diameter_buttons = {}
         self.content.get_style_context().add_class('lugo-extrusion')
         provider = Gtk.CssProvider()
-        provider.load_from_data(b'''
-            .lugo-extrusion button { box-shadow: none; text-shadow: none; }
-            button.lugo-diameter { border: 3px solid #505050; border-radius: 8px;
-                background-image: none; background-color: #242424; }
-            button.lugo-diameter.lugo-selected { border-color: #65dcff;
-                background-color: #075d79; }
-            button.lugo-diameter.lugo-selected label { color: #ffffff; font-weight: bold; }
-        ''')
+        provider.load_from_data(b'\n            .lugo-extrusion button {\n                background-image: none; background-color: #252525;\n                 \n                box-shadow: none; text-shadow: none;\n              border-radius: .25em;  border: 1px solid #505050; }\n            .lugo-extrusion button label { color: #ffffff; }\n            .lugo-extrusion button:active,\n            .lugo-extrusion button.lugo-selected {\n                background-color: #087da5; \n              border-radius: .25em;  border-color: #66dcff; }\n            .lugo-extrusion button.lugo-selected label { font-weight: bold; }\n            .lugo-extrusion button:disabled {\n                background-color: #282828; \n              border-radius: .25em;  border-color: #383838; }\n            .lugo-extrusion button:disabled label { color: #888888; }\n            .lugo-extrusion button.lugo-diameter {    border-radius: .25em;  border: 1px solid #505050; }\n            .lugo-extrusion button.lugo-diameter.lugo-selected {    border-radius: .25em;  border-color: #66dcff; }\n        \n.lugo-extrusion button, .lugo-extrusion button:active, .lugo-extrusion button:disabled,\n.lugo-extrusion button.button_active, .lugo-extrusion button.lugo-diameter,\n.lugo-extrusion button.lugo-selected, .lugo-extrusion button.lugo-diameter.lugo-selected { border: 0; }\n.lugo-extrusion button.lugo-inner-control { border: 1px solid #505050; }\n')
         if Panel._diameter_provider is None:
             Panel._diameter_provider = provider
             Gtk.StyleContext.add_provider_for_screen(
@@ -93,6 +86,7 @@ class Panel(ScreenPanel):
             heading.set_margin_bottom(2)
             adjust.attach(heading, col, 0, 1, 1)
             up = self._gtk.Button(label='▲', style='color1')
+            up.get_style_context().add_class('lugo-inner-control')
             up.set_vexpand(False)
             up.set_size_request(-1, 48)
             up.connect('clicked', self.adjust, key, 1)
@@ -102,6 +96,7 @@ class Panel(ScreenPanel):
             self.values[key] = value
             adjust.attach(value, col, 2, 1, 1)
             down = self._gtk.Button(label='▼', style='color1')
+            down.get_style_context().add_class('lugo-inner-control')
             down.set_vexpand(False)
             down.set_size_request(-1, 48)
             down.connect('clicked', self.adjust, key, -1)

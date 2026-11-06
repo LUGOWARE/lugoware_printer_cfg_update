@@ -3,7 +3,8 @@ import argparse
 from pathlib import Path
 import shutil
 
-FILES = ('extrude.py', 'nozzle_temperature.py', 'tool_prepare.py', 'tool_temperature.py', 'fan.py', 'fine_tune.py')
+FILES = ('extrude.py', 'nozzle_temperature.py', 'tool_prepare.py', 'tool_temperature.py', 'fan.py', 'fine_tune.py', 'settings.py', 'network.py', 'console.py', 'system.py')
+RUNTIME = ('ks_includes/sdbus_nm.py', 'ks_includes/widgets/scroll.py')
 
 
 def install(source, target, backup, check=False):
@@ -14,24 +15,32 @@ def install(source, target, backup, check=False):
         compile((source / name).read_bytes(), name, 'exec')
         if (target / name).exists() and not (target / name).is_file():
             raise ValueError(f'Not a file: {target / name}')
+    runtime_source = source.parent / 'runtime'
+    pairs = [(source / name, target / name, backup / name) for name in FILES]
+    pairs += [(runtime_source / name, target.parent / name, backup / 'runtime' / name)
+              for name in RUNTIME]
+    # Validate runtime and panels together before touching the installed screen.
+    for src, dest, saved in pairs:
+        compile(src.read_bytes(), str(src), 'exec')
+        if dest.exists() and not dest.is_file():
+            raise ValueError(f'Not a file: {dest}')
     if check:
         return
-    backup.mkdir(parents=True, exist_ok=True)
-    for name in FILES:
-        dest = target / name
-        if dest.exists() and dest.read_bytes() == (source / name).read_bytes():
+    for src, dest, saved in pairs:
+        if dest.exists() and dest.read_bytes() == src.read_bytes():
             continue
-        if dest.exists() and not (backup / name).exists():
-            shutil.copy2(dest, backup / name)
-    for name in FILES:
-        dest = target / name
-        if dest.exists() and dest.read_bytes() == (source / name).read_bytes():
-            print(f'  [SKIP] {name}: already installed', flush=True)
+        if dest.exists() and not saved.exists():
+            saved.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(dest, saved)
+    for src, dest, saved in pairs:
+        if dest.exists() and dest.read_bytes() == src.read_bytes():
+            print(f'  [SKIP] {dest.name}: already installed', flush=True)
             continue
-        shutil.copyfile(source / name, dest)
-        if dest.read_bytes() != (source / name).read_bytes():
-            raise IOError(f'Panel verification failed: {name}')
-        print(f'  [OK] {name}', flush=True)
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(src, dest)
+        if dest.read_bytes() != src.read_bytes():
+            raise IOError(f'Panel verification failed: {dest}')
+        print(f'  [OK] {dest.name}', flush=True)
 
 
 if __name__ == '__main__':

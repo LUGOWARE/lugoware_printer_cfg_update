@@ -17,8 +17,10 @@ def patch_settings(source):
             'callback': lambda widget, name: self._screen.show_panel('timezone', title=zone_title),
         })
 '''
+    if block in source:
+        return source
     if '# LUGOWARE timezone settings' in source:
-        source = re.sub(r'(?ms)^        # LUGOWARE timezone settings.*?(?=^        self.content.add\(self.labels\["settings_menu"\]\))', '', source)
+        source = re.sub(r'(?ms)^        # LUGOWARE timezone settings.*?^        \}\)\n', '', source)
     if source.count(anchor) != 1:
         raise ValueError('Unsupported settings panel structure')
     result = source.replace(anchor, block + anchor)

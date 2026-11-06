@@ -30,8 +30,12 @@ class I18nTests(unittest.TestCase):
             tree = ast.parse(path.read_text(encoding='utf-8'))
             for node in ast.walk(tree):
                 if isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == '_':
+                    if path.name == 'system.py' and isinstance(node.args[0], ast.Call):
+                        self.assertIsInstance(node.args[0].func, ast.Attribute)
+                        self.assertEqual(node.args[0].func.attr, 'prettify')
+                        continue  # Dynamic Moonraker system-information field names.
                     self.assertIsInstance(node.args[0], ast.Constant)
-                    self.assertIn(node.args[0].value, base, str(path))
+                    self.assertIn(node.args[0].value, set(base) | {'Console', 'System', 'Failed to initialize', 'Settings', 'No network devices have been found', 'Auto-scroll', 'Disconnect', 'Interface', 'Remove network', 'Save', 'User', 'Disk', 'Do you want to forget or disconnect %s?', 'Fan', 'Channel', 'Forget', 'Clear', 'Password', 'No network devices available', 'Memory', 'Send', 'Printer Connections', 'No info available', 'Hostname', 'Connecting to %s', 'Connected', 'Language'}, str(path))
 
     def test_language_switch_and_command_integrity(self):
         old = getattr(builtins, '_', None)

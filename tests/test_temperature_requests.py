@@ -24,7 +24,7 @@ class Tests(unittest.TestCase):
         self.p.sending = True
         self.p.sent_at = 98.
         self.p.pending = 0
-        self.p.status = Obj(set_text=lambda s: None)
+        self.p.status = Obj(set_text=lambda s: None, show=lambda: None)
         self.p.received = lambda *a: None
 
     def test_reenter_after_missing_reply_restores_query(self):

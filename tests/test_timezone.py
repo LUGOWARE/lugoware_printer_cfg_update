@@ -10,6 +10,13 @@ class TimezoneTests(unittest.TestCase):
         once=patch_settings(source)
         self.assertEqual(once,patch_settings(once))
         self.assertIn('setting_title(self._config.get_main_config())',once)
+    def test_lugo_settings_style_survives_timezone_install(self):
+        source=(Path(__file__).resolve().parents[1]/'panels/common/settings.py').read_text(encoding='utf-8')
+        updated=patch_settings(source)
+        self.assertEqual(source, updated)
+        self.assertIn('.lugo-settings', updated)
+        self.assertEqual(updated, patch_settings(updated))
+
     def test_permission_scope_is_timezone_only(self):
         for legacy in (False,True):
             text=policy('biqu',legacy)

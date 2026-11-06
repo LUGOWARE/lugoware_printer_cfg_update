@@ -38,22 +38,7 @@ class Panel(ScreenPanel):
         layout.set_margin_start(8)
         layout.set_margin_end(8)
         css = Gtk.CssProvider()
-        css.load_from_data(b"""
-            .fine-card { background-color: #242424; border: 1px solid #383838; border-radius: 8px; padding: 8px; }
-            .fine-card button { background-image: none; background-color: #303030;
-                border: 1px solid #505050; border-radius: 7px; padding: 4px;
-                min-width: 0; min-height: 30px; box-shadow: none; }
-            .fine-card button:active, .fine-card button.selected {
-                background-color: #087da5; border-color: #66dcff; }
-            .fine-card button label { color: #ffffff; }
-            .fine-card button.selected label { color: #ffffff; font-weight: bold; }
-            .fine-card .fine-z-status { font-size: 15px; }
-            .fine-card .fine-value { font-size: 25px; }
-            .fine-card .fine-title { font-size: 21px; font-weight: 600; }
-            .fine-card.fine-divider { padding-bottom: 8px; }
-            .fine-card button.fine-step { min-height: 36px; font-size: 20px; }
-            .fine-card button.fine-adjust { min-height: 60px; }
-        """)
+        css.load_from_data(b'\n            .fine-card { background-color: #252525;   padding: 8px;  border: 0; border-radius: .25em; }\n            .fine-card button { background-image: none; background-color: #252525;\n                  padding: 4px;\n                min-width: 0; min-height: 30px; box-shadow: none;   border-radius: .25em;  border: 1px solid #505050; }\n            .fine-card button:active, .fine-card button.selected {\n                background-color: #087da5;    border-radius: .25em;  border-color: #66dcff; }\n            .fine-card button label { color: #ffffff; }\n            .fine-card button.selected label { color: #ffffff; font-weight: bold; }\n            .fine-card .fine-z-status { font-size: 15px; }\n            .fine-card .fine-value { font-size: 25px; }\n            .fine-card .fine-title { font-size: 21px; font-weight: 600; }\n            .fine-card.fine-divider { padding-bottom: 8px; }\n            .fine-card button.fine-step { min-height: 36px; font-size: 20px;   border-radius: .25em;   }\n            .fine-card button.fine-adjust { min-height: 60px;   border-radius: .25em;   }\n        ')
         definitions = [
             ("z_offset", _("Z offset"), "zoffset", self.change_babystepping,
              ("0.01", "0.05", "0.1"), "mm"),

@@ -48,9 +48,18 @@ def current_zone():
 
 
 class Panel(ScreenPanel):
+    _lugo_provider = None
     _style = None
     def __init__(self, screen, title):
         super().__init__(screen, title)
+        self.content.get_style_context().add_class("lugo-theme")
+        if Panel._lugo_provider is None:
+            provider = Gtk.CssProvider()
+            provider.load_from_data(b'\n            .lugo-theme button {\n                background-image: none; background-color: #252525;\n                 \n                box-shadow: none; text-shadow: none;\n              border-radius: .25em;  border: 1px solid #505050; }\n            .lugo-theme button:active, .lugo-theme button:checked,\n            .lugo-theme button.button_active {\n                background-color: #087da5; \n              border-radius: .25em;  border-color: #66dcff; }\n            .lugo-theme button:disabled { background-color: #282828;    border-radius: .25em;  border-color: #383838; }\n            .lugo-theme .frame-item, .lugo-theme .tz-current {\n                background-color: #252525; \n                \n             border: 0; border-radius: .25em; }\n            .lugo-theme .timezone-panel button.tz-apply {     border-radius: .25em;  border: 1px solid #505050; }\n            .lugo-theme entry {\n                background-image: none; background-color: #181818;\n                border: 1px solid #505050; border-radius: 7px; color: #eeeeee;\n            }\n            .lugo-theme entry:focus { border-color: #66dcff; }\n            .lugo-theme textview, .lugo-theme textview text { background-color: #181818; }\n            .lugo-theme switch { background-image: none; background-color: #111111; border: 1px solid #484848; border-radius: 20px; }\n            .lugo-theme switch:checked { background-color: #305730; }\n            .lugo-theme switch slider { background-image: none; background-color: #eeeeee; border-radius: 20px; }\n\n.lugo-theme button, .lugo-theme button:active, .lugo-theme button:disabled,\n.lugo-theme button.button_active, .lugo-theme button.lugo-diameter,\n.lugo-theme button.lugo-selected, .lugo-theme button.lugo-diameter.lugo-selected { border: 0; }\n.lugo-theme .frame-item button, .lugo-theme .tz-current button { border: 1px solid #505050; }\n')
+            Gtk.StyleContext.add_provider_for_screen(self.content.get_screen(), provider,
+                                                     Gtk.STYLE_PROVIDER_PRIORITY_USER + 3)
+            Panel._lugo_provider = provider
+
         self.catalog, self.language = translations(self._config.get_main_config())
         self.tr = lambda text: self.catalog['ui'].get(text, text)
         self.countries = zones()

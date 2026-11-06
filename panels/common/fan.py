@@ -14,21 +14,7 @@ class Panel(ScreenPanel):
         rows.set_margin_start(10)
         rows.set_margin_end(10)
         css = Gtk.CssProvider()
-        css.load_from_data(b'''
-        .fan_controls { background-color: #242424; border: 1px solid #383838;
-            border-radius: 8px; padding: 12px; }
-        .fan_controls button { min-height: 38px; min-width: 0; padding: 5px 8px;
-            background-image: none; background-color: #303030;
-            border: 1px solid #505050; border-radius: 7px; box-shadow: none; }
-        .fan_controls button label { color: #ffffff; }
-        .fan_controls button:active { background-color: #087da5; border-color: #66dcff; }
-        .fan_controls scale trough { background-color: #111111; min-height: 10px;
-            border: 1px solid #484848; border-radius: 6px; }
-        .fan_controls scale highlight { background-color: #305730; border-radius: 6px; }
-        .fan_controls scale slider { background-image: none; background-color: #eeeeee;
-            border: 1px solid #bbbbbb; min-width: 34px; min-height: 34px; border-radius: 20px; }
-        .fan_controls scale { min-height: 30px; margin: 0; }
-        ''')
+        css.load_from_data(b'\n        .fan_controls { background-color: #252525; \n             padding: 12px;  border: 0; border-radius: .25em; }\n        .fan_controls button { min-height: 38px; min-width: 0; padding: 5px 8px;\n            background-image: none; background-color: #252525;\n              box-shadow: none;   border-radius: .25em;  border: 1px solid #505050; }\n        .fan_controls button label { color: #ffffff; }\n        .fan_controls button:active { background-color: #087da5;    border-radius: .25em;  border-color: #66dcff; }\n        .fan_controls scale trough { background-color: #111111; min-height: 10px;\n            border: 1px solid #484848; border-radius: 6px; }\n        .fan_controls scale highlight { background-color: #305730; border-radius: 6px; }\n        .fan_controls scale slider { background-image: none; background-color: #eeeeee;\n            border: 1px solid #bbbbbb; min-width: 34px; min-height: 34px; border-radius: 20px; }\n        .fan_controls scale { min-height: 30px; margin: 0; }\n        ')
         fans = sorted(self._printer.get_fans(), key=lambda f: (f != 'fan', 'chamber' not in f.lower(), f))
         for fan in fans:
             kind, separator, name = fan.partition(' ')
