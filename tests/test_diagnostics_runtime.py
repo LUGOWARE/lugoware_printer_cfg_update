@@ -126,9 +126,14 @@ class Tests(unittest.TestCase):
             for axis in ('x','y','diagonal_a','diagonal_b'):
                 self.assertEqual(sum(p[2]==axis for p in plan),10)
             self.assertEqual(plan[-1][0],[None,None,20.])
-            self.assertEqual(next(p[0][2] for p in plan if p[2]=='z_down'),vol[2])
-            self.assertEqual(sum(p[2]=='z_repeat' for p in plan),40)
-            self.assertEqual({p[0][2] for p in plan if p[2]=='z_repeat'},{0.,.5})
+            levels=list(range(0,vol[2]+1,50))
+            self.assertEqual([p[0][2] for p in plan if p[2] in ('z_up','z_down')],levels)
+            repeats=[p for p in plan if p[2]=='z_repeat']
+            self.assertEqual(len(repeats),40*len(levels))
+            for i,level in enumerate(levels):
+                block=repeats[i*40:(i+1)*40]
+                self.assertEqual({p[0][2] for p in block},{level,level+.5 if level<vol[2] else level-.5})
+                self.assertTrue(all(0<=p[0][2]<=vol[2] for p in block))
             activities=[p[2] for p in plan]
             self.assertLess(max(i for i,a in enumerate(activities) if a=='diagonal_a'), min(i for i,a in enumerate(activities) if a=='diagonal_b'))
         self.f.d.start('motor')

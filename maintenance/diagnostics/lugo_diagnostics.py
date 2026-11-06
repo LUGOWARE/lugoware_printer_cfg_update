@@ -275,10 +275,14 @@ class Diagnostics:
         plan.append(([0,y,20.],100.,'position',0))
         for cycle in range(1,6):
             plan += [([x,0,20.],500.,'diagonal_b',cycle),([0,y,20.],500.,'diagonal_b',cycle)]
-        plan += [([x/2,y/2,20.],100.,'position',0),
-                 ([None,None,z],40.,'z_down',1),([None,None,0.],40.,'z_up',1)]
-        for cycle in range(1,21):
-            plan += [([None,None,.5],40.,'z_repeat',cycle),([None,None,0.],40.,'z_repeat',cycle)]
+        plan.append(([x/2,y/2,20.],100.,'position',0))
+        for height in range(0, int(z) + 1, 50):
+            plan.append(([None,None,float(height)],40.,'z_up' if height == 0 else 'z_down',1))
+            # At the lower travel limit, oscillate inward instead of exceeding it.
+            other = height + .5 if height + .5 <= z else height - .5
+            for cycle in range(1,21):
+                plan += [([None,None,other],40.,'z_repeat',cycle),
+                         ([None,None,float(height)],40.,'z_repeat',cycle)]
         plan.append(([None,None,20.],40.,'z_finish',1))
         return plan
 
