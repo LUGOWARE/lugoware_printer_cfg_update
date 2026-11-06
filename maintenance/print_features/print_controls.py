@@ -240,6 +240,19 @@ def add_controls(panel, info):
     panel._toolchange_total = None
     info.attach(toolchange, 1, 3, 1, 1)
     info.attach(sensor, 1, 4, 1, 1)
+    from ks_includes.lugo_i18n import translate_text
+    row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=0,
+                  valign=Gtk.Align.CENTER, hexpand=True)
+    row.set_margin_start(1)
+    row.set_margin_end(8)
+    row.set_tooltip_text(translate_text('Toolhead sensor test'))
+    icon = screen.gtk.Image('extruder', size, size)
+    icon.set_size_request(size, size)
+    icon.set_margin_end(4)
+    row.pack_start(icon, False, False, 0)
+    panel._head_status = Gtk.Label(xalign=0)
+    row.pack_start(panel._head_status, False, False, 0)
+    info.attach(row, 1, 4, 1, 1)
 
 
 def mount_controls(panel):
@@ -268,6 +281,11 @@ def mount_controls(panel):
 
 
 def update_controls(panel):
+    from ks_includes.lugo_i18n import translate_text
+    value = (panel._printer.get_stat('filament_switch_sensor toolhead_sensor') or {}).get('filament_detected')
+    if hasattr(panel, '_head_status'):
+        caption = translate_text('Toolhead detected' if value is True else 'Toolhead not detected' if value is False else 'Toolhead sensor unavailable')
+        panel._head_status.set_text(caption)
     filename = panel._printer.get_stat('print_stats', 'filename')
     if filename != panel._toolchange_file:
         panel._toolchange_file = filename

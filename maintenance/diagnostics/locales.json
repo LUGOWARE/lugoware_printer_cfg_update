@@ -130,7 +130,9 @@
     "Z speed / acceleration": "Z 속도 / 가속도",
     "Model test volume exceeds configured axis limits": "모델 점검 범위가 설정된 축 한계를 벗어납니다.",
     "Unsupported diagnostic kinematics": "지원하지 않는 점검 구동 방식입니다.",
-    "Clear the bed and remove the toolhead. HOME_CHECK runs first. Model-sized XY round trips: 5 per direction at 500 mm/s and 16000 mm/s². Z travels down and up at 40 mm/s, then ends at Z20.": "베드를 비우고 툴헤드를 제거하세요. 홈 상태 확인 후 모델별 XY 범위에서 각 방향으로 5회 왕복합니다. 속도 500 mm/s, 가속도 16000 mm/s². 중앙에서 Z축을 40 mm/s로 하강·상승한 뒤 Z20에서 종료합니다."
+    "Clear the bed and remove the toolhead. HOME_CHECK runs first. Model-sized XY round trips: 5 per direction at 500 mm/s and 16000 mm/s². Z travels down and up at 40 mm/s, then ends at Z20.": "베드를 비우고 툴헤드를 제거하세요. 홈 상태 확인 후 모델별 XY 범위에서 각 방향으로 5회 왕복합니다. 속도 500 mm/s, 가속도 16000 mm/s². 중앙에서 Z축을 40 mm/s로 하강·상승한 뒤 Z20에서 종료합니다.",
+    "Toolhead detected": "툴헤드 감지",
+    "Toolhead not detected": "툴헤드 미감지"
   },
   "en": {
     "Nozzle temperature must be below 80C before heater test": "Nozzle temperature must be below 80C before heater test",
@@ -263,7 +265,9 @@
     "Z speed / acceleration": "Z speed / acceleration",
     "Model test volume exceeds configured axis limits": "Model test volume exceeds configured axis limits",
     "Unsupported diagnostic kinematics": "Unsupported diagnostic kinematics",
-    "Clear the bed and remove the toolhead. HOME_CHECK runs first. Model-sized XY round trips: 5 per direction at 500 mm/s and 16000 mm/s². Z travels down and up at 40 mm/s, then ends at Z20.": "Clear the bed and remove the toolhead. HOME_CHECK runs first. Model-sized XY round trips: 5 per direction at 500 mm/s and 16000 mm/s². Z travels down and up at 40 mm/s, then ends at Z20."
+    "Clear the bed and remove the toolhead. HOME_CHECK runs first. Model-sized XY round trips: 5 per direction at 500 mm/s and 16000 mm/s². Z travels down and up at 40 mm/s, then ends at Z20.": "Clear the bed and remove the toolhead. HOME_CHECK runs first. Model-sized XY round trips: 5 per direction at 500 mm/s and 16000 mm/s². Z travels down and up at 40 mm/s, then ends at Z20.",
+    "Toolhead detected": "Toolhead detected",
+    "Toolhead not detected": "Toolhead not detected"
   },
   "ar": {
     "A print started; diagnostics interrupted": "بدأت الطباعة؛ تمت مقاطعة التشخيص",
@@ -386,7 +390,9 @@
     "Z-axis motion": "حركة المحور Z",
     "Invalid probe sample": "عينة مسبار غير صالحة",
     "Unknown diagnostic": "تشخيص غير معروف",
-    "Unknown diagnostic action": "إجراء تشخيصي غير معروف"
+    "Unknown diagnostic action": "إجراء تشخيصي غير معروف",
+    "Toolhead detected": "تم اكتشاف رأس الطباعة",
+    "Toolhead not detected": "لم يُكتشف رأس الطباعة"
   },
   "bg": {
     "A print started; diagnostics interrupted": "Започна печат; диагностиката е прекъсната",
@@ -509,7 +515,9 @@
     "Z-axis motion": "Движение по Z-ос",
     "Invalid probe sample": "Невалидна проба от сондата",
     "Unknown diagnostic": "Неизвестна диагностика",
-    "Unknown diagnostic action": "Неизвестно диагностично действие"
+    "Unknown diagnostic action": "Неизвестно диагностично действие",
+    "Toolhead detected": "Главата е открита",
+    "Toolhead not detected": "Главата не е открита"
   },
   "cs": {
     "A print started; diagnostics interrupted": "Spustil se tisk; diagnostika přerušena",
@@ -632,7 +640,9 @@
     "Z-axis motion": "Pohyb v ose Z",
     "Invalid probe sample": "Neplatný vzorek sondy",
     "Unknown diagnostic": "Neznámá diagnostika",
-    "Unknown diagnostic action": "Neznámá diagnostická akce"
+    "Unknown diagnostic action": "Neznámá diagnostická akce",
+    "Toolhead detected": "Hlava detekována",
+    "Toolhead not detected": "Hlava nedetekována"
   },
   "da": {
     "A print started; diagnostics interrupted": "Et print startede; diagnostik afbrudt",
@@ -755,7 +765,9 @@
     "Z-axis motion": "Z-akse bevægelse",
     "Invalid probe sample": "Ugyldig sondeprøve",
     "Unknown diagnostic": "Ukendt diagnostik",
-    "Unknown diagnostic action": "Ukendt diagnostisk handling"
+    "Unknown diagnostic action": "Ukendt diagnostisk handling",
+    "Toolhead detected": "Printhoved registreret",
+    "Toolhead not detected": "Printhoved ikke registreret"
   },
   "de": {
     "A print started; diagnostics interrupted": "Ein Druck wurde gestartet; Diagnose unterbrochen",
@@ -878,7 +890,9 @@
     "Z-axis motion": "Z-Achsen-Bewegung",
     "Invalid probe sample": "Ungültige Sondenprobe",
     "Unknown diagnostic": "Unbekannte Diagnose",
-    "Unknown diagnostic action": "Unbekannte Diagnoseaktion"
+    "Unknown diagnostic action": "Unbekannte Diagnoseaktion",
+    "Toolhead detected": "Druckkopf erkannt",
+    "Toolhead not detected": "Druckkopf nicht erkannt"
   },
   "de_formal": {
     "A print started; diagnostics interrupted": "Ein Druck wurde gestartet; Diagnose unterbrochen",
@@ -1001,7 +1015,9 @@
     "Z-axis motion": "Z-Achsen-Bewegung",
     "Invalid probe sample": "Ungültige Sondenprobe",
     "Unknown diagnostic": "Unbekannte Diagnose",
-    "Unknown diagnostic action": "Unbekannte Diagnoseaktion"
+    "Unknown diagnostic action": "Unbekannte Diagnoseaktion",
+    "Toolhead detected": "Druckkopf erkannt",
+    "Toolhead not detected": "Druckkopf nicht erkannt"
   },
   "es": {
     "A print started; diagnostics interrupted": "Se inició una impresión; diagnóstico interrumpido",
@@ -1124,7 +1140,9 @@
     "Z-axis motion": "Movimiento del eje Z",
     "Invalid probe sample": "Muestra de sonda no válida",
     "Unknown diagnostic": "Diagnóstico desconocido",
-    "Unknown diagnostic action": "Acción de diagnóstico desconocida"
+    "Unknown diagnostic action": "Acción de diagnóstico desconocida",
+    "Toolhead detected": "Cabezal detectado",
+    "Toolhead not detected": "Cabezal no detectado"
   },
   "et": {
     "A print started; diagnostics interrupted": "Printimine algas; diagnostika katkestati",
@@ -1247,7 +1265,9 @@
     "Z-axis motion": "Z-telje liikumine",
     "Invalid probe sample": "Sondi proov on kehtetu",
     "Unknown diagnostic": "Tundmatu diagnostika",
-    "Unknown diagnostic action": "Tundmatu diagnostiline toiming"
+    "Unknown diagnostic action": "Tundmatu diagnostiline toiming",
+    "Toolhead detected": "Prindipea tuvastatud",
+    "Toolhead not detected": "Prindipead ei tuvastatud"
   },
   "fa": {
     "A print started; diagnostics interrupted": "چاپ شروع شد. تشخیص قطع شد",
@@ -1370,7 +1390,9 @@
     "Z-axis motion": "حرکت محور Z",
     "Invalid probe sample": "نمونه پروب نامعتبر است",
     "Unknown diagnostic": "تشخیصی ناشناخته",
-    "Unknown diagnostic action": "اقدام تشخیصی ناشناخته"
+    "Unknown diagnostic action": "اقدام تشخیصی ناشناخته",
+    "Toolhead detected": "هد چاپ شناسایی شد",
+    "Toolhead not detected": "هد چاپ شناسایی نشد"
   },
   "fr": {
     "A print started; diagnostics interrupted": "Une impression a démarré ; diagnostic interrompu",
@@ -1493,7 +1515,9 @@
     "Z-axis motion": "Mouvement sur l'axe Z",
     "Invalid probe sample": "Échantillon de sonde invalide",
     "Unknown diagnostic": "Diagnostic inconnu",
-    "Unknown diagnostic action": "Action de diagnostic inconnue"
+    "Unknown diagnostic action": "Action de diagnostic inconnue",
+    "Toolhead detected": "Tête détectée",
+    "Toolhead not detected": "Tête non détectée"
   },
   "he": {
     "A print started; diagnostics interrupted": "התחילה הדפסה; האבחון הופסק",
@@ -1616,7 +1640,9 @@
     "Z-axis motion": "תנועת ציר Z",
     "Invalid probe sample": "דגימת בדיקה לא חוקית",
     "Unknown diagnostic": "אבחון לא ידוע",
-    "Unknown diagnostic action": "פעולת אבחון לא ידועה"
+    "Unknown diagnostic action": "פעולת אבחון לא ידועה",
+    "Toolhead detected": "ראש הדפסה זוהה",
+    "Toolhead not detected": "ראש הדפסה לא זוהה"
   },
   "hr": {
     "A print started; diagnostics interrupted": "Započeo je ispis; dijagnostika prekinuta",
@@ -1739,7 +1765,9 @@
     "Z-axis motion": "Kretanje po osi Z",
     "Invalid probe sample": "Nevažeći uzorak sonde",
     "Unknown diagnostic": "Nepoznata dijagnostika",
-    "Unknown diagnostic action": "Nepoznata dijagnostička radnja"
+    "Unknown diagnostic action": "Nepoznata dijagnostička radnja",
+    "Toolhead detected": "Glava otkrivena",
+    "Toolhead not detected": "Glava nije otkrivena"
   },
   "hu": {
     "A print started; diagnostics interrupted": "Megkezdődött a nyomtatás; a diagnosztika megszakadt",
@@ -1862,7 +1890,9 @@
     "Z-axis motion": "Z-tengely mozgása",
     "Invalid probe sample": "Érvénytelen szondaminta",
     "Unknown diagnostic": "Ismeretlen diagnosztika",
-    "Unknown diagnostic action": "Ismeretlen diagnosztikai művelet"
+    "Unknown diagnostic action": "Ismeretlen diagnosztikai művelet",
+    "Toolhead detected": "Nyomtatófej érzékelve",
+    "Toolhead not detected": "Nyomtatófej nem érzékelhető"
   },
   "it": {
     "A print started; diagnostics interrupted": "È iniziata una stampa; diagnostica interrotta",
@@ -1985,7 +2015,9 @@
     "Z-axis motion": "Movimento dell'asse Z",
     "Invalid probe sample": "Campione sonda non valido",
     "Unknown diagnostic": "Diagnostica sconosciuta",
-    "Unknown diagnostic action": "Azione diagnostica sconosciuta"
+    "Unknown diagnostic action": "Azione diagnostica sconosciuta",
+    "Toolhead detected": "Testina rilevata",
+    "Toolhead not detected": "Testina non rilevata"
   },
   "jp": {
     "A print started; diagnostics interrupted": "印刷が開始されました。診断が中断されました",
@@ -2108,7 +2140,9 @@
     "Z-axis motion": "Z軸の動き",
     "Invalid probe sample": "無効なプローブサンプルです",
     "Unknown diagnostic": "不明な診断名",
-    "Unknown diagnostic action": "不明な診断アクション"
+    "Unknown diagnostic action": "不明な診断アクション",
+    "Toolhead detected": "ツールヘッド検出",
+    "Toolhead not detected": "ツールヘッド未検出"
   },
   "lt": {
     "A print started; diagnostics interrupted": "Pradėtas spausdinimas; diagnostika nutrūko",
@@ -2231,7 +2265,9 @@
     "Z-axis motion": "Z ašies judėjimas",
     "Invalid probe sample": "Neteisingas zondo pavyzdys",
     "Unknown diagnostic": "Nežinoma diagnostika",
-    "Unknown diagnostic action": "Nežinomas diagnostinis veiksmas"
+    "Unknown diagnostic action": "Nežinomas diagnostinis veiksmas",
+    "Toolhead detected": "Galvutė aptikta",
+    "Toolhead not detected": "Galvutė neaptikta"
   },
   "nl": {
     "A print started; diagnostics interrupted": "Er is een afdruk gestart; diagnose onderbroken",
@@ -2354,7 +2390,9 @@
     "Z-axis motion": "Z-asbeweging",
     "Invalid probe sample": "Ongeldig sondemonster",
     "Unknown diagnostic": "Onbekende diagnose",
-    "Unknown diagnostic action": "Onbekende diagnostische actie"
+    "Unknown diagnostic action": "Onbekende diagnostische actie",
+    "Toolhead detected": "Printkop gedetecteerd",
+    "Toolhead not detected": "Printkop niet gedetecteerd"
   },
   "pl": {
     "A print started; diagnostics interrupted": "Rozpoczęto drukowanie; diagnostyka przerwana",
@@ -2477,7 +2515,9 @@
     "Z-axis motion": "Ruch w osi Z",
     "Invalid probe sample": "Nieprawidłowa próbka sondy",
     "Unknown diagnostic": "Nieznana diagnostyka",
-    "Unknown diagnostic action": "Nieznane działanie diagnostyczne"
+    "Unknown diagnostic action": "Nieznane działanie diagnostyczne",
+    "Toolhead detected": "Głowica wykryta",
+    "Toolhead not detected": "Głowica niewykryta"
   },
   "pt": {
     "A print started; diagnostics interrupted": "Uma impressão foi iniciada; diagnóstico interrompido",
@@ -2600,7 +2640,9 @@
     "Z-axis motion": "Movimento do eixo Z",
     "Invalid probe sample": "Amostra de sonda inválida",
     "Unknown diagnostic": "Diagnóstico desconhecido",
-    "Unknown diagnostic action": "Ação de diagnóstico desconhecida"
+    "Unknown diagnostic action": "Ação de diagnóstico desconhecida",
+    "Toolhead detected": "Cabeça detetada",
+    "Toolhead not detected": "Cabeça não detetada"
   },
   "pt_BR": {
     "A print started; diagnostics interrupted": "Uma impressão foi iniciada; diagnóstico interrompido",
@@ -2723,7 +2765,9 @@
     "Z-axis motion": "Movimento do eixo Z",
     "Invalid probe sample": "Amostra de sonda inválida",
     "Unknown diagnostic": "Diagnóstico desconhecido",
-    "Unknown diagnostic action": "Ação de diagnóstico desconhecida"
+    "Unknown diagnostic action": "Ação de diagnóstico desconhecida",
+    "Toolhead detected": "Cabeçote detectado",
+    "Toolhead not detected": "Cabeçote não detectado"
   },
   "rs": {
     "A print started; diagnostics interrupted": "Штампање је почело; дијагностика прекинута",
@@ -2846,7 +2890,9 @@
     "Z-axis motion": "Кретање по З-оси",
     "Invalid probe sample": "Неважећи узорак сонде",
     "Unknown diagnostic": "Непозната дијагностика",
-    "Unknown diagnostic action": "Непозната дијагностичка радња"
+    "Unknown diagnostic action": "Непозната дијагностичка радња",
+    "Toolhead detected": "Глава откривена",
+    "Toolhead not detected": "Глава није откривена"
   },
   "ru": {
     "A print started; diagnostics interrupted": "Началась печать; диагностика прервана",
@@ -2969,7 +3015,9 @@
     "Z-axis motion": "Движение по оси Z",
     "Invalid probe sample": "Неверный пробный образец",
     "Unknown diagnostic": "Неизвестная диагностика",
-    "Unknown diagnostic action": "Неизвестное диагностическое действие"
+    "Unknown diagnostic action": "Неизвестное диагностическое действие",
+    "Toolhead detected": "Головка обнаружена",
+    "Toolhead not detected": "Головка не обнаружена"
   },
   "sk": {
     "A print started; diagnostics interrupted": "Začala sa tlač; diagnostika prerušená",
@@ -3092,7 +3140,9 @@
     "Z-axis motion": "Pohyb osi Z",
     "Invalid probe sample": "Neplatná vzorka sondy",
     "Unknown diagnostic": "Neznáma diagnostika",
-    "Unknown diagnostic action": "Neznáma diagnostická akcia"
+    "Unknown diagnostic action": "Neznáma diagnostická akcia",
+    "Toolhead detected": "Hlava detegovaná",
+    "Toolhead not detected": "Hlava nedetegovaná"
   },
   "sl": {
     "A print started; diagnostics interrupted": "Tisk se je začel; diagnostika prekinjena",
@@ -3215,7 +3265,9 @@
     "Z-axis motion": "Gibanje po osi Z",
     "Invalid probe sample": "Neveljaven vzorec sonde",
     "Unknown diagnostic": "Neznana diagnostika",
-    "Unknown diagnostic action": "Neznano diagnostično dejanje"
+    "Unknown diagnostic action": "Neznano diagnostično dejanje",
+    "Toolhead detected": "Glava zaznana",
+    "Toolhead not detected": "Glava ni zaznana"
   },
   "sv": {
     "A print started; diagnostics interrupted": "En utskrift startade; diagnostiken avbröts",
@@ -3338,7 +3390,9 @@
     "Z-axis motion": "Z-axelns rörelse",
     "Invalid probe sample": "Ogiltigt sondprov",
     "Unknown diagnostic": "Okänd diagnostik",
-    "Unknown diagnostic action": "Okänd diagnostisk åtgärd"
+    "Unknown diagnostic action": "Okänd diagnostisk åtgärd",
+    "Toolhead detected": "Skrivhuvud upptäckt",
+    "Toolhead not detected": "Skrivhuvud ej upptäckt"
   },
   "tr": {
     "A print started; diagnostics interrupted": "Bir baskı başladı; teşhis kesintiye uğradı",
@@ -3461,7 +3515,9 @@
     "Z-axis motion": "Z ekseni hareketi",
     "Invalid probe sample": "Geçersiz prob örneği",
     "Unknown diagnostic": "Bilinmeyen teşhis",
-    "Unknown diagnostic action": "Bilinmeyen teşhis eylemi"
+    "Unknown diagnostic action": "Bilinmeyen teşhis eylemi",
+    "Toolhead detected": "Baskı kafası algılandı",
+    "Toolhead not detected": "Baskı kafası algılanmadı"
   },
   "uk": {
     "A print started; diagnostics interrupted": "Розпочато друк; діагностика перервана",
@@ -3584,7 +3640,9 @@
     "Z-axis motion": "Рух по осі Z",
     "Invalid probe sample": "Недійсний зразок зонду",
     "Unknown diagnostic": "Невідомий діагноз",
-    "Unknown diagnostic action": "Невідома діагностична дія"
+    "Unknown diagnostic action": "Невідома діагностична дія",
+    "Toolhead detected": "Головку виявлено",
+    "Toolhead not detected": "Головку не виявлено"
   },
   "vi": {
     "A print started; diagnostics interrupted": "Bắt đầu in; chẩn đoán bị gián đoạn",
@@ -3707,7 +3765,9 @@
     "Z-axis motion": "Chuyển động theo trục Z",
     "Invalid probe sample": "Mẫu thăm dò không hợp lệ",
     "Unknown diagnostic": "Chẩn đoán không xác định",
-    "Unknown diagnostic action": "Hành động chẩn đoán không xác định"
+    "Unknown diagnostic action": "Hành động chẩn đoán không xác định",
+    "Toolhead detected": "Đã phát hiện đầu in",
+    "Toolhead not detected": "Chưa phát hiện đầu in"
   },
   "zh_CN": {
     "A print started; diagnostics interrupted": "打印开始；诊断中断",
@@ -3830,7 +3890,9 @@
     "Z-axis motion": "Z轴运动",
     "Invalid probe sample": "无效的探针样本",
     "Unknown diagnostic": "未知诊断",
-    "Unknown diagnostic action": "未知的诊断操作"
+    "Unknown diagnostic action": "未知的诊断操作",
+    "Toolhead detected": "已检测到工具头",
+    "Toolhead not detected": "未检测到工具头"
   },
   "zh_TW": {
     "A print started; diagnostics interrupted": "列印開始；診斷中斷",
@@ -3953,6 +4015,8 @@
     "Z-axis motion": "Z軸運動",
     "Invalid probe sample": "無效的探針樣本",
     "Unknown diagnostic": "未知診斷",
-    "Unknown diagnostic action": "未知的診斷操作"
+    "Unknown diagnostic action": "未知的診斷操作",
+    "Toolhead detected": "已偵測到工具頭",
+    "Toolhead not detected": "未偵測到工具頭"
   }
 }
