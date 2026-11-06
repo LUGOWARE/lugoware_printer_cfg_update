@@ -55,6 +55,10 @@ def apply_config(repo, home, backup):
     if (home / 'klipper/klippy/extras/print_sensor.py').is_file() and '[menu __print lock]' not in template:
         template += '\n[menu __print lock]\nenable: False\n'
     screen = merge(previous_screen, template)
+    if (home / 'klipper/klippy/extras/lugo_diagnostics.py').is_file():
+        from install_diagnostics import strip_legacy, screen_menu
+        base = strip_legacy(base)
+        screen = screen_menu(screen)
     validate_config(base, screen, home)
     changes = {'printer_base.cfg': base.encode(), 'KlipperScreen.conf': screen.encode()}
     previous = {name: (target / name).read_bytes() for name in changes}
