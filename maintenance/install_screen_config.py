@@ -16,16 +16,23 @@ SAVED = '#~# --- Do not edit below this line. This section is auto generated ---
 
 
 
-def hide_advanced_menus(text):
-    body, marker, saved = text.partition(SAVED)
-    for section in ('menu __main more macros', 'menu __print macros',
-                    'menu __main more limits', 'menu __print limits'):
+USER_MENUS = ('menu __main more macros', 'menu __print macros',
+              'menu __main more limits', 'menu __print limits')
+
+
+def preserve_menu_choices(existing, updated):
+    """These menus are controlled by the user's conf, not installer policy."""
+    old_body = existing.partition(SAVED)[0]
+    body, marker, saved = updated.partition(SAVED)
+    for section in USER_MENUS:
         pattern = r'(?ms)^\[' + re.escape(section) + r'\][^\n]*\n.*?(?=^\[|\Z)'
-        block = '[' + section + ']\nenable: False\n\n'
+        old = re.search(pattern, old_body)
+        if old is None:
+            continue
         if re.search(pattern, body):
-            body = re.sub(pattern, lambda match: block, body)
+            body = re.sub(pattern, lambda match: old[0], body)
         else:
-            body = body.rstrip() + '\n\n' + block
+            body = body.rstrip() + '\n\n' + old[0]
     return body + marker + saved
 
 
@@ -64,7 +71,7 @@ def merge(existing, template):
         block = match[0]
         block = re.sub(r'(?m)^\s*name\s*[:=].*$',lambda m:value,block) if re.search(r'(?m)^\s*name\s*[:=]',block) else block.rstrip()+'\n'+value+'\n\n'
         body=body[:match.start()]+block+body[match.end():]
-    return hide_advanced_menus(body + marker + saved)
+    return preserve_menu_choices(existing, body + marker + saved)
 
 
 def install(template, target, backup):

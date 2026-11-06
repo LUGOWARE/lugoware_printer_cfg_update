@@ -63,14 +63,6 @@ if __name__ == '__main__':
         after = transform(before)
         if before != after:
             changes[target] = (relative, after)
-    # Also apply menu policy for Mainsail system-only updates.
-    from install_screen_config import hide_advanced_menus
-    config = Path(os.environ.get('CONFIG_DIR', Path.home() / 'printer_data/config')) / 'KlipperScreen.conf'
-    if config.exists():
-        before = config.read_text(encoding='utf-8')
-        after = hide_advanced_menus(before)
-        if before != after:
-            changes[config] = ('KlipperScreen.conf', after)
     for target, (relative, after) in changes.items():
         backup = Path(os.environ['BACKUP_DIR']) / 'settings-policy' / relative
         backup.parent.mkdir(parents=True, exist_ok=True)
