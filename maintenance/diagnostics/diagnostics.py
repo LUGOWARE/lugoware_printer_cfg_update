@@ -89,25 +89,7 @@ class Panel(ScreenPanel):
         self.stop_button.set_sensitive(False)
         outer.pack_end(self.stop_button, False, False, 0)
         css = Gtk.CssProvider()
-        css.load_from_data(b'''
-            .lugo-diagnostics .diagnostic-card { background-color: #252525;
-                border: 0; border-radius: .25em; padding: 10px; }
-            .lugo-diagnostics button { background-image: none; background-color: #252525;
-                border: 1px solid #505050; border-radius: .25em; padding: 8px;
-                box-shadow: none; }
-            .lugo-diagnostics button:active { background-color: #087da5; }
-            .lugo-diagnostics .diagnostic-percent { color: #ffffff; font-weight: bold;
-                text-shadow: 0 1px 2px #000000; }
-            .lugo-diagnostics .sensor-indicator { font-size: 1.35em; }
-            .lugo-diagnostics .sensor-off { color: #000000; }
-            .lugo-diagnostics .sensor-on { color: #079dcd; }
-            .lugo-diagnostics .sensor-unknown { color: #888888; }
-            .lugo-diagnostics button:disabled { color: #888888; }
-            .lugo-diagnostics progressbar trough { min-height: 30px;
-                background-color: #111111; border-radius: .25em; }
-            .lugo-diagnostics progressbar progress { min-height: 30px;
-                background-color: #305b32; border-radius: .25em; }
-        ''')
+        css.load_from_data(b'\n            .lugo-diagnostics .diagnostic-card { background-color: #252525;\n                border: 0; border-radius: .25em; padding: 10px; }\n            .lugo-diagnostics button { background-image: none; background-color: #252525;\n                border: 1px solid #252525; border-radius: .25em; padding: 8px;\n                box-shadow: none; }\n            .lugo-diagnostics button:active { background-color: #424242; }\n            .lugo-diagnostics .diagnostic-percent { color: #e2e2e2; font-weight: bold;\n                text-shadow: 0 1px 2px #000000; }\n            .lugo-diagnostics .sensor-indicator { font-size: 1.35em; }\n            .lugo-diagnostics .sensor-off { color: #000000; }\n            .lugo-diagnostics .sensor-on { color: #2196f3; }\n            .lugo-diagnostics .sensor-unknown { color: #888888; }\n            .lugo-diagnostics button:disabled { color: #888888; }\n            .lugo-diagnostics progressbar trough { min-height: 30px;\n                background-color: #1c1c1c; border-radius: .25em; }\n            .lugo-diagnostics progressbar progress { min-height: 30px;\n                background-color: #2f5631; border-radius: .25em; }\n        \n.fan_controls button,\n.fine-card button,\n.lugo-temperature-control button,\n.lugo-diagnostics .diagnostic-card button,\n.lugo-theme .frame-item button,\n.lugo-theme .tz-current button,\n.lugo-settings .frame-item button { background-color: #1f1f1f; }\n.fan_controls button:active,\n.fan_controls button:checked,\n.fan_controls button.selected,\n.fan_controls button.lugo-selected,\n.fan_controls button.button_active,\n.fan_controls button.lugo-tapped,\n.fine-card button:active,\n.fine-card button:checked,\n.fine-card button.selected,\n.fine-card button.lugo-selected,\n.fine-card button.button_active,\n.fine-card button.lugo-tapped,\n.lugo-temperature-control button:active,\n.lugo-temperature-control button:checked,\n.lugo-temperature-control button.selected,\n.lugo-temperature-control button.lugo-selected,\n.lugo-temperature-control button.button_active,\n.lugo-temperature-control button.lugo-tapped,\n.lugo-diagnostics .diagnostic-card button:active,\n.lugo-diagnostics .diagnostic-card button:checked,\n.lugo-diagnostics .diagnostic-card button.selected,\n.lugo-diagnostics .diagnostic-card button.lugo-selected,\n.lugo-diagnostics .diagnostic-card button.button_active,\n.lugo-diagnostics .diagnostic-card button.lugo-tapped,\n.lugo-theme .frame-item button:active,\n.lugo-theme .frame-item button:checked,\n.lugo-theme .frame-item button.selected,\n.lugo-theme .frame-item button.lugo-selected,\n.lugo-theme .frame-item button.button_active,\n.lugo-theme .frame-item button.lugo-tapped,\n.lugo-theme .tz-current button:active,\n.lugo-theme .tz-current button:checked,\n.lugo-theme .tz-current button.selected,\n.lugo-theme .tz-current button.lugo-selected,\n.lugo-theme .tz-current button.button_active,\n.lugo-theme .tz-current button.lugo-tapped,\n.lugo-settings .frame-item button:active,\n.lugo-settings .frame-item button:checked,\n.lugo-settings .frame-item button.selected,\n.lugo-settings .frame-item button.lugo-selected,\n.lugo-settings .frame-item button.button_active,\n.lugo-settings .frame-item button.lugo-tapped,\n.lugo-extrusion button.lugo-inner-control:active,\n.lugo-extrusion button.lugo-inner-control:checked,\n.lugo-extrusion button.lugo-inner-control.selected,\n.lugo-extrusion button.lugo-inner-control.lugo-selected,\n.lugo-extrusion button.lugo-inner-control.button_active,\n.lugo-extrusion button.lugo-inner-control.lugo-tapped { background-color: #424242; }\n')
         def style(widget):
             widget.get_style_context().add_provider(css, Gtk.STYLE_PROVIDER_PRIORITY_USER+1)
             if isinstance(widget, Gtk.Container):

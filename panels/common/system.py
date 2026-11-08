@@ -195,7 +195,7 @@ class Panel(ScreenPanel):
         self.current_row += 1
         self.populate_info()
         css = Gtk.CssProvider()
-        css.load_from_data(b'\n            .system-card { background-color: #252525; \n                 padding: 12px;  border: 0; border-radius: .25em; }\n            .system-card label { font-size: 17px; }\n            .system-card .system-heading { font-size: 20px; font-weight: bold; }\n            .system-card .system-core { font-size: 15px; color: #bbbbbb; }\n            .system-card progressbar trough { min-height: 12px; background-color: #111111; border-radius: 4px; }\n            .system-card progressbar progress { min-height: 12px; background-color: #305730; border-radius: 4px; }\n        ')
+        css.load_from_data(b'\n            .system-card { background-color: #252525; \n                 padding: 12px;  border: 0; border-radius: .25em; }\n            .system-card label { font-size: 17px; }\n            .system-card .system-heading { font-size: 20px; font-weight: bold; }\n            .system-card .system-core { font-size: 15px; color: #a2a2a2; }\n            .system-card progressbar trough { min-height: 12px; background-color: #1c1c1c; border-radius: 4px; }\n            .system-card progressbar progress { min-height: 12px; background-color: #2f5631; border-radius: 4px; }\n        ')
         # Scoped CSS also covers disk labels created asynchronously.
         from gi.repository import Gdk
         Gtk.StyleContext.add_provider_for_screen(Gdk.Screen.get_default(), css, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION + 1)
