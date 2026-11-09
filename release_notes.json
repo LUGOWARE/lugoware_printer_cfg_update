@@ -10,8 +10,18 @@
         "중단된 출력 재개 기능 추가",
         "업데이트 목록 추가"
       ],
-      "en": [],
-      "zh_CN": []
+      "en": [
+        "Improved the user interface",
+        "Added printer diagnostics",
+        "Added recovery for interrupted prints",
+        "Added the update list"
+      ],
+      "zh_CN": [
+        "优化用户界面",
+        "新增打印机诊断功能",
+        "新增中断打印恢复功能",
+        "新增更新列表"
+      ]
     }
   },
   "lugoware_system": {
@@ -24,8 +34,18 @@
         "중단된 출력 재개 기능 추가",
         "업데이트 목록 추가"
       ],
-      "en": [],
-      "zh_CN": []
+      "en": [
+        "Improved the user interface",
+        "Added printer diagnostics",
+        "Added recovery for interrupted prints",
+        "Added the update list"
+      ],
+      "zh_CN": [
+        "优化用户界面",
+        "新增打印机诊断功能",
+        "新增中断打印恢复功能",
+        "新增更新列表"
+      ]
     }
   }
 }
