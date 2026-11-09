@@ -58,7 +58,7 @@ function Start-Remote($operation){
 }
 $connect.Add_Click({try{Start-Remote 'check'}catch{$log.Text=$_.Exception.Message}})
 $reset.Add_Click({
- $message="대상: $($ip.Text)`r`nG-code: $($script:plan.gcode_files)개 / 누적 출력: $($script:plan.history_count)회`r`n`r`nG-code, 썸네일, 이력·통계, 복구·점검 기록을 삭제합니다.`r`n설정·보정값·네트워크 정보는 유지됩니다.`r`n삭제한 데이터는 되돌릴 수 없습니다. 진행할까요?"
+ $message="대상: $($ip.Text)`r`nG-code: $($script:plan.gcode_files)개 / 누적 출력: $($script:plan.history_count)회`r`n`r`nG-code, 이력·통계, 복구·점검 기록, Wi-Fi, 로그·명령 기록, 설치 백업을 삭제합니다.`r`n기구 설정·보정값·유선 연결·SSH 인증은 유지됩니다.`r`n다른 SSH 터미널은 닫아 주세요. Wi-Fi 삭제 시 연결이 끊깁니다.`r`n삭제한 데이터는 되돌릴 수 없습니다. 진행할까요?"
  if([Windows.Forms.MessageBox]::Show($message,'출고 초기화 확인','YesNo','Warning') -eq 'Yes'){try{Start-Remote 'reset'}catch{$log.Text=$_.Exception.Message}}
 })
 $timer=New-Object Windows.Forms.Timer;$timer.Interval=250
@@ -71,9 +71,10 @@ $timer.Add_Tick({
    if($exit -ne 0){throw ($result.error+' '+$stderr)}
    if($script:operation -eq 'check'){
     $script:plan=$result;$reset.Enabled=[bool]$result.ready;Save-Credentials
-    $log.Text="연결 성공: $($result.hostname)`r`n기기 ID: $($result.machine_id)`r`nG-code: $($result.gcode_files)개`r`n누적 출력: $($result.history_count)회`r`n`r`n삭제: G-code·썸네일·출력 기록·통계·복구·점검 기록`r`n보존: 기구 설정·보정값·Wi-Fi·펌웨어`r`n"
+    $log.Text="연결 성공: $($result.hostname)`r`n기기 ID: $($result.machine_id)`r`nG-code: $($result.gcode_files)개`r`n누적 출력: $($result.history_count)회`r`n`r`n삭제: 출력 자료·Wi-Fi·로그·명령 기록·설치 백업`r`n보존: 기구 설정·보정값·유선 연결·SSH 인증·펌웨어`r`n"
+    if($result.privacy_cleanup_version -ne 1){$reset.Enabled=$false;$log.AppendText("`r`n개인정보 정리 기능이 없는 구버전입니다. 프린터 배포판을 업데이트하세요.")}
     if(-not $result.ready){$log.AppendText("`r`n현재 초기화 불가: "+($result.reasons -join ', '))}
-   }else{$script:plan=$null;$log.Text='초기화 완료. 프린터에 최초 설정 화면이 표시됩니다. 출고 전에는 설정을 완료하지 말고 정상 종료하세요.'}
+   }else{$script:plan=$null;$log.Text='데이터 정리가 완료됐습니다. 20초 뒤 Wi-Fi 정보 삭제를 시작합니다. 전원을 유지해 주세요. Wi-Fi 연결이 끊길 수 있습니다. 최소 1분 후 프린터에서 저장된 Wi-Fi가 없는지 확인하고 종료하세요. 완료 상태: /var/lib/lugoware-factory/privacy.json'}
   }catch{$log.Text="실패: $($_.Exception.Message)`r`n$stdout`r`n$stderr";$script:plan=$null}
  }
 })

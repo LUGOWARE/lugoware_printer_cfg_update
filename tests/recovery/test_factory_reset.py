@@ -16,13 +16,14 @@ class ResetTests(unittest.TestCase):
     if p=='/server/files/list?root=gcodes':return []
     if p.startswith('/server/history/list'):return {'count':0}
     return {}
-   with patch.object(f,'HOME',h),patch.object(f,'DATA',data),patch.object(f,'STATE',h/'state.json'),patch.object(f,'api',api),patch.object(f,'check',return_value={'machine_id':'id','ready':True,'files':[]}):
+   with patch.object(f,'HOME',h),patch.object(f,'DATA',data),patch.object(f,'STATE',h/'state.json'),patch.object(f,'api',api),patch.object(f,'privacy',return_value=None) as privacy,patch.object(f,'check',return_value={'machine_id':'id','ready':True,'files':[]}):
     self.assertTrue(f.reset('id')['ok'])
     self.assertEqual((cfg/'printer.cfg').read_text(),'CALIBRATION')
     self.assertFalse(list((data/'gcodes').iterdir()));self.assertFalse(list((data/'recovery').iterdir()))
     self.assertFalse((data/'logs/lugoware_diagnostics.jsonl').exists());self.assertTrue((data/'logs/klippy.log').exists())
     self.assertEqual(json.loads((h/'state.json').read_text())['status'],'pending')
     self.assertIn(('/server/history/reset_totals','POST'),calls)
+    self.assertEqual([c.args[0] for c in privacy.call_args_list],['--clean','--schedule'])
  def test_identity_or_active_print_rejects_before_mutation(self):
   with patch.object(f,'write_state') as write,patch.object(f,'check',return_value={'machine_id':'id','ready':False,'reasons':['Print is active']}):
    with self.assertRaises(RuntimeError):f.reset('wrong')

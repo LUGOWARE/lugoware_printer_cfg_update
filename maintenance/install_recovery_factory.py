@@ -76,6 +76,14 @@ def install(home, screen, klipper, backup, assets=None):
 
 
 if __name__=='__main__':
+    import subprocess
+    privacy_assets=Path(__file__).with_name('recovery')
+    helper=Path('/usr/local/libexec/lugoware-factory-privacy')
+    if not helper.exists() or helper.read_bytes()!=(privacy_assets/'factory_privacy.py').read_bytes():
+        if os.environ.get('LUGOWARE_SYSTEM_ONLY')=='1':
+            print('[출고 초기화] Wi-Fi/시스템 로그 정리 권한은 최신 SSH 설치 명령을 한 번 실행해야 적용됩니다. / Factory privacy cleanup requires one SSH installer run.')
+        else:
+            subprocess.run(['sudo','-n','python3',str(privacy_assets/'install_factory_privacy.py')],check=True)
     home=Path.home()
     install(home,Path(os.environ.get('KLIPPERSCREEN_DIR',home/'KlipperScreen')),
             Path(os.environ.get('KLIPPER_DIR',home/'klipper')),
