@@ -1,0 +1,12 @@
+const fs=require('fs'),vm=require('vm'),assert=require('assert');
+const names=['getEstimatedTimeFile','getEstimatedTimeFilament','getEstimatedTimeSlicer','getEstimatedTimeAvg','getEstimatedTimeETA'];
+let getters, polling;
+const root={printer:{print_stats:{filename:'a',state:'printing',print_duration:30}}};
+const store={_modulesNamespaceMap:{'printer/':{_rawModule:{getters:Object.fromEntries(names.map(n=>[n,()=>9999]))}}},registerModule(n,m){root[n]=m.state;},hotUpdate(m){assert.strictEqual(m.modules.printer.namespaced,true);getters=m.modules.printer.getters;},commit(n,v){root.lugoRecoveryEta={eta:v,received:Date.now()};}};
+vm.runInNewContext(fs.readFileSync(require('path').join(__dirname,'../../maintenance/recovery/lugoware-recovery-eta.js'),'utf8'),{window:{},document:{querySelector:()=>({__vue__:{$store:store}})},Date,AbortController,setTimeout,clearTimeout,setInterval:f=>polling=f,fetch:()=>new Promise(()=>{})});
+assert.equal(getters.getEstimatedTimeFile(null,null,root),9999);
+store.commit('',{active:true,filename:'a',remaining:1200,elapsed:20});
+assert.equal(getters.getEstimatedTimeFile(null,null,root),1190);
+assert.equal(getters.getEstimatedTimeSlicer(null,null,root),1190);
+root.printer.print_stats.filename='b';assert.equal(getters.getEstimatedTimeFile(null,null,root),9999);
+console.log('Mainsail normal/recovery isolation and namespaced getters: OK');

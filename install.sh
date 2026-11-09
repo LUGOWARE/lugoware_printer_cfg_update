@@ -191,6 +191,7 @@ python3 "$COMMON_REPO/maintenance/install_diagnostics.py" --model "${BRANCH#FLEX
 python3 "$COMMON_REPO/maintenance/install_screen_session.py"
 python3 "$COMMON_REPO/maintenance/install_mainsail_reconnect.py"
 python3 "$COMMON_REPO/maintenance/install_mainsail_mesh.py"
+python3 "$COMMON_REPO/maintenance/install_recovery_factory.py"
 if (( SYSTEM_ONLY )); then
     python3 "$COMMON_REPO/maintenance/usb/check_install.py"
 else
@@ -221,6 +222,7 @@ echo "패널 백업 / Panel backup: $BACKUP_DIR/panels"
 
 python3 "$COMMON_REPO/maintenance/wait_ready.py" --ready-only
 python3 "$COMMON_REPO/maintenance/verify_multi_pin.py" "$HOME/klipper"
+python3 "$COMMON_REPO/maintenance/verify_recovery_factory.py"
 
 python3 "$COMMON_REPO/maintenance/install_update_channels.py" "$BRANCH"
 

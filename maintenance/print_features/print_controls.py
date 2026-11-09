@@ -246,6 +246,12 @@ def add_controls(panel, info):
     row.set_margin_start(1)
     row.set_margin_end(8)
     row.set_tooltip_text(translate_text('Toolhead sensor test'))
+    # Labels/images do not use the button theme's insensitive colours.
+    # Follow effective sensitivity, including the locked parent container.
+    def head_sensitivity(widget, _previous_flags=None):
+        widget.set_opacity(1.0 if widget.is_sensitive() else 0.4)
+    row.connect('state-flags-changed', head_sensitivity)
+    head_sensitivity(row)
     icon = screen.gtk.Image('extruder', size, size)
     icon.set_size_request(size, size)
     icon.set_margin_end(4)

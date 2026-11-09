@@ -1,0 +1,52 @@
+{
+  "gcodes.py": [
+    [
+      "        self.cur_directory = \"gcodes\"",
+      "        from ks_includes.recovery_files import RecoveryFiles\n        self.recovery_files = RecoveryFiles(self)\n        self.cur_directory = \"gcodes\""
+    ],
+    [
+      "    def activate(self):\n",
+      "    def activate(self):\n        self.recovery_files.activate()\n"
+    ],
+    [
+      "    def deactivate(self):\n",
+      "    def deactivate(self):\n        self.recovery_files.deactivate()\n"
+    ],
+    [
+      "            icon = Gtk.Button()",
+      "            fbchild._recovery_name_label = itemname\n            icon = Gtk.Button()"
+    ],
+    [
+      "            icon = self._gtk.Button(label=basename)",
+      "            icon = self._gtk.Button(label=basename)\n            fbchild._recovery_button = icon\n            fbchild._recovery_name_label = find_widget(icon, Gtk.Label)"
+    ],
+    [
+      "        return fbchild",
+      "        if is_file:\n            self.recovery_files.decorate(fbchild, path)\n        return fbchild"
+    ],
+    [
+      "        format_label(widget)\n\n    def confirm_delete_file",
+      "        format_label(widget)\n        self.recovery_files.update_badges()\n\n    def confirm_delete_file"
+    ],
+    [
+      "    def confirm_print(self, widget, filename):\n",
+      "    def confirm_print(self, widget, filename):\n        self.recovery_files.select(widget, filename)\n\n    def open_print_info(self, widget, filename):\n"
+    ],
+    [
+      "    def _refresh_files(self, *args):\n",
+      "    def _refresh_files(self, *args):\n        self.recovery_files.refresh()\n"
+    ]
+  ],
+  "screen.py": [
+    [
+      "    def show_panel(self, panel, title=None, remove_all=False, panel_name=None, **kwargs):\n",
+      "    def show_panel(self, panel, title=None, remove_all=False, panel_name=None, **kwargs):\n        from ks_includes.first_run_state import pending as first_run_pending\n        if first_run_pending() and panel not in ('first_run', 'network', 'timezone', 'splash_screen', 'job_status', 'recovery_progress'):\n            panel = 'first_run'\n            panel_name = None\n            title = None\n            kwargs = {}\n            remove_all = True\n"
+    ]
+  ],
+  "job_status.py": [
+    [
+      "        estimated = adjusted_total(self, estimated, print_duration)",
+      "        estimated = adjusted_total(self, estimated, print_duration)\n        from ks_includes.recovery_eta_ui import adjusted_total as recovery_total\n        estimated = recovery_total(self, estimated, print_duration)"
+    ]
+  ]
+}

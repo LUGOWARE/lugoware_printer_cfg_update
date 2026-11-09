@@ -10,6 +10,13 @@ from october_features import job, notification, popup
 
 
 def patch_ui(source, name):
+    # Normalize additive recovery hooks before older whole-method UI migrations.
+    recovery_assets = Path(__file__).with_name('recovery')
+    recovery_patches = json.loads((recovery_assets / 'ui_patches.json').read_text(encoding='utf-8')).get(name, [])
+    had_recovery = any(new in source for old, new in recovery_patches)
+    if had_recovery:
+        for old, new in reversed(recovery_patches):
+            source = source.replace(new, old)
     from followup_features import ui
     source = ui(source, name, reverse=True)
     if name == "gcodes.py":
@@ -42,6 +49,9 @@ def patch_ui(source, name):
     if name == "screen.py":
         source = popup(source)
     source = ui(source, name)
+    if had_recovery:
+        from install_recovery_factory import patch_ui as recovery_ui
+        source = recovery_ui(source, name, recovery_assets)
     compile(source, name, 'exec')
     return source
 
