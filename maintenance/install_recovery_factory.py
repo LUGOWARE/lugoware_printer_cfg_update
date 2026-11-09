@@ -5,6 +5,7 @@ import json
 import os
 import re
 import shutil
+from install_update_progress import patch as patch_update_progress
 
 
 def patch_ui(source, name, assets):
@@ -43,11 +44,13 @@ def install(home, screen, klipper, backup, assets=None):
     home,screen,klipper,backup=map(Path,(home,screen,klipper,backup))
     assets=Path(assets) if assets else Path(__file__).with_name('recovery')
     changes={}
+    base_panel=screen/'panels/base_panel.py'
+    changes[base_panel]=patch_update_progress(base_panel.read_text(encoding='utf-8'),assets).encode('utf-8')
     for name in ('lugo_recovery','recovery_execution','recovery_index','recovery_objects','recovery_eta'):
         changes[klipper/'klippy/extras'/(name+'.py')]=(assets/(name+'.py')).read_bytes()
     for name in ('recovery','recovery_progress','first_run','updater'):
         changes[screen/'panels'/(name+'.py')]=(assets/(name+'.py')).read_bytes()
-    for name in ('recovery_files','recovery_notice','recovery_eta_ui','first_run_state','lugoware_release_notes'):
+    for name in ('recovery_files','recovery_notice','recovery_eta_ui','first_run_state','lugoware_release_notes','lugoware_update_progress','update_progress_i18n'):
         changes[screen/'ks_includes'/(name+'.py')]=(assets/(name+'.py')).read_bytes()
     for name,relative in [('screen.py','screen.py'),('gcodes.py','panels/gcodes.py'),('job_status.py','panels/job_status.py')]:
         path=screen/relative
