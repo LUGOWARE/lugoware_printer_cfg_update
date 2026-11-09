@@ -3,7 +3,7 @@ import argparse
 from pathlib import Path
 import shutil
 
-FILES = ('extrude.py', 'nozzle_temperature.py', 'tool_prepare.py', 'tool_temperature.py', 'fan.py', 'fine_tune.py', 'settings.py', 'network.py', 'console.py', 'system.py')
+FILES = ('extrude.py', 'nozzle_temperature.py', 'tool_prepare.py', 'tool_temperature.py', 'fan.py', 'fine_tune.py', 'settings.py', 'network.py', 'console.py', 'system.py', 'move.py', 'move_advanced.py')
 RUNTIME = ('ks_includes/sdbus_nm.py', 'ks_includes/widgets/scroll.py')
 
 

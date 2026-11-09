@@ -35,9 +35,10 @@ class Panel(ScreenPanel):
         self._display_pending_tool = None
         self._reported_error = False
         self._confirm_dialog = None
+        self.content.get_style_context().add_class("lugo-prepare-panel")
         if Panel._tool_provider is None:
             provider = Gtk.CssProvider()
-            provider.load_from_data(b'\n                button.lugo-prepare-tool { border: 2px solid #505050; background-color: #252525;\n                    border-radius: .25em; background-image: none; box-shadow: none; }\n                button.lugo-prepare-tool.lugo-selected {\n                    background-color: #424242; border-color: #424242; }\n                button.lugo-prepare-tool.lugo-selected label {\n                    color: #e2e2e2; font-weight: bold; }\n            ')
+            provider.load_from_data(b'.lugo-prepare-panel button:active { background-image: none; background-color: #424242; border-color: #424242; } \n                button.lugo-prepare-tool { border: 2px solid #505050; background-color: #252525;\n                    border-radius: .25em; background-image: none; box-shadow: none; }\n                button.lugo-prepare-tool:active, button.lugo-prepare-tool.lugo-selected {\n                    background-color: #424242; border-color: #424242; }\n                button.lugo-prepare-tool.lugo-selected label {\n                    color: #e2e2e2; font-weight: bold; }\n            ')
             Gtk.StyleContext.add_provider_for_screen(
                 self.content.get_screen(), provider, Gtk.STYLE_PROVIDER_PRIORITY_USER + 1)
             Panel._tool_provider = provider
