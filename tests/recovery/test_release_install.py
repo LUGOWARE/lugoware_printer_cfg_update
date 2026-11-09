@@ -4,10 +4,20 @@ from types import SimpleNamespace as Obj
 ROOT=Path(__file__).resolve().parents[2]
 sys.path.insert(0,str(ROOT/'maintenance'))
 sys.path.insert(0,str(ROOT/'maintenance/recovery'))
-from install_recovery_factory import header
+from install_recovery_factory import header, updater_menu
 from recovery_execution import RecoveryExecution
 
 class ReleaseTests(unittest.TestCase):
+ def test_updater_menu_enabled_without_losing_user_settings(self):
+  for source in ('[main]\nlanguage: ko\n', '[menu __main more updater]\nenable: False\n\n[main]\nlanguage: ko\n'):
+   source += '#~# --- Do not edit below this line.\n#~# [main]\n#~# language = ko\n'
+   result=updater_menu(source)
+   self.assertEqual(updater_menu(result),result)
+   self.assertEqual(result.count('[menu __main more updater]'),1)
+   self.assertIn('enable: True',result)
+   self.assertIn('language: ko',result)
+   self.assertTrue(result.endswith('#~# language = ko\n'))
+
  def test_header_preserves_calibration_and_connection(self):
   original='[mcu]\nserial: custom\n#*# <---------------------- SAVE_CONFIG ---------------------->\n#*# z_offset = 1.123\n'
   result=header(original)

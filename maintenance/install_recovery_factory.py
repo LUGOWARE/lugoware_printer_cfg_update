@@ -27,15 +27,27 @@ def header(source):
     return source.rstrip()+'\n'+block
 
 
+
+def updater_menu(source):
+    block="[menu __main more updater]\nname: {{ _('Update') }}\nicon: refresh\npanel: updater\nenable: True\n\n"
+    pattern=r'(?ms)^\[menu __main more updater\][^\n]*\n.*?(?=^\[|^#~#|\Z)'
+    result,count=re.subn(pattern,lambda match:block,source)
+    if count>1:raise ValueError('Duplicate updater menu')
+    if count:return result
+    marker='#~# ---'
+    if marker in source:return source.replace(marker,block+marker,1)
+    return source.rstrip()+'\n\n'+block
+
+
 def install(home, screen, klipper, backup, assets=None):
     home,screen,klipper,backup=map(Path,(home,screen,klipper,backup))
     assets=Path(assets) if assets else Path(__file__).with_name('recovery')
     changes={}
     for name in ('lugo_recovery','recovery_execution','recovery_index','recovery_objects','recovery_eta'):
         changes[klipper/'klippy/extras'/(name+'.py')]=(assets/(name+'.py')).read_bytes()
-    for name in ('recovery','recovery_progress','first_run'):
+    for name in ('recovery','recovery_progress','first_run','updater'):
         changes[screen/'panels'/(name+'.py')]=(assets/(name+'.py')).read_bytes()
-    for name in ('recovery_files','recovery_notice','recovery_eta_ui','first_run_state'):
+    for name in ('recovery_files','recovery_notice','recovery_eta_ui','first_run_state','lugoware_release_notes'):
         changes[screen/'ks_includes'/(name+'.py')]=(assets/(name+'.py')).read_bytes()
     for name,relative in [('screen.py','screen.py'),('gcodes.py','panels/gcodes.py'),('job_status.py','panels/job_status.py')]:
         path=screen/relative
@@ -44,7 +56,7 @@ def install(home, screen, klipper, backup, assets=None):
     changes[path]=header(path.read_text(encoding='utf-8')).encode('utf-8')
     path=home/'printer_data/config/KlipperScreen.conf'
     if path.exists():
-        source=path.read_text(encoding='utf-8')
+        source=updater_menu(path.read_text(encoding='utf-8'))
         # Recovery is reached only from the interrupted file's badge.
         source=re.sub(r'(?ms)^\[menu __main more recovery\][^\n]*\n.*?(?=^\[|^#~#|\Z)',
                       '[menu __main more recovery]\nenable: False\n\n',source)
