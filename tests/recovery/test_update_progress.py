@@ -56,3 +56,27 @@ class InstallTests(unittest.TestCase):
             for key in KEYS:self.assertTrue(caption(lang,key).strip())
         self.assertEqual(caption('unknown','notice'),caption('en','notice'))
         self.assertEqual(caption('zh-CN','notice'),caption('zh_CN','notice'))
+
+class PersistenceTests(unittest.TestCase):
+    def test_restart_new_run_terminal_and_dedup(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as folder:
+            path=Path(folder)/'progress.json'
+            event={'application':'lugoware_system','proc_id':123,'message':'[검증]'}
+            p=Progress(path);p.update(event);self.assertEqual(p.percent,90)
+            before=path.read_bytes()
+            p.update(dict(event,message='설치 진행 중'));self.assertEqual(path.read_bytes(),before)
+            restored=Progress(path);restored.update(dict(event,message='설치 진행 중'))
+            self.assertEqual(restored.percent,90)
+            restored.update(dict(event,proc_id=456,message='설치 진행 중'))
+            self.assertEqual(restored.percent,35)
+            restored.update(dict(event,proc_id=456,message='실제 설치 및 검증 완료',complete=True))
+            self.assertEqual(restored.percent,100)
+            next_run=Progress(path);next_run.update(dict(event,proc_id=789,message='설치 진행 중'))
+            self.assertEqual(next_run.percent,35)
+    def test_bad_cache_is_nonfatal(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as folder:
+            path=Path(folder)/'progress.json';path.write_text('invalid')
+            p=Progress(path);p.update({'application':'lugoware_system','proc_id':1,'message':'설치 진행 중'})
+            self.assertEqual(p.percent,35)
