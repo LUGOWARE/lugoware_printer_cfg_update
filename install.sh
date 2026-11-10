@@ -45,11 +45,6 @@ fi
 
 echo ""
 echo "선택된 모델: $MODEL (브랜치: $BRANCH)"
-if (( ! SYSTEM_ONLY )); then
-    mkdir -p "$HOME/.local/share/lugoware"
-    exec 9>"$HOME/.local/share/lugoware/update.lock"
-    flock -n 9 || { echo '다른 LUGOWARE 업데이트가 진행 중입니다.' >&2; exit 1; }
-fi
 echo ""
 
 echo "화면 언어는 KlipperScreen에서 마지막으로 선택한 설정을 유지합니다."
@@ -63,6 +58,14 @@ if (( SYSTEM_ONLY )); then
     COMMON_REPO="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 else
     git clone --depth 1 --branch main "$REPO_URL" "$COMMON_REPO"
+fi
+if (( ! SYSTEM_ONLY )); then
+    sudo python3 "$COMMON_REPO/maintenance/auto_expand_root.py"
+fi
+if (( ! SYSTEM_ONLY )); then
+    mkdir -p "$HOME/.local/share/lugoware"
+    exec 9>"$HOME/.local/share/lugoware/update.lock"
+    flock -n 9 || { echo '다른 LUGOWARE 업데이트가 진행 중입니다.' >&2; exit 1; }
 fi
 export BACKUP_DIR="$HOME/lugoware_backups/$(date +%Y%m%d-%H%M%S)-$$"
 mkdir -m 700 -p "$BACKUP_DIR"
