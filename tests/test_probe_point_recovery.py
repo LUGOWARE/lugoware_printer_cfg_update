@@ -16,7 +16,7 @@ from probe_auto_recovery import ProbeAutoRecovery, ERROR
 class Tests(unittest.TestCase):
  def setUp(self):
   self.r=r=ProbeAutoRecovery.__new__(ProbeAutoRecovery)
-  r.attempts=2;r.minimum_clearance=1.;r.offset=.723;r.recoveries=r.reactivations=0
+  r.attempts=2;r.minimum_clearance=1.;r.offset=.723;r.recoveries=r.reactivations=0;r.trigger_errors=r.tolerance_errors=r.tolerance_retries=0;r.last_samples=[]
   self.pos=[100.,100.,2.,0.]
   r.toolhead=Mock();r.toolhead.get_position.side_effect=lambda:list(self.pos)
   r.toolhead.get_status.return_value={'homed_axes':'xyz','axis_minimum':[-2,-2,-4],'axis_maximum':[277,257,275]}

@@ -13,6 +13,8 @@ class ProbeAutoRecovery:
         self.attempts = config.getint('attempts', 2, minval=1, maxval=2)
         self.minimum_clearance = config.getfloat('minimum_clearance', 1., above=0.)
         self.recoveries = self.reactivations = 0
+        self.trigger_errors = self.tolerance_errors = self.tolerance_retries = 0
+        self.last_samples = []
         self.printer.register_event_handler('klippy:ready', self.ready)
 
     def ready(self):
@@ -27,6 +29,8 @@ class ProbeAutoRecovery:
 
     def get_status(self, eventtime):
         return {'recoveries': self.recoveries, 'reactivations': self.reactivations,
+                'trigger_errors': self.trigger_errors, 'tolerance_errors': self.tolerance_errors,
+                'tolerance_retries': self.tolerance_retries, 'last_samples': list(self.last_samples),
                 'attempts': self.attempts, 'scope': 'multi_sample_probe_excluding_g28',
                 'normal_path_extra_wait': False, 'recovery_lift': 2.0,
                 'sample_tolerances': list(TOLERANCES),
@@ -112,8 +116,10 @@ class ProbeAutoRecovery:
             logging.info('Probe tolerance: XY=%s attempt=%d/5 tolerance=%.3f spread=%.6f accepted=%s',
                          xy, attempt, tolerance, spread, accepted)
             if accepted:
+                self.last_samples = [float(p.bed_z) for p in positions]
                 session.results.append(calc_probe_z_average(positions, params['samples_result']))
                 return
+            self.tolerance_errors += 1
             if attempt == len(TOLERANCES):
                 raise gcmd.error('Probe samples exceed samples_tolerance')
             gcmd.respond_info('Probe samples exceed tolerance. Retrying... '
@@ -121,6 +127,7 @@ class ProbeAutoRecovery:
                               (attempt + 1, TOLERANCES[attempt]))
             self.printer.lookup_object('gcode').respond_raw(
                 'echo: Probe tolerance exceeded (%d/5) - retrying.' % attempt)
+            self.tolerance_retries += 1
             self.lift_and_wait(gcmd, start, 1.0)
             self.printer.lookup_object('gcode').respond_raw('// PROBE_RECOVERY_SAMPLING')
 
@@ -139,6 +146,8 @@ class ProbeAutoRecovery:
                         self.recoveries += 1
                     return result
                 except self.printer.command_error as exc:
+                    if str(exc) == ERROR:
+                        self.trigger_errors += 1
                     if (str(exc) != ERROR or recovered
                             or len(self.session.results) != previous_count):
                         raise

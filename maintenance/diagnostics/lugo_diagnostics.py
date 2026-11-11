@@ -187,7 +187,7 @@ class Diagnostics:
                         self.finish('failed', 'A print started; diagnostics interrupted', cleanup=False)
                     elif self.stop_requested:
                         self.finish('stopped', 'Diagnostic stopped')
-                    elif eventtime - self.started > (300 if self.kind == 'motor' else 180 if self.kind == 'fan' else 120):
+                    elif eventtime - self.started > (300 if self.kind == 'motor' else 180 if self.kind in ('fan','probe') else 120):
                         self.finish('failed', 'Diagnostic timeout')
                     elif self.kind in ('motor', 'probe', 'heater', 'fan') and self.status(
                             'filament_switch_sensor toolhead_sensor').get('filament_detected', True):
@@ -253,7 +253,7 @@ class Diagnostics:
         return 'normal' if delta >= 7. else 'degraded' if delta >= 5. else 'fault'
 
     def motor_geometry(self):
-        size = {'M': (230.,230.,250.), 'L': (230.,230.,350.), 'W': (330.,230.,350.)}[self.model]
+        size = {'M': (230.,230.,270.), 'L': (230.,230.,370.), 'W': (334.,230.,370.)}[self.model]
         limits = self.status('toolhead')
         if any(lo > 0 or hi < target for lo, hi, target in zip(
                 limits['axis_minimum'], limits['axis_maximum'], size)):
@@ -262,25 +262,47 @@ class Diagnostics:
 
     def motor_plan(self):
         x,y,z = self.motor_geometry()
-        plan = [([None,None,20.], self.z_speed, 'position', 0),
-                ([0,y/2,20.], 100., 'position', 0)]
+        left,right,bottom,top = 1.,x,0.,229.
+        cx,cy = (left+right)/2.,(bottom+top)/2.
+        plan = [([None,None,20.],self.z_speed,'position',0)]
+        def move(px,py,activity='position',cycle=0,speed=100.):
+            plan.append(([px,py,20.],speed,activity,cycle))
+        for start,end,activity in (
+                ((left,cy),(right,cy),'x'), ((cx,bottom),(cx,top),'y'),
+                ((left,bottom),(right,top),'diagonal_a'),
+                ((left,top),(right,bottom),'diagonal_b')):
+            move(*start)
+            for cycle in range(1,6):
+                move(*end,activity,cycle,500.)
+                move(*start,activity,cycle,500.)
+        # Ellipse inset 1 mm from the model's nominal XY envelope.
+        ecx,ecy=x/2.,y/2.
+        rx,ry=x/2.-1.,y/2.-1.
+        move(ecx+rx,ecy)
+        # <= 0.05 mm chord error, avoiding thousands of tiny segments.
+        segments=math.ceil(math.pi/math.acos(1.-.05/max(rx,ry)))
         for cycle in range(1,6):
-            plan += [([x,y/2,20.],500.,'x',cycle),([0,y/2,20.],500.,'x',cycle)]
-        plan.append(([x/2,0,20.],100.,'position',0))
-        for cycle in range(1,6):
-            plan += [([x/2,y,20.],500.,'y',cycle),([x/2,0,20.],500.,'y',cycle)]
-        plan.append(([0,0,20.],100.,'position',0))
-        for cycle in range(1,6):
-            plan += [([x,y,20.],500.,'diagonal_a',cycle),([0,0,20.],500.,'diagonal_a',cycle)]
-        plan.append(([0,y,20.],100.,'position',0))
-        for cycle in range(1,6):
-            plan += [([x,0,20.],500.,'diagonal_b',cycle),([0,y,20.],500.,'diagonal_b',cycle)]
-        plan.append(([x/2,y/2,20.],100.,'position',0))
-        for height in range(0, int(z) + 1, 50):
-            plan.append(([None,None,float(height)],40.,'z_up' if height == 0 else 'z_down',1))
-            # At the lower travel limit, oscillate inward instead of exceeding it.
-            other = height + .5 if height + .5 <= z else height - .5
+            for i in range(1,segments+1):
+                angle=2.*math.pi*i/segments
+                move(ecx+rx*math.cos(angle),ecy+ry*math.sin(angle),'ellipse',cycle,500.)
+        # Small, expanding diagonal zigzags at each corner (0.4 .. 20 mm).
+        for corner,(flipx,flipy) in enumerate(((False,False),(True,False),(True,True),(False,True)),1):
+            def corner_point(dx,dy):
+                return (right-dx if flipx else left+dx,
+                        top-dy if flipy else bottom+dy)
+            move(*corner_point(0.,0.))
+            for cycle in range(1,51):
+                width=.4*cycle
+                move(*corner_point(width,0.),'infill_'+str(corner),cycle,500.)
+                move(*corner_point(0.,width),'infill_'+str(corner),cycle,500.)
+        move(cx,cy)
+        heights = ([0.,52.5,105.,157.5,210.,260.] if self.model == 'M'
+                   else [0.,60.,120.,180.,240.,300.,360.])
+        for height in heights:
+            plan.append(([None,None,float(height)],40.,'z_up' if height==0 else 'z_down',1))
             for cycle in range(1,21):
+                amplitude=.5*cycle
+                other=height+amplitude if height+amplitude<=z else height-amplitude
                 plan += [([None,None,other],40.,'z_repeat',cycle),
                          ([None,None,float(height)],40.,'z_repeat',cycle)]
         plan.append(([None,None,20.],40.,'z_finish',1))
@@ -341,30 +363,62 @@ class Diagnostics:
             self.finish('warning' if any(self.data['driver_warnings'].values()) else 'review',
                         'Motion finished; inspect noise and missed steps')
 
+    def probe_counters(self):
+        current = self.status('probe_auto_recovery')
+        for key in ('trigger_errors','tolerance_errors','tolerance_retries','reactivations','recoveries'):
+            self.data[key] = max(0, current.get(key,0)-self.probe_counter_start.get(key,0))
+
     def test_probe(self, now):
         if self.step == 0:
-            x, y, z = self.geometry()
+            x,y,z = self.geometry()
             self.saved['probe'] = True
-            self.data = {'center': [x, y], 'samples': []}
-            self.lift_z = z
-            self.move([None, None, z], self.z_speed)
-            self.move([x, y, None], 50.)
-            self.step = 1
-        self.phase = 'probe_running'
-        self.script('PROBE SAMPLES=1')
-        value = float(self.status('probe')['last_z_result'])
-        if not math.isfinite(value):
-            raise ValueError('Invalid probe sample')
-        self.samples.append(value)
-        self.data['samples'] = list(self.samples)
-        self.move([None, None, self.toolhead.get_position()[2] + 1.5], self.z_speed)
-        if len(self.samples) == 10:
-            spread = max(self.samples) - min(self.samples)
-            self.data.update(minimum=min(self.samples), maximum=max(self.samples),
-                             mean=statistics.mean(self.samples), median=statistics.median(self.samples),
-                             stddev=statistics.pstdev(self.samples), spread=spread, reference=.03)
-            self.move([None, None, self.lift_z], self.z_speed)
-            self.finish('passed' if spread <= .03 else 'warning', 'Probe repeatability test complete')
+            self.probe_counter_start = self.status('probe_auto_recovery')
+            if 'trigger_errors' not in self.probe_counter_start:
+                raise ValueError('Probe diagnostic counters unavailable')
+            self.data = {'schema':4, 'center':[x,y], 'samples':[], 'sets':0,
+                         'deployment_cycles':0, 'deployment_errors':0, 'stowed_triggered':0}
+            self.lift_z=z
+            self.move([None,None,z],self.z_speed)
+            self.move([x,y,None],50.)
+            self.step=1
+        wrapper=self.printer.lookup_object('probe').mcu_probe
+        self.phase='probe_running'
+        try:
+            if self.data['deployment_cycles'] < 10:
+                self.data['activity']='deployment'
+                self.script('Probe_Stow')
+                self.toolhead.dwell(.05)
+                self.toolhead.wait_moves()
+                if wrapper.query_endstop(self.toolhead.get_last_move_time()):
+                    self.data['stowed_triggered']+=1
+                self.script('Probe_Deploy')
+                self.toolhead.dwell(.2)
+                self.toolhead.wait_moves()
+                if wrapper.query_endstop(self.toolhead.get_last_move_time()):
+                    self.data['deployment_errors']+=1
+                    raise ValueError('Probe remained triggered after deployment')
+                self.data['deployment_cycles']+=1
+                self.script('Probe_Stow')
+                return
+            self.data['activity']='measurement'
+            self.script('PROBE SAMPLES=3')
+            values=self.status('probe_auto_recovery').get('last_samples',[])
+            if len(values)!=3 or not all(math.isfinite(v) for v in values):
+                raise ValueError('Invalid probe sample')
+            self.samples.extend(values)
+            self.data['sets']+=1
+            self.data['samples']=list(self.samples)
+            spread=max(self.samples)-min(self.samples)
+            self.data.update(minimum=min(self.samples),maximum=max(self.samples),
+                             mean=statistics.mean(self.samples),median=statistics.median(self.samples),
+                             stddev=statistics.pstdev(self.samples),spread=spread,reference=.03)
+            self.move([None,None,self.lift_z],self.z_speed)
+            self.probe_counters()
+            if self.data['sets']==10:
+                clean=not any(self.data[k] for k in ('trigger_errors','tolerance_errors','deployment_errors'))
+                self.finish('passed' if spread<=.03 and clean else 'warning','Probe repeatability test complete')
+        finally:
+            self.probe_counters()
 
     def test_fan(self, now):
         if not self.saved.get('fan_test'):

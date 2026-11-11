@@ -25,7 +25,7 @@ class Panel(ScreenPanel):
         self.instructions = {
             'heater': _('Alternately heats the two heaters. Remove the toolhead from the mount and start when the nozzle is below 50°C.'),
             'motor': _('Park and remove the toolhead before this test'),
-            'probe': _('Clear the bed and remove the toolhead. HOME_CHECK runs first. Measures 10 times at the bed center using the configured probe speed. No mesh or offset is saved.'),
+            'probe': _('Clear the bed and remove the toolhead. After HOME_CHECK, checks deployment 10 times and measures 10 sets of 3 samples at the bed center. Probe speed is unchanged. No mesh or offset is saved.'),
             'fan': _('Please check that the fans are actually running.'),
             'sensor': _('Press and release the switch to view its current state.')}
         outer = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
@@ -183,16 +183,24 @@ class Panel(ScreenPanel):
                 activity = _('Cooling heaters') if phase == 'heater_cooling' else (
                     _('Heating H2') if data.get('stage') == 3 else _('Heating H1'))
             elif kind == 'probe':
-                activity = _('Measurements') + f" {len(data.get('samples', []))}/10"
+                activity = (_('Deployment check') + f" {data.get('deployment_cycles',0)}/10"
+                            if data.get('schema') == 4 and data.get('activity') == 'deployment' else
+                            _('Measurements') + f" {data.get('sets',0)}/10 × 3" if data.get('schema') == 4 else
+                            _('Measurements') + f" {len(data.get('samples', []))}/10")
             elif kind == 'motor':
                 segment = data.get('segment', 0)
                 labels = {'position':_('Positioning'), 'x':_('X-axis motion'), 'y':_('Y-axis motion'),
                           'diagonal_a':_('Diagonal motion'), 'diagonal_b':_('Diagonal motion'),
-                          'z_down':_('Z-axis motion') + ' ↓', 'z_up':_('Z-axis motion') + ' ↑', 'z_finish':_('Z-axis motion') + ' → Z20', 'z_repeat':_('Z-axis motion') + ' ↕ 0.5 mm'}
+                          'z_down':_('Z-axis motion') + ' ↓', 'z_up':_('Z-axis motion') + ' ↑', 'z_finish':_('Z-axis motion') + ' ↕', 'z_repeat':_('Z-axis motion') + ' ↕'}
+                labels['ellipse'] = _('Motor test - circular')
+                for corner in range(1,5):
+                    labels['infill_'+str(corner)] = _('Diagonal motion') + f' {corner}/4'
                 activity = labels.get(data.get('activity'), _('Positioning'))
+                if str(data.get('activity','')).startswith('infill_'):
+                    activity += f" · {data.get('cycle',0)}/50"
                 if data.get('activity') == 'z_repeat':
                     activity += f" {data.get('cycle',0)}/20"
-                if data.get('activity') in ('x','y','diagonal_a','diagonal_b'):
+                if data.get('activity') in ('x','y','diagonal_a','diagonal_b','ellipse'):
                     activity += f" {data.get('cycle',0)}/5"
             elif kind == 'fan':
                 if phase == 'fan_heating':
@@ -239,7 +247,8 @@ class Panel(ScreenPanel):
         if kind == 'heater':
             value = elapsed / 32. * 100
         elif kind == 'probe':
-            value = len(data.get('samples', [])) * 10
+            value = (data.get('deployment_cycles',0)*2 + data.get('sets',0)*8
+                     if data.get('schema') == 4 else len(data.get('samples', []))*10)
         elif kind == 'motor':
             value = data.get('segment', 0) / max(1, data.get('segments',14)) * 100
         elif kind == 'fan':
@@ -313,22 +322,34 @@ class Panel(ScreenPanel):
                 grade = grades.get(data.get(f'result{number}'), _('Previous criteria')
                                   if delta is not None and not data.get('schema') else _('Not tested'))
                 note(box, grade)
-        elif kind == 'probe' and 'spread' in data:
-            box = card()
-            row(box, _('Range'), f"{data['spread']:.5f} mm", True)
-            row(box, _('Standard deviation'), f"{data['stddev']:.5f} mm")
-            for key, title in [('minimum', _('Minimum')), ('maximum', _('Maximum')), ('mean', _('Average'))]:
-                row(box, title, f'{data[key]:.5f} mm')
-            details = Gtk.Expander(label=_('Measurement details'))
-            samples = Gtk.Label(label='\n'.join(f'{i+1:02d}    {v:.5f} mm'
-                                for i,v in enumerate(data.get('samples', []))), xalign=0)
-            details.add(samples)
-            box.pack_start(details, False, False, 0)
-            note(card(), _('Reference range: 0.030 mm. Repeatability does not guarantee bed leveling accuracy.'))
+        elif kind == 'probe':
+            if data.get('schema') == 4:
+                box = card(_('Deployment check'))
+                row(box, _('Deployment signal OK'), f"{data.get('deployment_cycles',0)} / 10")
+                row(box, _('Deployment errors'), str(data.get('deployment_errors',0)))
+                row(box, _('Measurements'), f"{data.get('sets',0)} / 10 × 3")
+                note(box, _('Signal checks do not prove mechanical retraction.'))
+                box = card(_('Errors and retries'))
+                for key,title in [('trigger_errors',_('Trigger errors')),
+                                  ('tolerance_errors',_('Tolerance errors')),
+                                  ('tolerance_retries',_('Measurement retries')),
+                                  ('reactivations',_('Recovery redeployments')),
+                                  ('recoveries',_('Recovered measurements'))]:
+                    row(box,title,str(data.get(key,0)))
+            if 'spread' in data:
+                box=card(_('Measurements'))
+                row(box,_('Range'),f"{data['spread']:.5f} mm",True)
+                row(box,_('Standard deviation'),f"{data['stddev']:.5f} mm")
+                for key,title in [('minimum',_('Minimum')),('maximum',_('Maximum')),('mean',_('Average'))]:
+                    row(box,title,f'{data[key]:.5f} mm')
+                details=Gtk.Expander(label=_('Measurement details'))
+                samples=Gtk.Label(label='\n'.join(f'{i+1:02d}    {v:.5f} mm' for i,v in enumerate(data.get('samples',[]))),xalign=0)
+                details.add(samples)
+                box.pack_start(details,False,False,0)
+            note(card(),_('Reference range: 0.030 mm. Repeatability does not guarantee bed leveling accuracy.'))
         elif kind == 'motor':
             if data.get('model'):
                 box = card('FLEX4 ' + data['model'])
-                row(box, 'X × Y × Z', ' × '.join(str(int(v)) for v in data['volume']) + ' mm')
                 row(box, 'XY', '500 mm/s · 16000 mm/s²')
                 row(box, 'Z', f"{data.get('z_speed',40):g} mm/s · {data.get('z_accel',0):g} mm/s²")
             for name, values in data.get('after', {}).items():
@@ -358,8 +379,10 @@ class Panel(ScreenPanel):
                         note(section, _('Unavailable'))
                     details.add(section)
                     box.pack_start(details, False, False, 0)
-            note(card(), _('These are snapshots before and after the test, not continuous monitoring. The current scale is not a measured current.'))
-            note(card(), _('Configured current is not measured current. Motion completion does not prove absence of missed steps.'))
+            guidance = card()
+            note(guidance, _('These are snapshots before and after the test, not continuous monitoring.'))
+            note(guidance, _('Displayed current is configured current, not measured current.'))
+            note(guidance, _('Check for noise during movement and whether it occurs at a particular position.'))
         elif kind == 'fan':
             for key, title in [('part', _('Part cooling fan')),
                                ('chamber', _('Chamber filter fan')),

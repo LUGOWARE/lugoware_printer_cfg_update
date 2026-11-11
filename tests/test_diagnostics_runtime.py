@@ -53,6 +53,10 @@ class Fixture:
         self.printer = Obj(get_reactor=lambda:self.reactor, lookup_object=self.lookup,
                            register_event_handler=lambda *a:None)
         config=Obj(get=lambda n,d:d, get_printer=lambda:self.printer, getfloat=lambda n,d,**kw:d)
+        self.states['probe_auto_recovery']={k:0 for k in ('trigger_errors','tolerance_errors','tolerance_retries','reactivations','recoveries')}
+        self.toolhead.dwell=lambda t:None
+        self.toolhead.get_last_move_time=lambda:0
+        self.objects['probe']=Obj(mcu_probe=Obj(query_endstop=lambda t:False),get_status=lambda t:self.states['probe'].copy())
         self.d = module.Diagnostics(config)
         self.d.ready()
 
@@ -66,6 +70,8 @@ class Fixture:
         return default
     def script(self,text):
         self.scripts.append(text)
+        if text == 'PROBE SAMPLES=3':
+            self.states['probe_auto_recovery']['last_samples']=[.1,.101,.102]
         if text == 'PROBE SAMPLES=1':
             self.states['probe']['last_z_result'] += .001
         elif text == 'HOME_CHECK':self.states['toolhead']['homed_axes']='xyz'
@@ -106,10 +112,10 @@ class Tests(unittest.TestCase):
 
     def test_probe_repeatability_no_save_and_stop(self):
         self.f.d.validate('probe');self.f.d.start('probe')
-        for _ in range(11):self.f.tick()
+        for _ in range(21):self.f.tick()
         self.assertFalse(self.f.d.active)
-        self.assertEqual(len(self.f.d.data['samples']),10)
-        self.assertAlmostEqual(self.f.d.data['spread'],.009)
+        self.assertEqual(len(self.f.d.data['samples']),30)
+        self.assertAlmostEqual(self.f.d.data['spread'],.002)
         self.assertEqual(self.f.d.phase,'passed')
         self.assertNotIn('SAVE_CONFIG', '\n'.join(self.f.scripts))
         self.assertEqual(self.f.scripts[-1],'Probe_Stow')
@@ -119,20 +125,22 @@ class Tests(unittest.TestCase):
         self.assertEqual(self.f.d.phase,'stopped')
 
     def test_motor_models_and_restore(self):
-        for model,vol in [('M',(230,230,250)),('L',(230,230,350)),('W',(330,230,350))]:
+        for model,vol in [('M',(230,230,270)),('L',(230,230,370)),('W',(334,230,370))]:
             self.f.d.model=model
             self.f.states['toolhead']['axis_maximum']=[400,300,400]
             plan=self.f.d.motor_plan()
             for axis in ('x','y','diagonal_a','diagonal_b'):
                 self.assertEqual(sum(p[2]==axis for p in plan),10)
             self.assertEqual(plan[-1][0],[None,None,20.])
-            levels=list(range(0,vol[2]+1,50))
+            levels=[0,52.5,105,157.5,210,260] if model=='M' else [0,60,120,180,240,300,360]
+            for corner in range(1,5):
+                self.assertEqual(sum(p[2]=='infill_'+str(corner) for p in plan),100)
             self.assertEqual([p[0][2] for p in plan if p[2] in ('z_up','z_down')],levels)
             repeats=[p for p in plan if p[2]=='z_repeat']
             self.assertEqual(len(repeats),40*len(levels))
             for i,level in enumerate(levels):
                 block=repeats[i*40:(i+1)*40]
-                self.assertEqual({p[0][2] for p in block},{level,level+.5 if level<vol[2] else level-.5})
+                self.assertEqual({p[0][2] for p in block},{level} | {level+.5*j for j in range(1,21)})
                 self.assertTrue(all(0<=p[0][2]<=vol[2] for p in block))
             activities=[p[2] for p in plan]
             self.assertLess(max(i for i,a in enumerate(activities) if a=='diagonal_a'), min(i for i,a in enumerate(activities) if a=='diagonal_b'))
