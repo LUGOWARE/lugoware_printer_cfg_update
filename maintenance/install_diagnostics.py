@@ -41,7 +41,8 @@ def header(text,model):
 def install(config,screen,klipper,backup,model):
     assets=Path(__file__).with_name('diagnostics')
     changes={screen/'panels/diagnostics.py':(assets/'diagnostics.py').read_text(encoding='utf-8'),
-             klipper/'klippy/extras/lugo_diagnostics.py':(assets/'lugo_diagnostics.py').read_text(encoding='utf-8')}
+             klipper/'klippy/extras/lugo_diagnostics.py':(assets/'lugo_diagnostics.py').read_text(encoding='utf-8'),
+             klipper/'klippy/extras/lugo_factory_qc.py':(assets/'lugo_factory_qc.py').read_text(encoding='utf-8')}
     p=config/'printer_base.cfg';changes[p]=strip_legacy(p.read_text(encoding='utf-8'))
     p=config/'printer.cfg';changes[p]=header(strip_legacy(p.read_text(encoding='utf-8')),model)
     p=config/'KlipperScreen.conf';changes[p]=screen_menu(p.read_text(encoding='utf-8'))

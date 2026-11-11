@@ -7,7 +7,10 @@ import unittest
 from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parent
-spec = importlib.util.spec_from_file_location('diag', ROOT.parent/'maintenance/diagnostics/lugo_diagnostics.py')
+import sys, types
+package = types.ModuleType('qc_test_extras');package.__path__ = [str(ROOT.parent/'maintenance/diagnostics')]
+sys.modules['qc_test_extras'] = package
+spec = importlib.util.spec_from_file_location('qc_test_extras.diag', ROOT.parent/'maintenance/diagnostics/lugo_diagnostics.py')
 module = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(module)
 

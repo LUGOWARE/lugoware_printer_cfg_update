@@ -1,4 +1,5 @@
 """Bounded, user-started appliance diagnostics. No test runs on load."""
+from .lugo_factory_qc import FactoryQC
 import json
 import logging
 import math
@@ -17,6 +18,7 @@ class Diagnostics:
         self.model = config.get('model', 'M').upper()
         if self.model not in ('M', 'L', 'W'):
             raise config.error('Diagnostic model must be M, L or W')
+        self.factory = FactoryQC(self)
         self.active = False
         self.kind = ''
         self.phase = 'idle'
@@ -129,6 +131,14 @@ class Diagnostics:
 
     def control(self, request):
         action = request.get_str('action', 'status')
+        if action == 'factory_start':
+            try:self.factory.begin(request.get_int('minutes'), request.get_str('token'))
+            except (ValueError,KeyError) as exc:raise request.error(str(exc))
+            request.send(self.get_status(self.reactor.monotonic()));return
+        if action == 'factory_status':
+            try:self.factory.heartbeat(request.get_str('token'))
+            except (ValueError,AttributeError) as exc:raise request.error(str(exc))
+            request.send(self.get_status(self.reactor.monotonic()));return
         if action == 'sensor':
             request.send({'detected': self.status('filament_switch_sensor toolhead_sensor').get('filament_detected')})
             return
@@ -183,7 +193,9 @@ class Diagnostics:
             with self.gcode.get_mutex():
                 self._owns_mutex = True
                 try:
-                    if self.printing():
+                    if self.kind == 'factory':
+                        self.factory.tick(eventtime)
+                    elif self.printing():
                         self.finish('failed', 'A print started; diagnostics interrupted', cleanup=False)
                     elif self.stop_requested:
                         self.finish('stopped', 'Diagnostic stopped')
@@ -487,7 +499,8 @@ class Diagnostics:
 
     def finish(self, outcome, message, cleanup=True):
         if cleanup:
-            self.cleanup()
+            if self.kind == 'factory':self.factory.cleanup()
+            else:self.cleanup()
         self.active = False
         self.phase = outcome
         self.result = {'serial': self.serial, 'kind': self.kind, 'outcome': outcome,
@@ -509,7 +522,7 @@ class Diagnostics:
             self.finish('failed', 'Printer shutdown; inspect before retrying', cleanup=False)
 
     def get_status(self, eventtime):
-        return {'active': self.active, 'kind': self.kind, 'phase': self.phase,
+        return {'factory_qc_version': 1, 'active': self.active, 'kind': self.kind, 'phase': self.phase,
                 'serial': self.serial, 'data': getattr(self, 'data', {}),
                 'elapsed': round(eventtime-self.started, 1) if self.active else 0,
                 'result': self.result, 'results': self.results,

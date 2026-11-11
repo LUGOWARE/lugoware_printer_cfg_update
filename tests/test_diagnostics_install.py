@@ -18,6 +18,7 @@ class DiagnosticInstallTests(unittest.TestCase):
     install(cfg,ks,kp,home/'backup',model)
     after={str(p.relative_to(home)):p.read_bytes() for folder in (cfg,ks,kp) for p in folder.rglob('*') if p.is_file()}
     self.assertEqual(before,after)
+    self.assertTrue((kp/'klippy/extras/lugo_factory_qc.py').is_file())
     self.assertIn('model: '+model,(cfg/'printer.cfg').read_text())
     self.assertIn('#*# z_offset = 1.234',(cfg/'printer.cfg').read_text())
     text=(cfg/'printer_base.cfg').read_text();self.assertIn('sensor_pin: PA2',text);self.assertNotIn('[gcode_macro HEATER_TEST]',text)
