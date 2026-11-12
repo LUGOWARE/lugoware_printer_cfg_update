@@ -522,7 +522,7 @@ class Diagnostics:
             self.finish('failed', 'Printer shutdown; inspect before retrying', cleanup=False)
 
     def get_status(self, eventtime):
-        return {'factory_qc_version': 1, 'active': self.active, 'kind': self.kind, 'phase': self.phase,
+        return {'factory_qc_version': 3, 'active': self.active, 'kind': self.kind, 'phase': self.phase,
                 'serial': self.serial, 'data': getattr(self, 'data', {}),
                 'elapsed': round(eventtime-self.started, 1) if self.active else 0,
                 'result': self.result, 'results': self.results,
