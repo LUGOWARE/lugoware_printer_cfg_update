@@ -10,17 +10,17 @@
     }
   },
   "lugoware_system": {
-    "version": "1.2.2",
+    "version": "1.2.3",
     "date": "2026/11/13",
     "notes": {
       "ko": [
-        "일부 기기에서 시스템 업데이트가 중단되는 문제를 수정했습니다."
+        "설정 저장 백업을 최신 3개까지 유지하고 오래된 백업을 자동으로 정리합니다."
       ],
       "en": [
-        "Fixed system updates failing on some printers."
+        "Keep the latest three configuration-save backups and automatically remove older backups."
       ],
       "zh_CN": [
-        "修复部分打印机系统更新中断的问题。"
+        "仅保留最近三份配置保存备份，并自动清理旧备份。"
       ]
     }
   }
