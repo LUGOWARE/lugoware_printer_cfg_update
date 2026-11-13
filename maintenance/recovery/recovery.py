@@ -19,7 +19,7 @@ KO = {
  'Automatic machine Z estimate': '자동 복원 기계 Z (추정)',
  'Position recorded': '위치 기록 시각',
  'Position record interval': '위치 저장 간격',
- 'Restarts at the latest checkpoint confirmed executed. Some movements may be repeated.': '이동 실행이 확인된 가장 최근 복구 지점부터 재개합니다. 일부 구간은 중복 출력될 수 있습니다.',
+ 'Resumes from the latest point confirmed executed. Some sections may be printed again.': '이동 실행이 확인된 가장 최근 지점부터 재개합니다. 일부 구간은 중복 출력될 수 있습니다.',
  'Homing XY…': 'XY 홈 이동 중…', 'Heating…': '예열 중…',
  'Docking and priming…': '툴 도킹·프라임 중…',
  'Returning to the print…': '출력 위치로 복귀 중…',
@@ -35,7 +35,7 @@ KO = {
  'Close': '닫기', 'Cancel': '취소',
  'Delete the interrupted print record and open print options. Printing starts only when you press Print.': '중단 기록을 삭제하고 새 출력 정보창을 엽니다.\n출력 버튼을 눌러야 시작됩니다.',
  'Review the saved layer and machine position before resuming.': '저장된 레이어와 실제 기계 위치를 확인한 뒤 복구해주세요.',
- 'Review required. Recovery never starts automatically.': '실제 상태를 확인한 뒤 복구를 시작해주세요. 자동 실행하지 않습니다.',
+ 'Check the actual printer state before starting recovery.': '실제 상태를 확인한 뒤 복구를 시작해 주세요.',
  'Estimated layer at last observation': '마지막 관측 레이어 (추정)',
  'Suggested restart layer': '권장 재시작 레이어',
  'Current physical machine Z (mm)': '현재 실제 기계 Z 높이 (mm)',
@@ -204,7 +204,7 @@ class Panel(ScreenPanel):
         if action == 'review':
             self.status_label.set_text(tr(self._screen, 'Review saved. No movement or heating was started.'))
         else:
-            self.status_label.set_text(tr(self._screen, 'Recovery setup is running.' if data.get('state', {}).get('recovering') else 'Review required. Recovery never starts automatically.'))
+            self.status_label.set_text(tr(self._screen, 'Recovery setup is running.' if data.get('state', {}).get('recovering') else 'Check the actual printer state before starting recovery.'))
         if key != self.render_key:
             self.render_key = key
             self.render(data.get('state', {}).get('available', False))
@@ -250,26 +250,22 @@ class Panel(ScreenPanel):
         cause.pack_start(heading, False, False, 0)
         cause.pack_start(Gtk.Label(label=tr(self._screen, interruption), wrap=True, xalign=0), False, False, 0)
         self.body.pack_start(cause, False, False, 0)
-        restart = self.proposal_data.get('resume') or {}
         positions = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
         positions.get_style_context().add_class('recovery-card')
-        height = restart.get('height')
-        for title, value in (
-            ('Estimated layer at last observation', (self.proposal_data.get('observed') or {}).get('layer', unknown)),
-            ('Last observed machine Z (estimated)', f"{stop['z']:.3f} mm" if 'z' in stop else unknown),
-            ('Automatic restart layer', restart.get('layer', unknown)),
-            ('Automatic restart print Z', f'{height:.3f} mm' if height is not None else unknown)):
-            row = Gtk.Box(spacing=12)
-            row.pack_start(Gtk.Label(label=tr(self._screen, title), wrap=True, xalign=0), True, True, 0)
-            row.pack_end(Gtk.Label(label=str(value), xalign=1), False, False, 0)
-            positions.pack_start(row, False, False, 0)
-        positions.pack_start(Gtk.Label(label=tr(self._screen, 'Observed Z is a machine coordinate; restart Z is a print coordinate.'), wrap=True, xalign=0), False, False, 0)
+        row = Gtk.Box(spacing=12)
+        row.pack_start(Gtk.Label(label=tr(self._screen, 'Estimated layer at last observation'), wrap=True, xalign=0), True, True, 0)
+        row.pack_end(Gtk.Label(label=str((self.proposal_data.get('observed') or {}).get('layer', unknown)), xalign=1), False, False, 0)
+        positions.pack_start(row, False, False, 0)
+        zrow = Gtk.Box(spacing=12)
+        zrow.pack_start(Gtk.Label(label=tr(self._screen, 'Last observed machine Z (estimated)'), wrap=True, xalign=0), True, True, 0)
+        zvalue = f"{stop['z']:.3f} mm" if stop.get('z') is not None else unknown
+        zrow.pack_end(Gtk.Label(label=zvalue, xalign=1), False, False, 0)
+        positions.pack_start(zrow, False, False, 0)
         self.body.pack_start(positions, False, False, 0)
-        self.body.pack_start(Gtk.Label(label=tr(self._screen, 'Restarts at the latest checkpoint confirmed executed. Some movements may be repeated.'), wrap=True, xalign=0), False, False, 0)
+        self.body.pack_start(Gtk.Label(label=tr(self._screen, 'Resumes from the latest point confirmed executed. Some sections may be printed again.'), wrap=True, xalign=0), False, False, 0)
         reason = self.proposal_data.get('reason')
-        if reason:
+        if reason and not self.proposal_data.get('can_prepare'):
             self.body.pack_start(Gtk.Label(label=tr(self._screen, reason), wrap=True, xalign=0), False, False, 0)
-        self.body.pack_start(Gtk.Label(label=tr(self._screen, 'Recorded positions are observations, not a confirmed stopping point.'), wrap=True, xalign=0), False, False, 0)
         checks = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
         checks.get_style_context().add_class('recovery-card')
         self.body.pack_start(checks, False, False, 0)

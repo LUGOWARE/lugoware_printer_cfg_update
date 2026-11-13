@@ -79,6 +79,17 @@ def build_index(path):
     return dict(records=records,events=events,total=total,tool_seconds=tool_seconds)
 
 def index_file(path, cache_dir=None):
+    # Lock only this file's display cache across background/screen workers.
+    # Never runs on the Klipper Reactor or GTK main thread.
+    import fcntl
+    folder=Path(cache_dir) if cache_dir else Path.home()/'.cache/KlipperScreen/exclusion_eta'
+    folder.mkdir(parents=True,exist_ok=True)
+    lock=folder/(hashlib.sha256(str(Path(path).resolve()).encode()).hexdigest()+'.lock')
+    with lock.open('a') as stream:
+        fcntl.flock(stream,fcntl.LOCK_EX)
+        return _index_file(path,cache_dir)
+
+def _index_file(path, cache_dir=None):
     path=Path(path).resolve()
     def stamp():
         s=path.stat();return [str(path),s.st_size,s.st_mtime_ns,s.st_ctime_ns,s.st_ino]

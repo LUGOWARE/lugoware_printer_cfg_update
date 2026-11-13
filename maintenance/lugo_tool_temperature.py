@@ -115,6 +115,18 @@ class ToolTemperature:
         path = sd.file_path() if sd else None
         if not path:
             return
+        prepared = self.printer.lookup_object('lugo_preanalysis', None)
+        prepared = prepared.for_file(path) if prepared else None
+        if prepared:
+            result = prepared['tools']; data = result['metadata']
+            self.used = sorted(set(result['used']) | set(self.used or []))
+            for i, name in enumerate(data.get('filament_settings_id', data.get('lugo_tool_materials', data.get('filament_type', [])))[:4]):
+                self.materials[i] = name or 'Unknown'
+            for i, value in enumerate(data.get('nozzle_temperature', [])[:4]):
+                temp = float(value)
+                if self.base[i] is None and math.isfinite(temp) and temp > 0:
+                    self.base[i] = temp
+            return
         reactor = self.printer.get_reactor()
         generation = self._analysis_generation
         output = tempfile.TemporaryFile(mode='w+b')

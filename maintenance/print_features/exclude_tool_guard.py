@@ -159,6 +159,30 @@ class ExcludeToolGuard:
         path = self.sd.file_path()
         if not path or not self.sd.is_cmd_from_sd():
             raise gcmd.error('First tool selection requires an active print file')
+        prepared = self.printer.lookup_object('lugo_preanalysis', None)
+        prepared = prepared.for_file(path) if prepared else None
+        if prepared:
+            params = dict(defaults)
+            start = self.sd.get_file_position()
+            for offset, line in prepared['first_commands']:
+                if offset < start: continue
+                if offset - start > 32 * 1024 * 1024:
+                    raise gcmd.error('Cannot determine first printable tool within scan limit')
+                command = line.split()[0].upper()
+                if command == 'CHANGE_TOOL': params = self.tool_params(line)
+                elif command in ('M104', 'M109'):
+                    match = re.search(r'(?:^|\s)S([-+0-9.eE]+)', line, re.I)
+                    if match: params['TEMP'] = match.group(1)
+                elif re.fullmatch(r'T\d+', command):
+                    if int(command[1:]) != int(params.get('NEXT_TOOL', -1)):
+                        raise gcmd.error('First printable tool has no matching CHANGE_TOOL settings')
+                elif command == 'EXCLUDE_OBJECT_START':
+                    match = NAME.search(line)
+                    if not match: raise gcmd.error('First printable object has no name')
+                    name = match.group(1).upper()
+                    if name not in excluded: return name, params
+                elif command in ('END_PRINT', 'PRINT_END', 'START_PRINT'): break
+            raise gcmd.error('No printable object remains or first tool settings are unavailable')
         params = dict(defaults)
         count = 0
         checkpoint = 65536

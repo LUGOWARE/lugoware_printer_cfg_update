@@ -38,7 +38,7 @@ def patch(source, assets=None):
     if NEW not in result:
         if result.count(OLD)!=1:raise ValueError('Unsupported update notification handler')
         result=result.replace(OLD,NEW,1)
-    for imp in ('from ks_includes.lugoware_update_progress import Progress',
+    for imp in ('import time', 'from ks_includes.lugoware_update_progress import Progress',
                 'from ks_includes.update_progress_i18n import caption as update_progress_caption'):
         if imp not in result:result=imp+'\n'+result
     compile(result,'base_panel.py','exec')

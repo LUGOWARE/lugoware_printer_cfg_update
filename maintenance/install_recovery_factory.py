@@ -76,6 +76,8 @@ def install(home, screen, klipper, backup, assets=None):
             if '</body>' not in source:raise ValueError('Unsupported Mainsail index.html')
             source=source.replace('</body>','<script src="./lugoware-recovery-eta.js?v=20261109"></script></body>')
         changes[mainsail/'index.html']=source.encode('utf-8')
+    from install_preanalysis import extend_changes
+    extend_changes(changes, home, screen, klipper)
     # Validate everything before any writes. No journal, wizard state or user data is modified.
     for path,data in changes.items():
         if path.suffix=='.py':ast.parse(data,filename=str(path))

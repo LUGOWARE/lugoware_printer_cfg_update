@@ -10,6 +10,13 @@ import queue
 import threading
 import time
 import uuid
+import subprocess
+import sys
+import tempfile
+try:
+    from . import recovery_latency as latency
+except ImportError:
+    import recovery_latency as latency
 from collections import deque
 try:
     from .recovery_index import analyze, locate, MARKER, CURA, validate_checkpoint
@@ -60,6 +67,8 @@ class Recovery(RecoveryExecution):
     def __init__(self, config):
         self.printer = config.get_printer()
         self.reactor = self.printer.get_reactor()
+        latency.start()
+        self.io_latency = latency
         self.boot = uuid.uuid4().hex
         self.folder = Path.home() / 'printer_data/recovery'
         self.path = self.folder / 'current.json'
@@ -94,6 +103,7 @@ class Recovery(RecoveryExecution):
         self.printer.lookup_object('gcode').register_command('LUGO_RECOVERY_RESUME', self.resume_command)
 
     def ready(self):
+        self.config_signature_ready = self.config_hash()
         self.reactor.register_timer(self.cleanup_missing_sources, self.reactor.monotonic() + 5.)
         if hasattr(self, 'execution_pending'):
             self.install_observer()
@@ -217,8 +227,13 @@ class Recovery(RecoveryExecution):
 
     def status(self, name, now):
         obj = self.printer.lookup_object(name, None)
-        return obj.get_status(now) if obj else {}
+        started = latency.begin()
+        try:
+            return obj.get_status(now) if obj else {}
+        finally:
+            latency.end('status.' + name, started)
 
+    @latency.timed('recovery.snapshot')
     def snapshot(self, now):
         try:
             from .recovery_objects import capture
@@ -255,8 +270,13 @@ class Recovery(RecoveryExecution):
                 ('active', 'materials', 'base', 'overrides', 'used', 'bed_base', 'bed_override', 'bed_ready')}
         result['monotonic'] = now
         result['position_quality'] = 'observed_not_confirmed_stop'
-        return json.loads(json.dumps(result, allow_nan=False))
+        started = latency.begin()
+        try:
+            return json.loads(json.dumps(result, allow_nan=False))
+        finally:
+            latency.end('recovery.snapshot_json', started)
 
+    @latency.timed('recovery.begin')
     def begin(self, stats, now):
         previous = self.record
         session = uuid.uuid4().hex
@@ -275,8 +295,12 @@ class Recovery(RecoveryExecution):
                        'previous_session': previous.get('session') if previous else None}
         try: self.record['system_boot'] = Path('/proc/sys/kernel/random/boot_id').read_text().strip()
         except OSError: pass
-        settings = self.status('configfile', now).get('settings', {})
-        self.record['config_signature'] = hashlib.sha256(json.dumps(settings, sort_keys=True).encode()).hexdigest()
+        signature = getattr(self, 'config_signature_ready', None)
+        if signature is None: signature = self.config_hash()
+        self.record['config_signature'] = signature
+        gate = self.printer.lookup_object('lugo_preanalysis', None)
+        prepared = gate.for_file(source) if gate else None
+        self.prepared_analysis = prepared['recovery'] if prepared else None
         self.running = True
         self.last_save = 0.
         self.last_layer = None
@@ -286,6 +310,7 @@ class Recovery(RecoveryExecution):
             self.analysis = None
             self.resume_token = None
 
+    @latency.timed('recovery.tick')
     def tick(self, now):
         # print_stats may still say printing after an MCU shutdown. Never
         # interpret that stale state as a new job or replace the saved checkpoint.
@@ -371,6 +396,7 @@ class Recovery(RecoveryExecution):
             self.running = False
             self.submit()
 
+    @latency.timed('recovery.submit')
     def submit(self):
         if not self.record: return
         now = self.reactor.monotonic()
@@ -379,7 +405,12 @@ class Recovery(RecoveryExecution):
         if self.record.get('status') == 'recording':
             if now - getattr(self, 'last_submit', 0.) < 1.: return
             self.last_submit = now
-        item = copy.deepcopy(self.record)
+        started = latency.begin()
+        try:
+            item = copy.deepcopy(self.record)
+        finally:
+            latency.end('recovery.submit_copy', started)
+        item['_prepared_analysis'] = getattr(self, 'prepared_analysis', None)
         try:
             self.pending.put_nowait(item)
         except queue.Full:
@@ -389,15 +420,33 @@ class Recovery(RecoveryExecution):
                 pass
             self.pending.put_nowait(item)
 
+    @latency.timed('recovery.analyze_worker')
+    def analyze_worker(self, source):
+        # Called only by the existing writer, never by the Reactor. A Python
+        # thread still competes for the Klipper interpreter GIL; isolate parsing.
+        worker = Path(__file__).with_name('recovery_worker.py')
+        with tempfile.TemporaryFile() as output, tempfile.TemporaryFile() as errors:
+            result = subprocess.run([sys.executable, '-I', str(worker), str(source)],
+                                    stdout=output, stderr=errors, timeout=600,
+                                    check=False, close_fds=True)
+            if result.returncode:
+                errors.seek(0)
+                raise RuntimeError('Recovery index worker failed: ' + errors.read(2048).decode('utf-8', 'replace'))
+            if output.tell() > 32 * 1024 * 1024:
+                raise ValueError('Recovery index result exceeds limit')
+            output.seek(0)
+            return json.load(output)
+
     def write_loop(self):
         identified = {}
         while True:
             data = self.pending.get()
             try:
                 session = data['session']
+                prepared = data.pop('_prepared_analysis', None)
                 if session not in identified:
                     source = Path(data['source'])
-                    analysis = analyze(source)
+                    analysis = prepared if prepared is not None else self.analyze_worker(source)
                     if data.get('identity') and data['identity']['sha256'] != analysis['identity']['sha256']:
                         raise ValueError('Original print file has changed')
                     identified.clear()
