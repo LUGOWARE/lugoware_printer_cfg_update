@@ -149,7 +149,7 @@ class Panel(ScreenPanel):
             expander = self.expanders.get(key)
             if expander is None:
                 continue
-            expander.get_child().set_text(entry['body'] if entry else self.text('empty'))
+            expander.get_child().set_text(entry.get('body') or self.text('empty') if entry else self.text('empty'))
             if entry and entry.get('version'):
                 expander.set_label(self.text(key[1]) + ': ' + entry['version'])
         return False

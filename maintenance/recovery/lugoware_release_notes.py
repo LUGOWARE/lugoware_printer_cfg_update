@@ -45,11 +45,24 @@ def read_notes(home, channel, revision, language):
     try:
         size = subprocess.run(git + ['cat-file', '-s', obj], capture_output=True,
                               text=True, timeout=4)
-        if size.returncode or not 0 < int(size.stdout.strip()) <= MAX_BYTES:
-            return None
-        result = subprocess.run(git + ['show', obj], capture_output=True, timeout=4)
-        if result.returncode:
-            return None
-        return parse_notes(result.stdout, channel, language)
+        entry = None
+        if not size.returncode and 0 < int(size.stdout.strip()) <= MAX_BYTES:
+            result = subprocess.run(git + ['show', obj], capture_output=True, timeout=4)
+            if result.returncode == 0:
+                entry = parse_notes(result.stdout, channel, language)
+        if channel == 'lugoware_config':
+            if entry:
+                entry['version'] = ''
+            config = subprocess.run(git + ['show', revision + ':printer_base.cfg'],
+                                    capture_output=True, timeout=4)
+            if config.returncode == 0:
+                match = re.search(r'(?im)^\s*#\s*FLEX4[_ -][MLW][_ -]V(\d+(?:\.\d+)+)\b',
+                                  config.stdout.decode('utf-8-sig', errors='replace'))
+                if match:
+                    entry = entry or {'version': '', 'body': ''}
+                    entry['version'] = match.group(1)
+            elif entry:
+                entry['version'] = ''
+        return entry
     except (OSError, ValueError, subprocess.TimeoutExpired):
         return None

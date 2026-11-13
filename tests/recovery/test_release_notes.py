@@ -38,4 +38,18 @@ class NotesTests(unittest.TestCase):
             self.assertIn('새 설명',result['body']);self.assertNotIn('INTERNAL',result['body'])
             self.assertIsNone(read_notes(directory,'lugoware_system','0'*40,'ko'))
 
+    def test_config_version_comes_from_exact_config_revision(self):
+        with tempfile.TemporaryDirectory() as directory:
+            repo=Path(directory)/'lugoware_config';repo.mkdir()
+            def git(*args):
+                return subprocess.check_output(['git','-C',str(repo),*args],stderr=subprocess.DEVNULL).decode().strip()
+            git('init');git('config','user.name','Test');git('config','user.email','test@example.invalid')
+            path=repo/'printer_base.cfg'
+            path.write_text('# FLEX4_W_V2.4.16\n',encoding='utf8')
+            git('add','.');git('commit','-m','first');old=git('rev-parse','HEAD')
+            path.write_text('# FLEX4_W_V2.5.0\n',encoding='utf8')
+            git('add','.');git('commit','-m','second');new=git('rev-parse','HEAD')
+            self.assertEqual(read_notes(directory,'lugoware_config',old,'ko')['version'],'2.4.16')
+            self.assertEqual(read_notes(directory,'lugoware_config',new,'ko')['version'],'2.5.0')
+
 if __name__=='__main__':unittest.main()
