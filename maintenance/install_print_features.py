@@ -10,6 +10,14 @@ from october_features import job, notification, popup
 
 
 def patch_ui(source, name):
+    # Temporarily remove the additive subscription for legacy block matching.
+    # Restore it after migration; never discard the preanalysis status hook.
+    preanalysis_line = '                "lugo_preanalysis": None,\n'
+    had_preanalysis = name == 'screen.py' and preanalysis_line in source
+    if had_preanalysis:
+        if source.count(preanalysis_line) != 1:
+            raise ValueError('Duplicate preanalysis subscription')
+        source = source.replace(preanalysis_line, '', 1)
     # Normalize additive recovery hooks before older whole-method UI migrations.
     recovery_assets = Path(__file__).with_name('recovery')
     recovery_patches = json.loads((recovery_assets / 'ui_patches.json').read_text(encoding='utf-8')).get(name, [])
@@ -52,6 +60,9 @@ def patch_ui(source, name):
     if had_recovery:
         from install_recovery_factory import patch_ui as recovery_ui
         source = recovery_ui(source, name, recovery_assets)
+    if had_preanalysis:
+        from install_preanalysis import patch_screen
+        source = patch_screen(source)
     compile(source, name, 'exec')
     return source
 

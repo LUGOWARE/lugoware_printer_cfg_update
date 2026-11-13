@@ -10,20 +10,17 @@
     }
   },
   "lugoware_system": {
-    "version": "1.2.1",
+    "version": "1.2.2",
     "date": "2026/11/13",
     "notes": {
       "ko": [
-        "G-code 출력 준비 최적화",
-        "출력 재개 안내 및 화면 개선"
+        "일부 기기에서 시스템 업데이트가 중단되는 문제를 수정했습니다."
       ],
       "en": [
-        "Optimized G-code preparation for printing",
-        "Improved print recovery instructions and screen"
+        "Fixed system updates failing on some printers."
       ],
       "zh_CN": [
-        "优化 G-code 打印准备流程",
-        "改进打印恢复提示和界面"
+        "修复部分打印机系统更新中断的问题。"
       ]
     }
   }
