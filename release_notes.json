@@ -10,17 +10,17 @@
     }
   },
   "lugoware_system": {
-    "version": "1.2.3",
+    "version": "1.2.4",
     "date": "2026/11/13",
     "notes": {
       "ko": [
-        "설정 저장 백업을 최신 3개까지 유지하고 오래된 백업을 자동으로 정리합니다."
+        "이전 성능 진단 기능이 설치된 프린터에서도 시스템 업데이트가 정상적으로 진행되도록 개선했습니다."
       ],
       "en": [
-        "Keep the latest three configuration-save backups and automatically remove older backups."
+        "Fixed system updates on printers with the earlier performance diagnostics installed."
       ],
       "zh_CN": [
-        "仅保留最近三份配置保存备份，并自动清理旧备份。"
+        "修复了安装旧版性能诊断功能的打印机无法完成系统更新的问题。"
       ]
     }
   }

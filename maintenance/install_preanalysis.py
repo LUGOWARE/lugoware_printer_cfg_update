@@ -13,7 +13,10 @@ def patch_sd(source, assets):
     actual = ''.join(lines[node.lineno-1:node.end_lineno]).rstrip()+'\n'
     if actual == after:
         return source
-    if actual != before:
+    # Exact allowlist for the previously deployed .26 latency instrumentation.
+    # Never accept arbitrary changes to motion dispatch or error handling.
+    legacy = json.loads((assets/'virtual_sd_legacy.json').read_text(encoding='utf-8'))
+    if actual != before and actual not in legacy:
         raise ValueError('Unsupported VirtualSD work_handler; no files changed')
     lines[node.lineno-1:node.end_lineno] = [after]
     result = ''.join(lines)
