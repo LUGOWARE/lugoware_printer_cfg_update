@@ -26,21 +26,27 @@
   },
   "lugoware_system": {
     "version": "2.4.16",
-    "date": "2026/11/09",
+    "date": "2026/11/13",
     "notes": {
       "ko": [
+        "G-code 출력 준비 최적화",
+        "출력 재개 안내 및 화면 개선",
         "UI 개선",
         "점검 기능 추가",
         "중단된 출력 재개 기능 추가",
         "업데이트 목록 추가"
       ],
       "en": [
+        "Optimized G-code preparation for printing",
+        "Improved print recovery instructions and screen",
         "Improved the user interface",
         "Added printer diagnostics",
         "Added recovery for interrupted prints",
         "Added the update list"
       ],
       "zh_CN": [
+        "优化 G-code 打印准备流程",
+        "改进打印恢复提示和界面",
         "优化用户界面",
         "新增打印机诊断功能",
         "新增中断打印恢复功能",
