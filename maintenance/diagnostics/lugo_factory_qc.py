@@ -242,6 +242,8 @@ class FactoryQC:
 
     def motor_plan(self):
         x,y,z = self.motor_geometry()
+        # Keep every oscillation 5 mm clear of the physical Z travel end.
+        z = min(z, 265. if self.model == 'M' else 365.)
         left,right,bottom,top = 1.,x,0.,229.
         cx,cy = (left+right)/2.,(bottom+top)/2.
         plan = [([None,None,20.],self.z_speed,'position',0)]
@@ -276,8 +278,8 @@ class FactoryQC:
                 move(*corner_point(width,0.),'infill_'+str(corner),cycle,500.)
                 move(*corner_point(0.,width),'infill_'+str(corner),cycle,500.)
         move(cx,cy)
-        heights = ([0.,52.5,105.,157.5,210.,260.] if self.model == 'M'
-                   else [0.,60.,120.,180.,240.,300.,360.])
+        heights = ([0.,52.5,105.,157.5,210.,z-10.] if self.model == 'M'
+                   else [0.,60.,120.,180.,240.,300.,z-10.])
         for height in heights:
             plan.append(([None,None,float(height)],40.,'z_up' if height==0 else 'z_down',1))
             for cycle in range(1,21):

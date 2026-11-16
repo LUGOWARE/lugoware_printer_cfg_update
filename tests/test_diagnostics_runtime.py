@@ -128,14 +128,16 @@ class Tests(unittest.TestCase):
         self.assertEqual(self.f.d.phase,'stopped')
 
     def test_motor_models_and_restore(self):
-        for model,vol in [('M',(230,230,270)),('L',(230,230,370)),('W',(334,230,370))]:
+        for model,vol in [('M',(230,230,265)),('L',(230,230,365)),('W',(334,230,365))]:
             self.f.d.model=model
             self.f.states['toolhead']['axis_maximum']=[400,300,400]
             plan=self.f.d.motor_plan()
+            self.assertEqual(max(p[0][2] for p in plan),vol[2])
+            self.assertTrue(all(0 <= p[0][2] <= vol[2] for p in plan))
             for axis in ('x','y','diagonal_a','diagonal_b'):
                 self.assertEqual(sum(p[2]==axis for p in plan),10)
             self.assertEqual(plan[-1][0],[None,None,20.])
-            levels=[0,52.5,105,157.5,210,260] if model=='M' else [0,60,120,180,240,300,360]
+            levels=[0,52.5,105,157.5,210,255] if model=='M' else [0,60,120,180,240,300,355]
             for corner in range(1,5):
                 self.assertEqual(sum(p[2]=='infill_'+str(corner) for p in plan),100)
             self.assertEqual([p[0][2] for p in plan if p[2] in ('z_up','z_down')],levels)

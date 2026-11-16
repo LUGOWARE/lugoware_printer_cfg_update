@@ -10,17 +10,17 @@
     }
   },
   "lugoware_system": {
-    "version": "1.2.4",
-    "date": "2026/11/13",
+    "version": "1.2.5",
+    "date": "2026/11/16",
     "notes": {
       "ko": [
-        "이전 성능 진단 기능이 설치된 프린터에서도 시스템 업데이트가 정상적으로 진행되도록 개선했습니다."
+        "모터 점검과 공장 QC의 Z축 이동 범위를 M 265mm, L·W 365mm로 줄여 하단 여유 공간을 확보했습니다."
       ],
       "en": [
-        "Fixed system updates on printers with the earlier performance diagnostics installed."
+        "Reduced Z travel during motor diagnostics and factory QC to 265 mm for M and 365 mm for L/W, leaving 5 mm of clearance at the lower travel end."
       ],
       "zh_CN": [
-        "修复了安装旧版性能诊断功能的打印机无法完成系统更新的问题。"
+        "将电机检测和出厂 QC 的 Z 轴行程限制为 M 265 毫米、L/W 365 毫米，在行程下端保留 5 毫米余量。"
       ]
     }
   }

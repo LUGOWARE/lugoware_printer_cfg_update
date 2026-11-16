@@ -89,3 +89,16 @@ class TimedTests(unittest.TestCase):
 
 
 if __name__=='__main__':unittest.main()
+
+class ZLimitTests(unittest.TestCase):
+    def test_factory_all_models(self):
+        for model,cap in [('M',265.),('L',365.),('W',365.)]:
+            host=Fake();host.model=model
+            host.motor_geometry=lambda:(334. if model=='W' else 230.,230.,cap+5.)
+            factory=FactoryQC(host)
+            plan=factory.motor_plan()
+            self.assertEqual(max(p[0][2] for p in plan),cap)
+            self.assertTrue(all(0<=p[0][2]<=cap for p in plan))
+            self.assertEqual(plan[-1][0][2],20.)
+            last=[p[0][2] for p in plan if p[2]=='z_repeat'][-40:]
+            self.assertEqual(last[::2],[cap-10.+.5*j for j in range(1,21)])
