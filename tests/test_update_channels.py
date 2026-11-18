@@ -79,15 +79,17 @@ class ChannelTests(unittest.TestCase):
     def test_write_failure_restores_both_files(self):
         with tempfile.TemporaryDirectory() as d:
             home, repo, backup, target = self.fixture(Path(d))
-            original = worker.atomic
+            import install_toolhead_variant as variants
+            original = variants.os.replace
             count = 0
             def fail_second(path, data):
                 nonlocal count
                 count += 1
                 if count == 2: raise OSError('disk failure')
                 original(path, data)
-            with patch.object(worker, 'validate_config'), patch.object(worker, 'check_idle'), patch.object(worker, 'atomic', side_effect=fail_second):
+            with patch.object(worker, 'validate_config'), patch.object(worker, 'check_idle'), patch.object(variants.os, 'replace', side_effect=fail_second), patch.object(worker.subprocess, 'run') as run:
                 with self.assertRaises(OSError): worker.apply_config(repo, home, backup)
+                run.assert_not_called()
             self.assertEqual((target / 'printer_base.cfg').read_text(), 'old')
             self.assertEqual((target / 'KlipperScreen.conf').read_text(), '[main]\nlanguage: ko\n')
 

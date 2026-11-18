@@ -1,0 +1,80 @@
+{
+  "KlipperScreen/ks_includes/printer.py": [
+    [
+      "        if self.sensors is None:\n            self.sensors = list(self.get_config_section_list(\"filament_switch_sensor \"))\n            self.sensors.extend(iter(self.get_config_section_list(\"filament_motion_sensor \")))\n        return self.sensors\n\n    def get_probe(self):\n",
+      "        if self.sensors is None:\n            self.sensors = list(self.get_config_section_list(\"filament_switch_sensor \"))\n            self.sensors.extend(iter(self.get_config_section_list(\"filament_motion_sensor \")))\n            if self.config_section_exists(\"temperature_toolhead_sensor toolhead_sensor\"):\n                self.sensors.append(\"filament_switch_sensor toolhead_sensor\")\n        return self.sensors\n\n    def get_probe(self):\n"
+    ],
+    [
+      "            for x in self.tempstore[device]:\n                length = len(self.tempstore[device][x])\n                if length < self.tempstore_size:\n                    self.tempstore[device][x] = [0] * (\n                        self.tempstore_size - length\n                    ) + self.tempstore[device][x]\n        logging.info(f\"Temp store: {list(self.tempstore)}\")\n",
+      "            for x in self.tempstore[device]:\n                length = len(self.tempstore[device][x])\n                if length < self.tempstore_size:\n                    self.tempstore[device][x] = [None if device == \"heater_generic Toolhead\" else 0] * (\n                        self.tempstore_size - length\n                    ) + self.tempstore[device][x]\n        logging.info(f\"Temp store: {list(self.tempstore)}\")\n"
+    ],
+    [
+      "            for x in self.tempstore[device]:\n                self.tempstore[device][x].pop(0)\n                temp = self.get_stat(device, x[:-1])\n                if not temp:\n                    # If the temperature is not available, set it to 0.\n                    temp = 0\n                self.tempstore[device][x].append(temp)\n",
+      "            for x in self.tempstore[device]:\n                self.tempstore[device][x].pop(0)\n                temp = self.get_stat(device, x[:-1])\n                if not temp and device != \"heater_generic Toolhead\":\n                    # If the temperature is not available, set it to 0.\n                    temp = 0\n                self.tempstore[device][x].append(temp)\n"
+    ]
+  ],
+  "KlipperScreen/ks_includes/screen_panel.py": [
+    [
+      "        return name\n\n    def update_temp(self, dev, temp, target, power, lines=1, digits=1):\n        new_label_text = f\"{temp or 0:.{digits}f}\"\n        if self._printer.device_has_target(dev) and target:\n            new_label_text += f\"/{target:.0f}\"\n        if dev not in self.devices:\n",
+      "        return name\n\n    def update_temp(self, dev, temp, target, power, lines=1, digits=1):\n        new_label_text = _('Not attached') if dev == \"heater_generic Toolhead\" and temp is None else f\"{temp or 0:.{digits}f}\"\n        if self._printer.device_has_target(dev) and target:\n            new_label_text += f\"/{target:.0f}\"\n        if dev not in self.devices:\n"
+    ]
+  ],
+  "KlipperScreen/ks_includes/widgets/heatergraph.py": [
+    [
+      "            if self.store[device][\"show\"]:\n                temp = self.printer.get_temp_store(device, \"temperatures\", data_points)\n                if isinstance(temp, list):\n                    mnum.append(max([v for v in temp if v is not None]))\n                target = self.printer.get_temp_store(device, \"targets\", data_points)\n                if isinstance(target, list):\n                    mnum.append(max([v for v in target if v is not None]))\n        return max(mnum)\n\n    def draw_graph(self, da: Gtk.DrawingArea, ctx: cairoContext):\n",
+      "            if self.store[device][\"show\"]:\n                temp = self.printer.get_temp_store(device, \"temperatures\", data_points)\n                if isinstance(temp, list):\n                    mnum.append(max([v for v in temp if v is not None], default=0))\n                target = self.printer.get_temp_store(device, \"targets\", data_points)\n                if isinstance(target, list):\n                    mnum.append(max([v for v in target if v is not None], default=0))\n        return max(mnum)\n\n    def draw_graph(self, da: Gtk.DrawingArea, ctx: cairoContext):\n"
+    ],
+    [
+      "        start_x = gsize[1][0]\n        end_x = gsize[0][0]\n\n        for i, d in enumerate(data):\n            if d is None:\n                continue\n\n            p_x = i * swidth + gsize[0][0] if i != d_len else gsize[1][0] - 1\n",
+      "        start_x = gsize[1][0]\n        end_x = gsize[0][0]\n\n        new_segment = True\n        for i, d in enumerate(data):\n            if d is None:\n                new_segment = True\n                continue\n\n            p_x = i * swidth + gsize[0][0] if i != d_len else gsize[1][0] - 1\n"
+    ],
+    [
+      "                p_y = gsize[1][1] - (d * (gsize[1][1] - gsize[0][1]))\n            else:\n                p_y = max(gsize[0][1], min(gsize[1][1], gsize[1][1] - 1 - (d * hscale)))\n            if i == 0:\n                ctx.move_to(gsize[0][0], p_y)\n            ctx.line_to(p_x, p_y)\n        if fill:\n            ctx.stroke_preserve()\n            ctx.line_to(end_x - 1, gsize[1][1] - 1)\n",
+      "                p_y = gsize[1][1] - (d * (gsize[1][1] - gsize[0][1]))\n            else:\n                p_y = max(gsize[0][1], min(gsize[1][1], gsize[1][1] - 1 - (d * hscale)))\n            if new_segment:\n                ctx.move_to(p_x, p_y)\n                new_segment = False\n            else:\n                ctx.line_to(p_x, p_y)\n        if fill:\n            ctx.stroke_preserve()\n            ctx.line_to(end_x - 1, gsize[1][1] - 1)\n"
+    ]
+  ],
+  "KlipperScreen/panels/main_menu.py": [
+    [
+      "            return False\n\n        temperature = self._printer.get_stat(device, \"temperature\")\n        if temperature is None:\n            return False\n        logging.info(f\"Adding device: {device}\")\n        if device.startswith(\"extruder\"):\n",
+      "            return False\n\n        temperature = self._printer.get_stat(device, \"temperature\")\n        if temperature is None and device != \"heater_generic Toolhead\":\n            return False\n        logging.info(f\"Adding device: {device}\")\n        if device.startswith(\"extruder\"):\n"
+    ]
+  ],
+  "KlipperScreen/panels/base_panel.py": [
+    [
+      "\ngi.require_version(\"Gtk\", \"3.0\")\nfrom datetime import datetime\nfrom math import log\n\nfrom gi.repository import GdkPixbuf, Gio, GLib, Gtk, Pango\nfrom jinja2 import Environment\n",
+      "\ngi.require_version(\"Gtk\", \"3.0\")\nfrom datetime import datetime\nfrom math import log, isfinite\n\nfrom gi.repository import GdkPixbuf, Gio, GLib, Gtk, Pango\nfrom jinja2 import Environment\n"
+    ],
+    [
+      "            return\n        for device in devices:\n            temp = self._printer.get_stat(device, \"temperature\")\n            if temp and device in self.titlebar_labels:\n                name = \"\"\n                if not (device.startswith(\"extruder\") or device.startswith(\"heater_bed\")):\n                    if self.titlebar_name_type == \"full\":\n",
+      "            return\n        for device in devices:\n            temp = self._printer.get_stat(device, \"temperature\")\n            if device in self.titlebar_labels:\n                name = \"\"\n                if not (device.startswith(\"extruder\") or device.startswith(\"heater_bed\")):\n                    if self.titlebar_name_type == \"full\":\n"
+    ],
+    [
+      "                    elif self.titlebar_name_type == \"short\":\n                        name = device.split()[1] if len(device.split()) > 1 else device\n                        name = f\"{name[:1].upper()}: \"\n                self.titlebar_labels[device].set_label(f\"{name}{temp:.0f}°\")\n\n        if (\n            self.current_extruder\n",
+      "                    elif self.titlebar_name_type == \"short\":\n                        name = device.split()[1] if len(device.split()) > 1 else device\n                        name = f\"{name[:1].upper()}: \"\n                sensor_state = self._printer.get_stat(device, \"sensor_state\")\n                valid = (isinstance(temp, (int, float)) and not isinstance(temp, bool)\n                         and isfinite(temp)\n                         and (not sensor_state or sensor_state == \"connected\"))\n                value = f\"{temp:.0f}°\" if valid else \"-\"\n                self.titlebar_labels[device].set_label(f\"{name}{value}\")\n\n        if (\n            self.current_extruder\n"
+    ]
+  ],
+  "KlipperScreen/panels/tool_prepare.py": [
+    [
+      "        self._status = {}\n        self._status_time = 0\n        self._action_pending = False\n        self._sent_action = None\n        self._display_pending_tool = None\n        self._reported_error = False\n",
+      "        self._status = {}\n        self._status_time = 0\n        self._action_pending = False\n        self._action_query = None\n        self._sent_action = None\n        self._display_pending_tool = None\n        self._reported_error = False\n"
+    ],
+    [
+      "            return\n        self._status = status\n        self._status_time = time.monotonic()\n        self._action_clicked(None, action, tool, diameter, confirmed_from=source)\n\n    def _action_clicked(self, widget, action, tool, diameter, confirmed_from=None):\n        if self._action_pending and action != \"motor_off\":\n            self._notify(_('Action in progress.\\nPlease wait.'))\n            return\n",
+      "            return\n        self._status = status\n        self._status_time = time.monotonic()\n        self._execute_action(None, action, tool, diameter, confirmed_from=source)\n\n    def _action_clicked(self, widget, action, tool, diameter, confirmed_from=None):\n        # Never decide a motion using the previous periodic sensor sample.\n        if action == \"motor_off\":\n            return self._execute_action(widget, action, tool, diameter, confirmed_from)\n        if self._action_pending or self._action_query is not None:\n            self._notify(_('Action in progress.\\nPlease wait.'))\n            return\n        socket = getattr(self._screen, \"_ws\", None)\n        if not self._active or not socket or not getattr(socket, \"connected\", False):\n            self._notify(_('Status unavailable.\\nCheck the connection.'))\n            return\n        token = object()\n        self._action_query = token\n        try:\n            sent = socket.send_method(\"printer.objects.query\", {\"objects\": {\n                \"webhooks\": [\"state\"], \"print_stats\": [\"state\"],\n                \"idle_timeout\": [\"state\"], \"gcode_macro TOOL_STATE\": None,\n                \"gcode_macro PREPARE_STATE\": None,\n                \"filament_switch_sensor toolhead_sensor\": None}},\n                self._action_status_received, token, self._generation, socket,\n                action, tool, diameter, confirmed_from)\n            if sent is False:\n                raise RuntimeError(\"Status query was not sent\")\n            GLib.timeout_add_seconds(8, self._action_query_expired, token)\n        except Exception:\n            self._action_query = None\n            logging.exception(\"Preparation pre-action status query failed\")\n            self._notify(_('Status query failed'))\n\n    def _action_query_expired(self, token):\n        if self._action_query is token:\n            self._action_query = None\n            if self._active:\n                self._notify(_('Response delayed; status unavailable'))\n        return False\n\n    def _action_status_received(self, response, method, params, token, generation,\n                                socket, action, tool, diameter, confirmed_from):\n        if self._action_query is not token:\n            return False\n        self._action_query = None\n        if (not self._active or generation != self._generation\n                or socket is not getattr(self._screen, \"_ws\", None)):\n            return False\n        status = response.get(\"result\", {}).get(\"status\", {})\n        if \"error\" in response or not status:\n            self._notify(_('Status query failed'))\n            return False\n        # Preserve server tool identity; a sensor disconnect is not a park.\n        self._status = status\n        self._status_time = time.monotonic()\n        self._update_indicator()\n        self._render_mount()\n        self._execute_action(None, action, tool, diameter, confirmed_from)\n        return False\n\n    def _execute_action(self, widget, action, tool, diameter, confirmed_from=None):\n        if self._action_pending and action != \"motor_off\":\n            self._notify(_('Action in progress.\\nPlease wait.'))\n            return\n"
+    ],
+    [
+      "            self._gtk.remove_dialog(self._confirm_dialog)\n            self._confirm_dialog = None\n        self._active = False\n        self._generation += 1\n        self._pending = False\n        if self._timer is not None:\n",
+      "            self._gtk.remove_dialog(self._confirm_dialog)\n            self._confirm_dialog = None\n        self._active = False\n        self._action_query = None\n        self._generation += 1\n        self._pending = False\n        if self._timer is not None:\n"
+    ],
+    [
+      "            (\"filament_switch_sensor toolhead_sensor\", [\"filament_detected\", \"enabled\"]),\n            (\"extruder\", [\"temperature\", \"target\"]),\n        ):\n            if name in (\"print_stats\", \"idle_timeout\") or self._printer.get_config_section(name):\n                objects[name] = fields\n        self._pending = True\n        self._requested_at = time.monotonic()\n",
+      "            (\"filament_switch_sensor toolhead_sensor\", [\"filament_detected\", \"enabled\"]),\n            (\"extruder\", [\"temperature\", \"target\"]),\n        ):\n            temperature_presence = (\n                name == \"filament_switch_sensor toolhead_sensor\"\n                and self._printer.get_config_section(\"temperature_toolhead_sensor toolhead_sensor\")\n            )\n            if name in (\"print_stats\", \"idle_timeout\") or self._printer.get_config_section(name) or temperature_presence:\n                objects[name] = fields\n        self._pending = True\n        self._requested_at = time.monotonic()\n"
+    ]
+  ],
+  "KlipperScreen/screen.py": [
+    [
+      "            ]\n        for h in self.printer.get_heaters():\n            requested_updates[\"objects\"][h] = [\"target\", \"temperature\", \"power\"]\n        for t in self.printer.get_temp_sensors():\n            requested_updates[\"objects\"][t] = [\"temperature\"]\n        for f in self.printer.get_temp_fans():\n",
+      "            ]\n        for h in self.printer.get_heaters():\n            requested_updates[\"objects\"][h] = [\"target\", \"temperature\", \"power\"]\n            if h == \"heater_generic Toolhead\":\n                requested_updates[\"objects\"][h].append(\"sensor_state\")\n        for t in self.printer.get_temp_sensors():\n            requested_updates[\"objects\"][t] = [\"temperature\"]\n        for f in self.printer.get_temp_fans():\n"
+    ]
+  ]
+}

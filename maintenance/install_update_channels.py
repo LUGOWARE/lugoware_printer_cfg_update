@@ -92,6 +92,7 @@ def install(branch):
     # Copy dependencies as well so future jobs use the last successfully installed code.
     for path in source.glob('*.py'):
         shutil.copy2(path, cache / path.name)
+    shutil.copytree(source / 'toolhead_variant', cache / 'toolhead_variant', dirs_exist_ok=True)
     if not unattended:
         for channel in ('config', 'system'):
             for name, content in service_units(user, home, channel).items():

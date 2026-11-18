@@ -1,0 +1,48 @@
+M5P installation profiles / M5P 설치 방식
+
+Installation order: select FLEX4 M/L/W, then select:
+1. Standard / 표준 버전 / 标准版
+2. Auxiliary toolhead heating / 툴헤드 예열 보조 버전 / 工具头辅助加热版
+
+Only M5P GitHub and Gitee distributions support this selection. M8P is unchanged.
+The model Git branches remain FLEX4_M, FLEX4_L, FLEX4_W. Hardware profiles are
+separate overlays; model motion coordinates are never copied from the test printer.
+The standard model branches were not modified by this release.
+
+The auxiliary profile matches the tested .97 software configuration:
+- Existing nozzle sensor PA1; Generic 3950 thermistor PA2, pull-up 4700 ohm.
+- PB7 drives the DFR0457 heater interface, with a 24V 48W heater.
+- Sensor presence replaces the standard PC3 toolhead presence input.
+- Print docking arms auxiliary heating to the selected tool temperature;
+  parking turns it off and confirms queued PWM is off before releasing the guard.
+- Idle detachment is allowed; heating fault, stale sensor and overtemperature
+  protection remain active. Reconnection alone does not resume heating.
+- Graph gaps and localized absence labels; titlebar shows '-' when detached.
+- Maximum target 300 C, max_power 1.0, provisional reference PID.
+  Thermal performance/PID must be validated on each hardware configuration.
+- Manual preparation docking does not start heating automatically.
+
+Updates retain the selected profile in ~/.local/share/lugoware/variant.json.
+Mainsail system/config updates do not ask interactive questions and keep this choice.
+To change hardware profile, run the normal SSH installer again and select it.
+Legacy machines without a marker stay Standard. A recognized existing auxiliary
+experiment is migrated without discarding its heater parameters.
+
+Selecting Standard removes the auxiliary configuration include, docking/parking
+hooks and Mainsail extension, and reverses auxiliary UI changes. PC3 toolhead
+presence is used again. Original PC3 sensor hardware is required for that function.
+The inactive toolhead_auxiliary.cfg and unused module files may remain for recovery;
+they are not loaded as heaters in Standard mode. Other calibration data is retained.
+
+Backups are under ~/lugoware_backups/<install>/hardware-variant and related
+variant-capture folders. manifest.json records each original path and numbered
+backup; null means that file did not exist before. Do not restore during printing.
+Installation errors are reported as failures, never as successful installation.
+If a failure leaves an incomplete installation, inspect the installer log and retry
+or restore the recorded files while the printer is idle.
+
+Validation performed: all three current model profiles on both remotes; activation,
+repeat installation, standard return, reactivation, unchanged motion coordinates,
+configuration update overlay, UI patch reversal, write failure rollback, and
+mock heater protection tests. No automatic heating/motion is run by profile selection.
+Full physical installation and thermal tests on each model remain operator tests.

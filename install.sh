@@ -45,6 +45,22 @@ fi
 
 echo ""
 echo "선택된 모델: $MODEL (브랜치: $BRANCH)"
+# Hardware profile selection is separate from the model configuration branch.
+if (( ! SYSTEM_ONLY )); then
+    echo "버전을 선택하세요 / Select version / 选择版本:"
+    echo "  1) 표준 버전 / Standard / 标准版"
+    echo "  2) 툴헤드 예열 보조 버전 / Auxiliary toolhead heating / 工具头辅助加热版"
+    read -r -p "번호 입력 (1/2): " variant_choice </dev/tty
+    case "$variant_choice" in
+        1) export LUGOWARE_VARIANT=standard ;;
+        2) export LUGOWARE_VARIANT=toolhead ;;
+        *) echo "Invalid version selection" >&2; exit 1 ;;
+    esac
+    if [[ "$LUGOWARE_VARIANT" == toolhead ]]; then
+        echo "M5P: nozzle sensor PA1; Generic3950 PA2; DFR0457 PB7; 24V 48W. Verify wiring before heating."
+    fi
+fi
+
 echo ""
 
 echo "화면 언어는 KlipperScreen에서 마지막으로 선택한 설정을 유지합니다."
@@ -143,6 +159,8 @@ python3 "$COMMON_REPO/maintenance/preserve_sensor_pins.py" \
     "$REPO_DIR/printer_base.cfg" "$CONFIG_DIR/printer.cfg" "$BACKUP_DIR/printer-base-prepared.cfg"
 fi
 
+python3 "$COMMON_REPO/maintenance/install_toolhead_variant.py" --capture --backup "$BACKUP_DIR/variant-capture"
+
 # 3. .151 기준 공통 헤더 / 각 기기의 MCU·SAVE_CONFIG 보존
 echo "[3/6] printer.cfg 공통 헤더 적용 중..."
 python3 "$COMMON_REPO/maintenance/install_printer_header.py" \
@@ -211,6 +229,8 @@ if (( SYSTEM_ONLY )); then
     echo '[진행] 시스템에 맞는 최신 모델 설정 함께 적용'
     python3 "$COMMON_REPO/maintenance/channel_worker.py" --sync-config "$BRANCH" "$BACKUP_DIR/latest-config"
 fi
+
+python3 "$COMMON_REPO/maintenance/install_toolhead_variant.py" --backup "$BACKUP_DIR/hardware-variant"
 
 # 공통 시스템 설정 (재실행해도 cron 중복 없음)
 echo "설정을 적용하고 있습니다. 완료될 때까지 전원을 유지해 주세요..."

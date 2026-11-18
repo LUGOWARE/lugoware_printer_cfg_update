@@ -10,17 +10,23 @@
     }
   },
   "lugoware_system": {
-    "version": "1.2.5",
-    "date": "2026/11/16",
+    "version": "1.2.6",
+    "date": "2026/11/18",
     "notes": {
       "ko": [
-        "모터 점검과 공장 QC의 Z축 이동 범위를 M 265mm, L·W 365mm로 줄여 하단 여유 공간을 확보했습니다."
+        "M5P 설치 시 모델 선택 후 표준 버전 또는 툴헤드 예열 보조 버전을 선택할 수 있습니다.",
+        "선택한 방식은 업데이트 후에도 유지되며, 표준 버전 재설치 시 보조 예열 기능이 비활성화됩니다.",
+        "보조 버전의 탈착 온도 표시와 실시간 갱신을 개선했습니다."
       ],
       "en": [
-        "Reduced Z travel during motor diagnostics and factory QC to 265 mm for M and 365 mm for L/W, leaving 5 mm of clearance at the lower travel end."
+        "Choose Standard or Auxiliary toolhead heating after selecting the M5P model.",
+        "Updates retain the selected profile; reinstalling Standard disables auxiliary heating.",
+        "Improved detachable toolhead temperature display and live status updates."
       ],
       "zh_CN": [
-        "将电机检测和出厂 QC 的 Z 轴行程限制为 M 265 毫米、L/W 365 毫米，在行程下端保留 5 毫米余量。"
+        "M5P 安装时可在选择机型后选择标准版或工具头辅助加热版。",
+        "更新保留所选模式，重新安装标准版将停用辅助加热功能。",
+        "改进工具头拆装温度显示及实时状态更新。"
       ]
     }
   }

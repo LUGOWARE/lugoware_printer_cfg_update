@@ -73,7 +73,7 @@ PACKAGES = ('fonts-noto-core', 'fonts-noto-cjk', 'build-essential', 'libncurses-
             'libopenjp2-7', 'libsodium-dev', 'zlib1g-dev', 'libjpeg-dev', 'packagekit',
             'wireless-tools', 'curl')
 # These files run as the ordinary printer user, never imported by this root policy.
-WORKER_FILES = ('followup_features.py', 'channel_worker.py', 'run_worker.py', 'check_idle.py', 'install_screen_config.py',
+WORKER_FILES = ('install_toolhead_variant.py', 'followup_features.py', 'channel_worker.py', 'run_worker.py', 'check_idle.py', 'install_screen_config.py',
                 'patch_print_controls.py', 'final_print_ui.py', 'wait_ready.py', 'verify_firmware.py',
                 'preserve_sensor_pins.py', 'october_features.py', 'stage_features.py', 'mesh_features.py')
 
@@ -193,6 +193,8 @@ def execute(args, channel, cfg):
         source = active_source()
         for name in WORKER_FILES:
             write_fixed(RUNTIME / name, (source / name).read_bytes())
+        for name in ('ui_patches.json', 'translations.json', 'toolhead_auxiliary.cfg', 'lugoware-toolhead-temperature.js', 'toolhead_temperature_test.py', 'temperature_toolhead_sensor.py', 'detachable_heater_sensor.py'):
+            write_fixed(RUNTIME / "toolhead_variant" / name, (source / "toolhead_variant" / name).read_bytes())
         # Deliberately do not update this policy, sudoers, shim or service units.
 
 

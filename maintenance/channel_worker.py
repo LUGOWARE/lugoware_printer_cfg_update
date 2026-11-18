@@ -14,6 +14,7 @@ from check_idle import main as check_idle, request
 from install_screen_config import merge
 from patch_print_controls import macros, feature_macros
 from preserve_sensor_pins import preserve
+from install_toolhead_variant import plan as variant_plan, selected as selected_variant, commit as commit_variant
 
 
 def atomic(path, data):
@@ -61,17 +62,14 @@ def apply_config(repo, home, backup):
         screen = screen_menu(screen)
     validate_config(base, screen, home)
     changes = {'printer_base.cfg': base.encode(), 'KlipperScreen.conf': screen.encode()}
+    variant_changes = variant_plan(home, selected_variant(home), Path(__file__).with_name('toolhead_variant'), base_override=base)
     previous = {name: (target / name).read_bytes() for name in changes}
     for name, content in previous.items():
         (backup / name).write_bytes(content)
     check_idle()
-    try:
-        for name, content in changes.items():
-            atomic(target / name, content)
-    except Exception:
-        for name, content in previous.items():
-            atomic(target / name, content)
-        raise
+    combined = {target / name: content for name, content in changes.items()}
+    combined.update(variant_changes)
+    commit_variant(combined, backup / 'hardware-variant')
     subprocess.run(['sudo', '-n', 'systemctl', 'restart', 'klipper', 'KlipperScreen'], check=True)
     subprocess.run([sys.executable, str(Path(__file__).with_name('wait_ready.py')), '--ready-only'], check=True)
     subprocess.run(['systemctl', 'is-active', '--quiet', 'KlipperScreen'], check=True)

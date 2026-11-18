@@ -33,6 +33,19 @@ def install(user):
         shutil.copyfile(path, target)
         os.chown(target, 0, 0)
         target.chmod(0o755 if path.name == 'update_root.py' else 0o644)
+    assets = root / 'toolhead_variant'
+    if assets.is_symlink():
+        raise PermissionError('Unexpected variant asset symlink')
+    assets.mkdir(exist_ok=True)
+    os.chown(assets, 0, 0)
+    assets.chmod(0o755)
+    for name in ('ui_patches.json', 'translations.json', 'toolhead_auxiliary.cfg', 'lugoware-toolhead-temperature.js', 'toolhead_temperature_test.py', 'temperature_toolhead_sensor.py', 'detachable_heater_sensor.py'):
+        target = assets / name
+        if target.is_symlink():
+            raise PermissionError('Unexpected variant file symlink')
+        shutil.copyfile(source / 'toolhead_variant' / name, target)
+        os.chown(target, 0, 0)
+        target.chmod(0o644)
     shim = root / 'bin/sudo'
     shutil.copyfile(source / 'update_sudo.py', shim)
     os.chown(shim, 0, 0)
