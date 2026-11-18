@@ -77,7 +77,10 @@ def patch_ui(text, edits, variant):
     # Existing experimental installations used both Python quote styles.
     # Normalize only this known, semantically identical gettext expression.
     text = text.replace('_("Not attached")', "_('Not attached')")
-    for edit in (edits if variant == 'toolhead' else reversed(edits)):
+    for label in ('"미부착"', "'미부착'"):
+        old = label + ' if dev == "heater_generic Toolhead" and temp is None'
+        text = text.replace(old, "_('Not attached')" + ' if dev == "heater_generic Toolhead" and temp is None')
+    for index, edit in enumerate(edits if variant == 'toolhead' else reversed(edits), 1):
         before, after = edit
         source, target = (before, after) if variant == 'toolhead' else (after, before)
         if source in text:
@@ -85,7 +88,7 @@ def patch_ui(text, edits, variant):
                 raise ValueError('Ambiguous UI patch anchor')
             text = text.replace(source, target, 1)
         elif target not in text:
-            raise ValueError('Unsupported UI revision; preserved without modification')
+            raise ValueError('Unsupported UI revision at patch %d; preserved without modification' % index)
     return text
 
 
@@ -131,7 +134,10 @@ def plan(home, variant, assets, base_override=None):
     for rel, edits in patches.items():
         path = home / rel
         old = path.read_text(encoding='utf-8')
-        new = patch_ui(old, edits, variant)
+        try:
+            new = patch_ui(old, edits, variant)
+        except ValueError as exc:
+            raise ValueError('%s: %s' % (rel, exc)) from exc
         ast.parse(new)
         changes[path] = new.encode()
     if variant == 'toolhead':
@@ -191,6 +197,48 @@ def apply(home, variant, backup, base_override=None):
     commit(changes, backup)
 
 
+def preflight(home, variant, assets, screen_upgrade_pending=None):
+    """Check package integrity and non-replaced UI before system mutations."""
+    patches = json.loads((assets / 'ui_patches.json').read_text(encoding='utf-8'))
+    json.loads((assets / 'translations.json').read_text(encoding='utf-8'))
+    for name in ('toolhead_temperature_test.py', 'temperature_toolhead_sensor.py', 'detachable_heater_sensor.py'):
+        ast.parse((assets / name).read_bytes())
+    for name in ('toolhead_auxiliary.cfg', 'lugoware-toolhead-temperature.js'):
+        if not (assets / name).read_bytes():
+            raise ValueError('Empty variant package asset: ' + name)
+    marker = home / '.local/share/lugoware/variant.json'
+    previous = json.loads(marker.read_text())['variant'] if marker.exists() else None
+    if previous is not None and previous not in VARIANTS:
+        raise ValueError('Invalid stored hardware profile; inspect variant.json')
+    header = (home / 'printer_data/config/printer.cfg').read_text(encoding='utf-8')
+    experimental = bool(section(header, AUX[0]) or '[include toolhead_auxiliary.cfg]' in header)
+    if variant == 'standard' and previous != 'toolhead' and not experimental:
+        return
+    if screen_upgrade_pending is None:
+        import subprocess
+        from upgrade_klipperscreen import MIN_VERSION
+        from upgrade_klipper import version_key
+        screen = home / 'KlipperScreen'
+        version = subprocess.check_output(['git', '-C', str(screen), 'describe', '--tags', '--long', '--dirty'], text=True).strip()
+        gitdir = Path(subprocess.check_output(['git', '-C', str(screen), 'rev-parse', '--absolute-git-dir'], text=True).strip())
+        screen_upgrade_pending = (version_key(version) < MIN_VERSION or (gitdir/'lugoware-screen-pending').exists())
+    if screen_upgrade_pending:
+        # Old UI will be replaced by the pinned baseline before final validation.
+        print('Variant preflight: pinned screen upgrade will run before UI checks.')
+        return
+    for rel, edits in patches.items():
+        # The common installer always replaces this managed panel.
+        if rel == 'KlipperScreen/panels/tool_prepare.py':
+            continue
+        path = home / rel
+        if not path.is_file():
+            raise ValueError('Missing UI file before installation: ' + rel)
+        try:
+            ast.parse(patch_ui(path.read_text(encoding='utf-8'), edits, variant))
+        except (ValueError, SyntaxError) as exc:
+            raise ValueError('Preflight failed for %s: %s; no variant files changed' % (rel, exc)) from exc
+
+
 def capture(home, backup):
     """Save machine-specific experimental PID before the common header refresh."""
     cfg = home / 'printer_data/config'
@@ -208,9 +256,14 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--variant', choices=VARIANTS)
     parser.add_argument('--capture', action='store_true')
+    parser.add_argument('--preflight', action='store_true')
     parser.add_argument('--backup', type=Path, required=True)
     args = parser.parse_args()
     home = Path.home()
+    if args.preflight:
+        preflight(home, args.variant or selected(home), Path(__file__).with_name('toolhead_variant'))
+        print('M5P variant preflight passed')
+        raise SystemExit(0)
     if args.capture:
         capture(home, args.backup)
         raise SystemExit(0)

@@ -46,3 +46,8 @@ repeat installation, standard return, reactivation, unchanged motion coordinates
 configuration update overlay, UI patch reversal, write failure rollback, and
 mock heater protection tests. No automatic heating/motion is run by profile selection.
 Full physical installation and thermal tests on each model remain operator tests.
+
+1.2.7 compatibility: known gettext quote styles and legacy Korean absence labels
+are accepted. Package and retained UI checks run before system upgrades; older
+screens scheduled for baseline replacement are checked after upgrade. Unknown
+code changes still stop safely with the affected file and patch number.

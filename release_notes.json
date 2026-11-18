@@ -14,16 +14,19 @@
     "date": "2026/11/18",
     "notes": {
       "ko": [
-        "기존 툴헤드 보조 버전의 화면 표기 차이로 업데이트가 중단되는 문제를 수정했습니다.",
-        "표준·보조 버전 선택 유지 및 재설치 호환성을 보완했습니다."
+        "기존 툴헤드 보조 버전의 온도 표시 코드 차이로 설치가 중단되는 문제를 수정했습니다.",
+        "구형 시험판·재설치 호환성과 설치 전 확인을 보완했습니다.",
+        "표준·보조 버전 선택과 기존 설정을 유지합니다."
       ],
       "en": [
-        "Fixed an update failure caused by equivalent temperature label code in existing auxiliary installations.",
-        "Improved reinstall compatibility while preserving Standard/Auxiliary selection."
+        "Fixed installation failures caused by equivalent temperature labels in existing auxiliary versions.",
+        "Improved compatibility with older experimental installations and added pre-install checks.",
+        "Preserved Standard/Auxiliary selection and existing settings."
       ],
       "zh_CN": [
-        "修复已有辅助加热版本因温度标签代码写法不同而导致更新中断的问题。",
-        "改进重新安装兼容性，并保留标准版/辅助加热版选择。"
+        "修复已有辅助加热版本因温度显示代码写法不同而导致安装中断的问题。",
+        "改进旧测试版和重新安装的兼容性，并增加安装前检查。",
+        "保留标准版/辅助加热版选择及现有设置。"
       ]
     }
   }

@@ -59,9 +59,39 @@ class VariantTests(unittest.TestCase):
         self.assertEqual(variant.patch_ui(installed, edits, 'toolhead'), after)
         self.assertEqual(variant.patch_ui(installed, edits, 'standard'), before)
 
+    def test_legacy_korean_label_and_partial_upgrade(self):
+        patches = json.loads((ROOT/'maintenance/toolhead_variant/ui_patches.json').read_text(encoding='utf-8'))
+        edits = patches['KlipperScreen/ks_includes/screen_panel.py']
+        before, after = edits[0]
+        for literal in ('"미부착"', "'미부착'"):
+            legacy = after.replace("_('Not attached')", literal)
+            self.assertEqual(variant.patch_ui(legacy, edits, 'toolhead'), after)
+            self.assertEqual(variant.patch_ui(legacy, edits, 'standard'), before)
+
     def test_unknown_ui_preserved(self):
         with self.assertRaises(ValueError):
             variant.patch_ui('unknown', [('a', 'b')], 'toolhead')
+
+    def test_preflight_does_not_block_old_screen_replacement(self):
+        with tempfile.TemporaryDirectory() as d:
+            home = Path(d)
+            config = home/'printer_data/config'
+            config.mkdir(parents=True)
+            (config/'printer.cfg').write_text('[mcu]\nserial: test\n')
+            assets = ROOT/'maintenance/toolhead_variant'
+            variant.preflight(home, 'toolhead', assets, screen_upgrade_pending=True)
+            with self.assertRaisesRegex(ValueError, 'Missing UI file'):
+                variant.preflight(home, 'toolhead', assets, screen_upgrade_pending=False)
+            self.assertEqual((config/'printer.cfg').read_text(), '[mcu]\nserial: test\n')
+
+    def test_standard_preflight_does_not_require_auxiliary_ui(self):
+        with tempfile.TemporaryDirectory() as d:
+            home = Path(d)
+            config = home/'printer_data/config'
+            config.mkdir(parents=True)
+            (config/'printer.cfg').write_text('[mcu]\nserial: test\n')
+            variant.preflight(home, 'standard', ROOT/'maintenance/toolhead_variant')
+            self.assertFalse((home/'.local/share/lugoware/variant.json').exists())
 
     def test_atomic_write_rollback(self):
         with tempfile.TemporaryDirectory() as d:
