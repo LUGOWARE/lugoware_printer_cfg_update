@@ -51,6 +51,14 @@ class VariantTests(unittest.TestCase):
                 self.assertEqual(variant.patch_ui(new, [(old, new)], 'toolhead'), new)
                 self.assertEqual(variant.patch_ui(new, [(old, new)], 'standard'), old)
 
+    def test_existing_double_quote_translation(self):
+        patches = json.loads((ROOT/'maintenance/toolhead_variant/ui_patches.json').read_text(encoding='utf-8'))
+        edits = patches['KlipperScreen/ks_includes/screen_panel.py']
+        before, after = edits[0]
+        installed = after.replace("_('Not attached')", '_("Not attached")')
+        self.assertEqual(variant.patch_ui(installed, edits, 'toolhead'), after)
+        self.assertEqual(variant.patch_ui(installed, edits, 'standard'), before)
+
     def test_unknown_ui_preserved(self):
         with self.assertRaises(ValueError):
             variant.patch_ui('unknown', [('a', 'b')], 'toolhead')

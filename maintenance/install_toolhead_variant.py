@@ -74,6 +74,9 @@ def base_profile(text, variant):
 
 
 def patch_ui(text, edits, variant):
+    # Existing experimental installations used both Python quote styles.
+    # Normalize only this known, semantically identical gettext expression.
+    text = text.replace('_("Not attached")', "_('Not attached')")
     for edit in (edits if variant == 'toolhead' else reversed(edits)):
         before, after = edit
         source, target = (before, after) if variant == 'toolhead' else (after, before)
