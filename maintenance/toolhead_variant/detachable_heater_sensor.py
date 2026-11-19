@@ -15,6 +15,8 @@ class DetachableHeaterSensor:
         self.manual_targets = None
         self.manual_parked = False
         source.gcode.register_command("TOOLHEAD_DOCK_HEAT", self.dock_heat)
+        source.gcode.register_command("TOOLHEAD_WAIT_FOR_PRIME", self.wait_for_prime,
+                                           desc="Wait for auxiliary toolhead temperature before prime")
         source.gcode.register_command("TOOLHEAD_PARK_OFF", self.park_off)
         self.minimum = 0.
         self.maximum = 60.
@@ -70,6 +72,39 @@ class DetachableHeaterSensor:
         self.dock_target = target
         self.dock_deadline = self.source.reactor.monotonic() + 5.
         self.dock_pending = bool(target)
+
+    def wait_for_prime(self, gcmd):
+        target = gcmd.get_float('TARGET', above=30., maxval=self.maximum)
+        timeout = gcmd.get_float('TIMEOUT', 60., above=0., maxval=180.)
+        threshold = target - 30.
+        reactor = self.source.reactor
+        fast_cancel = self.printer.lookup_object('fast_cancel', None)
+        now = reactor.monotonic()
+        deadline = now + timeout
+        connected = False
+        while True:
+            if self.failed or self.printer.is_shutdown():
+                raise gcmd.error('Toolhead heater safety stop before prime')
+            if fast_cancel and fast_cancel.stop_wait():
+                # FAST_CANCEL_PRIME will skip extrusion and run the safe dock exit.
+                return
+            sensor = self.source.get_status(now)
+            state = sensor['state']
+            if (state in ('short_circuit', 'invalid', 'stale')
+                    or (connected and state == 'disconnected')):
+                self.heater.set_temp(0.)
+                raise gcmd.error('Toolhead sensor unavailable before prime: ' + state)
+            if state == 'connected' and self.valid_samples >= 9:
+                connected = True
+                if self.heater.target_temp == target and sensor['temperature'] >= threshold:
+                    return
+            if not self.dock_pending and self.heater.target_temp != target:
+                self.heater.set_temp(0.)
+                raise gcmd.error('Toolhead heating target changed before prime')
+            if now >= deadline:
+                self.heater.set_temp(0.)
+                raise gcmd.error('Toolhead did not reach %.1f C before prime' % threshold)
+            now = reactor.pause(min(now + .1, deadline))
 
     def park_off(self, gcmd):
         self.manual_parked = True

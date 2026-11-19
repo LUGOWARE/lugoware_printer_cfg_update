@@ -1,0 +1,128 @@
+{
+  "CHANGE_TOOL": [
+    [
+      "    {% set temp = params.TEMP|int %}\n    {% set r_len = params.RETRACT_LEN|default(1.2)|float %}\n",
+      "    {% set temp = params.TEMP|int %}\n    {% set slicer_temp = params.SLICER_TEMP|default(temp)|int %}\n    {% set r_len = params.RETRACT_LEN|default(1.2)|float %}\n"
+    ],
+    [
+      "    SET_GCODE_VARIABLE MACRO=TOOL_STATE VARIABLE=changing VALUE=1\n    PARK_CURRENT NEXT_TEMP={temp}\n    SET_GCODE_VARIABLE MACRO=TOOL_STATE VARIABLE=changing VALUE=0\n",
+      "    SET_GCODE_VARIABLE MACRO=TOOL_STATE VARIABLE=changing VALUE=1\n    PARK_CURRENT NEXT_TEMP={slicer_temp}\n    SET_GCODE_VARIABLE MACRO=TOOL_STATE VARIABLE=changing VALUE=0\n"
+    ],
+    [
+      "    {% if next_tool == 0 %}\n    DOCK_TOOL_0 EXTRUDER_TEMP={temp} FIRST_USE={first_use} H_D={h_d} {prime_p}\n    {% elif next_tool == 1 %}\n    DOCK_TOOL_1 EXTRUDER_TEMP={temp} FIRST_USE={first_use} H_D={h_d} {prime_p}\n    {% elif next_tool == 2 %}\n    DOCK_TOOL_2 EXTRUDER_TEMP={temp} FIRST_USE={first_use} H_D={h_d} {prime_p}\n    {% elif next_tool == 3 %}\n    DOCK_TOOL_3 EXTRUDER_TEMP={temp} FIRST_USE={first_use} H_D={h_d} {prime_p}\n    {% endif %}\n",
+      "    {% if next_tool == 0 %}\n    DOCK_TOOL_0 EXTRUDER_TEMP={temp} SLICER_TEMP={slicer_temp} FIRST_USE={first_use} H_D={h_d} {prime_p}\n    {% elif next_tool == 1 %}\n    DOCK_TOOL_1 EXTRUDER_TEMP={temp} SLICER_TEMP={slicer_temp} FIRST_USE={first_use} H_D={h_d} {prime_p}\n    {% elif next_tool == 2 %}\n    DOCK_TOOL_2 EXTRUDER_TEMP={temp} SLICER_TEMP={slicer_temp} FIRST_USE={first_use} H_D={h_d} {prime_p}\n    {% elif next_tool == 3 %}\n    DOCK_TOOL_3 EXTRUDER_TEMP={temp} SLICER_TEMP={slicer_temp} FIRST_USE={first_use} H_D={h_d} {prime_p}\n    {% endif %}\n"
+    ]
+  ],
+  "DOCK_TOOL_0": [
+    [
+      "    {% set normal_temp = params.EXTRUDER_TEMP|int %}\n    {% set preheat_temp = normal_temp + 40 %}\n    {% set is_175 = 1 if ef|float > 0.9 else 0 %}    # ef = (1.75/dia)**2  →  1.75mm=1.0 / 2.85mm=0.3768\n\n    M104 S{preheat_temp}\n    TEMPERATURE_WAIT SENSOR=extruder MINIMUM={ normal_temp -9 } MAXIMUM={preheat_temp +40}\n    RESPOND MSG=\"DOCKING T1.\"\n",
+      "    {% set normal_temp = params.EXTRUDER_TEMP|int %}\n    {% set slicer_temp = params.SLICER_TEMP|default(normal_temp)|int %}\n    {% set preheat_temp = normal_temp + 20 %}\n    {% set is_175 = 1 if ef|float > 0.9 else 0 %}    # ef = (1.75/dia)**2  →  1.75mm=1.0 / 2.85mm=0.3768\n\n    # M104 S{preheat_temp}\n    # TEMPERATURE_WAIT SENSOR=extruder MINIMUM={ normal_temp -9 } MAXIMUM={preheat_temp +40}\n    RESPOND MSG=\"DOCKING T1.\"\n"
+    ],
+    [
+      "\n    {% set preheat_temp = normal_temp + (15 if is_175 else 25) %}\n    M104 S{preheat_temp}\n\n",
+      "\n    # M104 S{preheat_temp}\n\n"
+    ],
+    [
+      "\n    {% set preheat_temp = normal_temp + (10 if is_175 else 12) %}\n    M104 S{preheat_temp}\n    TOOLHEAD_DOCK_HEAT TEMP={normal_temp}\n    FAST_CANCEL_WAIT P={(h_d * 1000)|int}\n    FAST_CANCEL_PRIME STATE=begin TOOL=0\n",
+      "\n    {% set preheat_temp = normal_temp + (5 if is_175 else 5) %}\n    # M104 S{preheat_temp}\n    TOOLHEAD_DOCK_HEAT TEMP={slicer_temp}\n    # FAST_CANCEL_WAIT P={(h_d * 1000)|int}\n    TOOLHEAD_WAIT_FOR_PRIME TARGET={slicer_temp} TIMEOUT=60\n    FAST_CANCEL_PRIME STATE=begin TOOL=0\n"
+    ],
+    [
+      "    {% set preheat_temp = normal_temp + (5 if is_175 else 10) %}\n    M104 S{preheat_temp}\n    # 2차 프라임: P2 를 MVS 로\n",
+      "    {% set preheat_temp = normal_temp %}\n    # M104 S{preheat_temp}\n    # 2차 프라임: P2 를 MVS 로\n"
+    ],
+    [
+      "    {% set preheat_temp = normal_temp + (2 if is_175 else 2) %}\n    M104 S{preheat_temp}\n    # 2차 폼 프라임: FP2 를 MVS 로\n",
+      "    {% set preheat_temp = normal_temp %}\n    # M104 S{preheat_temp}\n    # 2차 폼 프라임: FP2 를 MVS 로\n"
+    ]
+  ],
+  "DOCK_TOOL_1": [
+    [
+      "    {% set normal_temp = params.EXTRUDER_TEMP|int %}\n    {% set preheat_temp = normal_temp + 40 %}\n    {% set is_175 = 1 if ef|float > 0.9 else 0 %}    # ef = (1.75/dia)**2  →  1.75mm=1.0 / 2.85mm=0.3768\n\n    M104 S{preheat_temp}\n    TEMPERATURE_WAIT SENSOR=extruder MINIMUM={ normal_temp -9 } MAXIMUM={preheat_temp +40}\n    RESPOND MSG=\"DOCKING T2.\"\n",
+      "    {% set normal_temp = params.EXTRUDER_TEMP|int %}\n    {% set slicer_temp = params.SLICER_TEMP|default(normal_temp)|int %}\n    {% set preheat_temp = normal_temp + 20 %}\n    {% set is_175 = 1 if ef|float > 0.9 else 0 %}    # ef = (1.75/dia)**2  →  1.75mm=1.0 / 2.85mm=0.3768\n\n    # M104 S{preheat_temp}\n    # TEMPERATURE_WAIT SENSOR=extruder MINIMUM={ normal_temp -9 } MAXIMUM={preheat_temp +40}\n    RESPOND MSG=\"DOCKING T2.\"\n"
+    ],
+    [
+      "\n    {% set preheat_temp = normal_temp + (15 if is_175 else 25) %}\n    M104 S{preheat_temp}\n\n",
+      "\n    # M104 S{preheat_temp}\n\n"
+    ],
+    [
+      "\n    {% set preheat_temp = normal_temp + (10 if is_175 else 12) %}\n    M104 S{preheat_temp}\n    TOOLHEAD_DOCK_HEAT TEMP={normal_temp}\n    FAST_CANCEL_WAIT P={(h_d * 1000)|int}\n    FAST_CANCEL_PRIME STATE=begin TOOL=1\n",
+      "\n    {% set preheat_temp = normal_temp + (5 if is_175 else 5) %}\n    # M104 S{preheat_temp}\n    TOOLHEAD_DOCK_HEAT TEMP={slicer_temp}\n    # FAST_CANCEL_WAIT P={(h_d * 1000)|int}\n    TOOLHEAD_WAIT_FOR_PRIME TARGET={slicer_temp} TIMEOUT=60\n    FAST_CANCEL_PRIME STATE=begin TOOL=1\n"
+    ],
+    [
+      "    {% set preheat_temp = normal_temp + (5 if is_175 else 10) %}\n    M104 S{preheat_temp}\n    # 2차 프라임: P2 를 MVS 로\n",
+      "    {% set preheat_temp = normal_temp %}\n    # M104 S{preheat_temp}\n    # 2차 프라임: P2 를 MVS 로\n"
+    ],
+    [
+      "    {% set preheat_temp = normal_temp + (2 if is_175 else 2) %}\n    M104 S{preheat_temp}\n    # 2차 폼 프라임: FP2 를 MVS 로\n",
+      "    {% set preheat_temp = normal_temp %}\n    # M104 S{preheat_temp}\n    # 2차 폼 프라임: FP2 를 MVS 로\n"
+    ]
+  ],
+  "DOCK_TOOL_2": [
+    [
+      "    {% set normal_temp = params.EXTRUDER_TEMP|int %}\n    {% set preheat_temp = normal_temp + 40 %}\n    {% set is_175 = 1 if ef|float > 0.9 else 0 %}    # ef = (1.75/dia)**2  →  1.75mm=1.0 / 2.85mm=0.3768\n\n    M104 S{preheat_temp}\n    TEMPERATURE_WAIT SENSOR=extruder MINIMUM={ normal_temp -9 } MAXIMUM={preheat_temp +40}\n    RESPOND MSG=\"DOCKING T3.\"\n",
+      "    {% set normal_temp = params.EXTRUDER_TEMP|int %}\n    {% set slicer_temp = params.SLICER_TEMP|default(normal_temp)|int %}\n    {% set preheat_temp = normal_temp + 20 %}\n    {% set is_175 = 1 if ef|float > 0.9 else 0 %}    # ef = (1.75/dia)**2  →  1.75mm=1.0 / 2.85mm=0.3768\n\n    # M104 S{preheat_temp}\n    # TEMPERATURE_WAIT SENSOR=extruder MINIMUM={ normal_temp -9 } MAXIMUM={preheat_temp +40}\n    RESPOND MSG=\"DOCKING T3.\"\n"
+    ],
+    [
+      "\n    {% set preheat_temp = normal_temp + (15 if is_175 else 25) %}\n    M104 S{preheat_temp}\n\n",
+      "\n    # M104 S{preheat_temp}\n\n"
+    ],
+    [
+      "\n    {% set preheat_temp = normal_temp + (10 if is_175 else 12) %}\n    M104 S{preheat_temp}\n    TOOLHEAD_DOCK_HEAT TEMP={normal_temp}\n    FAST_CANCEL_WAIT P={(h_d * 1000)|int}\n    FAST_CANCEL_PRIME STATE=begin TOOL=2\n",
+      "\n    {% set preheat_temp = normal_temp + (5 if is_175 else 5) %}\n    # M104 S{preheat_temp}\n    TOOLHEAD_DOCK_HEAT TEMP={slicer_temp}\n    # FAST_CANCEL_WAIT P={(h_d * 1000)|int}\n    TOOLHEAD_WAIT_FOR_PRIME TARGET={slicer_temp} TIMEOUT=60\n    FAST_CANCEL_PRIME STATE=begin TOOL=2\n"
+    ],
+    [
+      "    {% set preheat_temp = normal_temp + (5 if is_175 else 10) %}\n    M104 S{preheat_temp}\n    # 2차 프라임: P2 를 MVS 로\n",
+      "    {% set preheat_temp = normal_temp %}\n    # M104 S{preheat_temp}\n    # 2차 프라임: P2 를 MVS 로\n"
+    ],
+    [
+      "    {% set preheat_temp = normal_temp + (2 if is_175 else 2) %}\n    M104 S{preheat_temp}\n    # 2차 폼 프라임: FP2 를 MVS 로\n",
+      "    {% set preheat_temp = normal_temp %}\n    # M104 S{preheat_temp}\n    # 2차 폼 프라임: FP2 를 MVS 로\n"
+    ]
+  ],
+  "DOCK_TOOL_3": [
+    [
+      "    {% set normal_temp = params.EXTRUDER_TEMP|int %}\n    {% set preheat_temp = normal_temp + 40 %}\n    {% set is_175 = 1 if ef|float > 0.9 else 0 %}    # ef = (1.75/dia)**2  →  1.75mm=1.0 / 2.85mm=0.3768\n\n    M104 S{preheat_temp}\n    TEMPERATURE_WAIT SENSOR=extruder MINIMUM={ normal_temp -9 } MAXIMUM={preheat_temp +40}\n    RESPOND MSG=\"DOCKING T4.\"\n",
+      "    {% set normal_temp = params.EXTRUDER_TEMP|int %}\n    {% set slicer_temp = params.SLICER_TEMP|default(normal_temp)|int %}\n    {% set preheat_temp = normal_temp + 20 %}\n    {% set is_175 = 1 if ef|float > 0.9 else 0 %}    # ef = (1.75/dia)**2  →  1.75mm=1.0 / 2.85mm=0.3768\n\n    # M104 S{preheat_temp}\n    # TEMPERATURE_WAIT SENSOR=extruder MINIMUM={ normal_temp -9 } MAXIMUM={preheat_temp +40}\n    RESPOND MSG=\"DOCKING T4.\"\n"
+    ],
+    [
+      "\n    {% set preheat_temp = normal_temp + (15 if is_175 else 25) %}\n    M104 S{preheat_temp}\n\n",
+      "\n    # M104 S{preheat_temp}\n\n"
+    ],
+    [
+      "\n    {% set preheat_temp = normal_temp + (10 if is_175 else 12) %}\n    M104 S{preheat_temp}\n    TOOLHEAD_DOCK_HEAT TEMP={normal_temp}\n    FAST_CANCEL_WAIT P={(h_d * 1000)|int}\n    FAST_CANCEL_PRIME STATE=begin TOOL=3\n",
+      "\n    {% set preheat_temp = normal_temp + (5 if is_175 else 5) %}\n    # M104 S{preheat_temp}\n    TOOLHEAD_DOCK_HEAT TEMP={slicer_temp}\n    # FAST_CANCEL_WAIT P={(h_d * 1000)|int}\n    TOOLHEAD_WAIT_FOR_PRIME TARGET={slicer_temp} TIMEOUT=60\n    FAST_CANCEL_PRIME STATE=begin TOOL=3\n"
+    ],
+    [
+      "    {% set preheat_temp = normal_temp + (5 if is_175 else 10) %}\n    M104 S{preheat_temp}\n    # 2차 프라임: P2 를 MVS 로\n",
+      "    {% set preheat_temp = normal_temp %}\n    # M104 S{preheat_temp}\n    # 2차 프라임: P2 를 MVS 로\n"
+    ],
+    [
+      "    {% set preheat_temp = normal_temp + (2 if is_175 else 2) %}\n    M104 S{preheat_temp}\n    # 2차 폼 프라임: FP2 를 MVS 로\n",
+      "    {% set preheat_temp = normal_temp %}\n    # M104 S{preheat_temp}\n    # 2차 폼 프라임: FP2 를 MVS 로\n"
+    ]
+  ],
+  "PARK_TOOL_0": [
+    [
+      "    {% if next_temp > 0 %}\n    {% set preheat_temp = [next_temp + 25, 298]|min %} \n    M104 S{preheat_temp}\n",
+      "    {% if next_temp > 0 %}\n    {% set preheat_temp = [next_temp + 40, 298]|min %} \n    M104 S{preheat_temp}\n"
+    ]
+  ],
+  "PARK_TOOL_1": [
+    [
+      "    {% if next_temp > 0 %}\n    {% set preheat_temp = [next_temp + 25, 298]|min %}\n    M104 S{preheat_temp}\n",
+      "    {% if next_temp > 0 %}\n    {% set preheat_temp = [next_temp + 40, 298]|min %}\n    M104 S{preheat_temp}\n"
+    ]
+  ],
+  "PARK_TOOL_2": [
+    [
+      "    {% if next_temp > 0 %}\n    {% set preheat_temp = [next_temp + 25, 298]|min %}\n    M104 S{preheat_temp}\n",
+      "    {% if next_temp > 0 %}\n    {% set preheat_temp = [next_temp + 40, 298]|min %}\n    M104 S{preheat_temp}\n"
+    ]
+  ],
+  "PARK_TOOL_3": [
+    [
+      "    {% if next_temp > 0 %}\n    {% set preheat_temp = [next_temp + 25, 298]|min %}\n    M104 S{preheat_temp}\n",
+      "    {% if next_temp > 0 %}\n    {% set preheat_temp = [next_temp + 40, 298]|min %}\n    M104 S{preheat_temp}\n"
+    ]
+  ]
+}

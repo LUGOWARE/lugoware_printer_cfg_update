@@ -10,17 +10,20 @@
     }
   },
   "lugoware_system": {
-    "version": "1.2.18",
-    "date": "2026/11/19",
+    "version": "1.2.19",
+    "date": "2026/11/20",
     "notes": {
       "ko": [
-        "터치스크린 메인 화면에서 보조 툴헤드 예열 칸을 숨겼습니다. 상단 온도 표시, 그래프, 온도 메뉴 제어는 계속 사용할 수 있습니다."
+        "툴헤드 보조 버전의 툴체인지에서 슬라이서 목표를 기준으로 파킹 중 노즐을 예열하고, 보조 툴헤드가 목표보다 30°C 낮은 온도에 도달하면 프라임을 시작합니다.",
+        "출력 파일에서 오류가 발생하는 동시에 취소하면 툴 정리와 가열 종료가 멈출 수 있던 문제를 수정했습니다."
       ],
       "en": [
-        "The auxiliary Toolhead preheat row is hidden on the touchscreen home screen. The top temperature display, graph, and Temperature menu controls remain available."
+        "Auxiliary tool changes preheat the nozzle while parking and start priming when the toolhead reaches 30°C below the slicer target.",
+        "Fixed a stall that could block tool cleanup and heater shutdown when a print-file error coincided with cancellation."
       ],
       "zh_CN": [
-        "隐藏触摸屏主界面上的辅助工具头预热栏。顶部温度显示、温度曲线和温度菜单控制仍可使用。"
+        "辅助工具头换刀时在停放阶段预热喷嘴，并在工具头达到切片目标温度减30°C时开始排料。",
+        "修复取消打印与打印文件错误同时发生时，工具整理和加热关闭可能卡住的问题。"
       ]
     }
   }

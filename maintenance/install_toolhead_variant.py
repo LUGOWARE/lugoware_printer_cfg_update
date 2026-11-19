@@ -173,6 +173,19 @@ def patch_ui(text, edits, variant):
     return text
 
 
+def dock_wait_profile(text, patches, variant):
+    for name, edits in patches.items():
+        match = section(text, 'gcode_macro ' + name)
+        if not match:
+            raise ValueError('Missing tool-change macro: ' + name)
+        try:
+            changed = patch_ui(match[0], edits, variant)
+        except ValueError as exc:
+            raise ValueError('Unsupported tool-change macro ' + name + ': ' + str(exc)) from exc
+        text = text[:match.start()] + changed + text[match.end():]
+    return text
+
+
 def plan(home, variant, assets, base_override=None):
     if variant not in VARIANTS:
         raise ValueError('Invalid variant')
@@ -214,7 +227,13 @@ def plan(home, variant, assets, base_override=None):
     if variant == 'toolhead':
         header = '[include toolhead_auxiliary.cfg]\n' + header
     changes[header_path] = nozzle_header_profile(header, variant).encode()
-    changes[base_path] = base_profile(base, variant).encode()
+    dock_patches = json.loads((assets / 'dock_wait_patches.json').read_text(encoding='utf-8'))
+    if 'TOOLHEAD_WAIT_FOR_PRIME TARGET={slicer_temp}' in base:
+        base = dock_wait_profile(base, dock_patches, 'standard')
+    base = base_profile(base, variant)
+    if variant == 'toolhead':
+        base = dock_wait_profile(base, dock_patches, 'toolhead')
+    changes[base_path] = base.encode()
     patches = json.loads((assets / 'ui_patches.json').read_text(encoding='utf-8'))
     for rel, edits in patches.items():
         path = home / rel
@@ -335,8 +354,9 @@ def preflight(home, variant, assets, screen_upgrade_pending=None):
         print('Variant preflight: pinned screen upgrade will run before UI checks.')
         return
     for rel, edits in patches.items():
-        # The common installer always replaces this managed panel.
-        if rel == 'KlipperScreen/panels/tool_prepare.py':
+        # The common installer supplies these files before applying the variant.
+        if rel in ('KlipperScreen/panels/tool_prepare.py', 'klipper/klippy/extras/fast_cancel.py',
+                   'klipper/klippy/extras/lugo_tool_temperature.py'):
             continue
         path = home / rel
         if not path.is_file():

@@ -84,5 +84,17 @@
       "            ]\n        for h in self.printer.get_heaters():\n            requested_updates[\"objects\"][h] = [\"target\", \"temperature\", \"power\"]\n        for t in self.printer.get_temp_sensors():\n            requested_updates[\"objects\"][t] = [\"temperature\"]\n        for f in self.printer.get_temp_fans():\n",
       "            ]\n        for h in self.printer.get_heaters():\n            requested_updates[\"objects\"][h] = [\"target\", \"temperature\", \"power\"]\n            if h == \"heater_generic Toolhead\":\n                requested_updates[\"objects\"][h].append(\"sensor_state\")\n        for t in self.printer.get_temp_sensors():\n            requested_updates[\"objects\"][t] = [\"temperature\"]\n        for f in self.printer.get_temp_fans():\n"
     ]
+  ],
+  "klipper/klippy/extras/fast_cancel.py": [
+    [
+      "        # Wait for the executing macro stack to unwind before recovery moves.\n        with self.gcode.get_mutex():\n            if not self.requested or self.printer.is_shutdown():\n                return\n            while self.sd.work_timer is not None:\n                if not self.requested or self.printer.is_shutdown():\n                    return\n                self.reactor.pause(self.reactor.monotonic() + .01)\n            self.cleaning = True\n",
+      "        # VirtualSD's error cleanup can need the G-code mutex before it clears\n        # work_timer. Wait without holding that mutex, then serialize motion.\n        while self.sd.work_timer is not None:\n            if not self.requested or self.printer.is_shutdown():\n                return\n            self.reactor.pause(self.reactor.monotonic() + .01)\n        with self.gcode.get_mutex():\n            if not self.requested or self.printer.is_shutdown():\n                return\n            self.cleaning = True\n"
+    ]
+  ],
+  "klipper/klippy/extras/lugo_tool_temperature.py": [
+    [
+      "            if self.overrides[tool] is not None:\n                cmd = self.replaced(cmd, 'TEMP', self.overrides[tool])\n        starting = self.start_tool is not None and not self.changing\n",
+      "            if self.overrides[tool] is not None:\n                cmd = self.replaced(cmd, 'SLICER_TEMP', self.base[tool])\n                cmd = self.replaced(cmd, 'TEMP', self.overrides[tool])\n        starting = self.start_tool is not None and not self.changing\n"
+    ]
   ]
 }
