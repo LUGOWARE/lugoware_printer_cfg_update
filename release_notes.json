@@ -10,20 +10,20 @@
     }
   },
   "lugoware_system": {
-    "version": "1.2.12",
+    "version": "1.2.13",
     "date": "2026/11/19",
     "notes": {
       "ko": [
-        "구형 CB2에서 보안 패키지를 다운로드하지 못해 설치가 중단되는 문제를 수정했습니다.",
-        "중단된 Moonraker 설치를 복구할 때도 정상적인 보안 패키지 저장소를 사용합니다."
+        "툴헤드 보조 버전에서 출력 취소 후 툴이 분리됐는데도 장착 상태로 판단하는 문제를 수정했습니다.",
+        "실제 툴이 남아 있거나 센서에 이상이 있을 때의 안전 보호는 유지됩니다."
       ],
       "en": [
-        "Fixed installation failures when downloading security packages on older CB2 systems.",
-        "Interrupted Moonraker installations also use the correct security package archive during recovery."
+        "Fixed stale tool attachment status after parking during cancellation in the auxiliary toolhead version.",
+        "Existing safeguards for an attached tool and sensor faults are retained."
       ],
       "zh_CN": [
-        "修复旧版 CB2 系统因安全软件包下载失败而中断安装的问题。",
-        "恢复中断的 Moonraker 安装时也使用正确的安全软件包归档源。"
+        "修复工具头辅助加热版取消打印后工具已分离但仍显示为安装状态的问题。",
+        "保留工具仍连接及传感器异常时的安全保护。"
       ]
     }
   }

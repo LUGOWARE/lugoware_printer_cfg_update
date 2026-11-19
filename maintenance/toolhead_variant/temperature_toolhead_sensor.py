@@ -34,7 +34,12 @@ class TemperatureToolheadSensor:
 
     def get_status(self, eventtime):
         result = self.runout_helper.get_status(eventtime)
-        result.update(self.sensor.get_status(eventtime))
+        sensor_status = self.sensor.get_status(eventtime)
+        result.update(sensor_status)
+        # Motion guards must use the same current, debounced temperature state.
+        # Runout events remain on poll(); status reads must not emit events.
+        if sensor_status['state'] in ('connected', 'disconnected'):
+            result['filament_detected'] = sensor_status['state'] == 'connected'
         result['source'] = 'PA2 thermistor'
         return result
 
