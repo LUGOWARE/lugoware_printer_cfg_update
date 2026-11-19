@@ -28,4 +28,6 @@ if __name__ == '__main__':
             shutil.copy2(target, backup / target.name)
         shutil.copy2(Path(__file__).with_name('mainsail_mesh.js'), target)
         index.write_text(result, encoding='utf-8')
+        index.chmod(0o644)
+        target.chmod(0o644)
         print('Mainsail bed mesh switch installed; refresh browser once.')

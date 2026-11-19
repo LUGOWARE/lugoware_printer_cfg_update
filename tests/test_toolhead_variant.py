@@ -3,6 +3,10 @@ import json
 from pathlib import Path
 import tempfile
 import unittest
+import os
+import stat
+import subprocess
+import sys
 from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -22,6 +26,43 @@ def profile():
 
 
 class VariantTests(unittest.TestCase):
+    @unittest.skipUnless(os.name == 'posix', 'Linux permissions required')
+    def test_common_web_helpers_repair_permissions(self):
+        for helper, filename in [('reconnect','lugoware-reconnect.js'),('mesh','lugoware-mesh.js')]:
+            with self.subTest(helper=helper), tempfile.TemporaryDirectory() as d:
+                root=Path(d);web=root/'mainsail';web.mkdir();index=web/'index.html'
+                index.write_text('<html><head></head><body></body></html>');index.chmod(0o600)
+                env=dict(os.environ,MAINSAIL_DIR=str(web),BACKUP_DIR=str(root/'backup'))
+                subprocess.run([sys.executable,str(ROOT/'maintenance'/('install_mainsail_'+helper+'.py'))],
+                               check=True,env=env,capture_output=True,preexec_fn=lambda:os.umask(0o077))
+                for p in (index,web/filename):self.assertEqual(stat.S_IMODE(p.stat().st_mode),0o644)
+
+    @unittest.skipUnless(os.name == 'posix', 'Linux permissions required')
+    def test_web_assets_readable_under_private_umask(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d); web=root/'mainsail'; web.mkdir()
+            index=web/'index.html'; index.write_bytes(b'unchanged'); index.chmod(0o600)
+            script=web/'lugoware-toolhead-temperature.js'
+            secret=root/'private.json'; secret.write_bytes(b'old');secret.chmod(0o600)
+            old=os.umask(0o077)
+            try:
+                variant.commit({index:b'unchanged',script:b'public',secret:b'new'},root/'backup')
+                self.assertEqual(os.umask(0o077),0o077)
+            finally:os.umask(old)
+            for path in (index,script):self.assertEqual(stat.S_IMODE(path.stat().st_mode),0o644)
+            self.assertEqual(stat.S_IMODE(secret.stat().st_mode),0o600)
+            self.assertEqual(stat.S_IMODE((root/'backup'/'0').stat().st_mode),0o600)
+
+    @unittest.skipUnless(os.name == 'posix', 'Linux permissions required')
+    def test_failed_transaction_restores_mode(self):
+        with tempfile.TemporaryDirectory() as d:
+            root=Path(d);web=root/'mainsail';web.mkdir();index=web/'index.html'
+            index.write_bytes(b'original');index.chmod(0o600)
+            blocker=root/'block';blocker.write_bytes(b'block')
+            with self.assertRaises(OSError):variant.commit({index:b'new',blocker/'bad':b'x'},root/'backup')
+            self.assertEqual(index.read_bytes(),b'original')
+            self.assertEqual(stat.S_IMODE(index.stat().st_mode),0o600)
+
     def test_atomic_staging_is_outside_watched_config(self):
         with tempfile.TemporaryDirectory() as d:
             root = Path(d); config = root/'config'; config.mkdir()

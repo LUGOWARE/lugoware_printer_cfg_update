@@ -5,6 +5,7 @@ import json
 import os
 from pathlib import Path
 import re
+import stat
 
 VARIANTS = ('standard', 'toolhead')
 SENSOR = 'temperature_toolhead_sensor toolhead_sensor'
@@ -245,15 +246,27 @@ def plan(home, variant, assets, base_override=None):
     return changes
 
 
+def desired_mode(path):
+    # Only these public web assets require nginx access. Never relax secrets,
+    # printer configs, backups or the company's restrictive process umask.
+    if path.parent.name == 'mainsail' and path.name in (
+            'index.html', 'lugoware-toolhead-temperature.js'):
+        return 0o644
+    return stat.S_IMODE(path.stat().st_mode) if path.exists() else 0o600
+
+
 def commit(changes, backup):
     # Do not manufacture file events for already-current config/UI files.
     changes = {p: data for p, data in changes.items()
-               if not p.is_file() or p.read_bytes() != data}
+               if not p.is_file() or p.read_bytes() != data
+               or (os.name == 'posix' and stat.S_IMODE(p.stat().st_mode) != desired_mode(p))}
     backup.mkdir(parents=True, exist_ok=False)
     previous = {p: p.read_bytes() if p.exists() else None for p in changes}
+    previous_modes = {p: stat.S_IMODE(p.stat().st_mode) if p.exists() else None for p in changes}
     manifest = []
     for i, (path, data) in enumerate(previous.items()):
-        manifest.append({'path': str(path), 'backup': str(i) if data is not None else None})
+        manifest.append({'path': str(path), 'backup': str(i) if data is not None else None,
+                         'mode': previous_modes[path]})
         if data is not None:
             (backup / str(i)).write_bytes(data)
     (backup / 'manifest.json').write_text(json.dumps(manifest, indent=2))
@@ -269,6 +282,7 @@ def commit(changes, backup):
                 raise ValueError('Variant backup and destination must share a filesystem')
             tmp = backup / ('.variant-stage-' + str(index))
             tmp.write_bytes(data)
+            tmp.chmod(desired_mode(path))
             os.replace(tmp, path)
             touched.append(path)
     except Exception:
@@ -277,6 +291,7 @@ def commit(changes, backup):
                 path.unlink()
             else:
                 path.write_bytes(previous[path])
+                path.chmod(previous_modes[path])
         raise
 
 

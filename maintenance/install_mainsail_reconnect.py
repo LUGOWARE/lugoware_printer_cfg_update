@@ -30,4 +30,6 @@ if __name__ == '__main__':
             shutil.copy2(index, backup / 'index.html')
         shutil.copy2(Path(__file__).with_name('mainsail_reconnect.js'), folder / 'lugoware-reconnect.js')
         index.write_text(result, encoding='utf-8')
+        index.chmod(0o644)
+        (folder / 'lugoware-reconnect.js').chmod(0o644)
         print('Mainsail reconnect helper installed; refresh browser once to load it.')

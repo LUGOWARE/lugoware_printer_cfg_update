@@ -10,20 +10,20 @@
     }
   },
   "lugoware_system": {
-    "version": "1.2.10",
+    "version": "1.2.11",
     "date": "2026/11/19",
     "notes": {
       "ko": [
-        "업데이트 후 메인세일 설정 목록에 같은 파일이 두 번 표시되는 문제를 수정했습니다.",
-        "내용이 같은 설정 파일은 다시 교체하지 않도록 개선했습니다."
+        "통합 프로그램으로 업데이트한 뒤 메인세일 접속 시 Forbidden이 표시될 수 있는 문제를 수정했습니다.",
+        "웹 공개 파일의 읽기 권한을 복구하고 비공개 파일과 백업의 권한은 유지합니다."
       ],
       "en": [
-        "Fixed duplicate configuration file rows in Mainsail after updates.",
-        "Unchanged configuration files are no longer replaced unnecessarily."
+        "Fixed a possible Mainsail Forbidden error after company-managed updates.",
+        "Public web assets receive the required read permissions while private files and backups remain restricted."
       ],
       "zh_CN": [
-        "修复更新后 Mainsail 配置列表中同一文件重复显示的问题。",
-        "不再重复替换内容未变更的配置文件。"
+        "修复通过公司管理程序更新后 Mainsail 可能显示 Forbidden 的问题。",
+        "恢复公开网页文件所需的读取权限，并保留私有文件和备份的权限限制。"
       ]
     }
   }

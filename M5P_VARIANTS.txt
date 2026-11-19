@@ -70,3 +70,7 @@ bed remain unchanged. Measured on .107; validate thermal behavior on each unit.
 1.2.10: Atomic profile writes stage in the unwatched backup directory on the
 same filesystem, preventing duplicate Mainsail move-event rows. Byte-identical
 files are skipped. No duplicate configuration files need to be deleted.
+
+1.2.11: Explicit public-web 0644 permissions work under company UMask=0077.
+Existing non-web modes are preserved; backups remain private. Failed writes
+restore original file modes. Unchanged but unreadable web files are repaired.
