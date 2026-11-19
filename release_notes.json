@@ -10,20 +10,20 @@
     }
   },
   "lugoware_system": {
-    "version": "1.2.14",
+    "version": "1.2.15",
     "date": "2026/11/19",
     "notes": {
       "ko": [
-        "메인세일과 터치스크린에서 보조 툴헤드의 전력 점선을 숨겨 온도 그래프를 보기 쉽게 정리했습니다.",
-        "출력 취소 후 툴이 분리됐는데도 장착 상태로 판단하던 문제를 수정했습니다. 실제 장착 및 센서 이상에 대한 보호는 유지합니다."
+        "보조 툴헤드에도 노즐과 동일한 약 10분 유휴 예열 자동 종료를 적용했습니다.",
+        "출력 중에는 예열을 유지하며, 목표 온도를 변경하면 해당 히터의 대기 시간을 다시 계산합니다."
       ],
       "en": [
-        "Hid the auxiliary toolhead power curve in Mainsail and the touchscreen for a clearer temperature graph.",
-        "Fixed stale attachment detection after cancel parking while retaining tool attachment and sensor fault safeguards."
+        "Added the same approximately 10-minute idle heating timeout to the auxiliary toolhead as the nozzle.",
+        "Heating is retained while printing; changing a heater target resets its idle countdown."
       ],
       "zh_CN": [
-        "隐藏 Mainsail 和触摸屏中辅助工具头的功率虚线，使温度曲线更清晰。",
-        "修复取消打印并停放工具后安装状态更新不及时的问题，保留工具连接和传感器故障保护。"
+        "辅助工具头新增与喷嘴一致的约10分钟空闲加热自动关闭功能。",
+        "打印期间保持加热，修改目标温度后重新计算该加热器的空闲时间。"
       ]
     }
   }

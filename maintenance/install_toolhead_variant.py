@@ -200,6 +200,10 @@ def plan(home, variant, assets, base_override=None):
             content = auxiliary.read_text(encoding='utf-8')
         else:
             content = (assets / 'toolhead_auxiliary.cfg').read_text(encoding='utf-8')
+        # Upgrade existing auxiliary configs as well as fresh installations.
+        defaults = (assets / 'toolhead_auxiliary.cfg').read_text(encoding='utf-8')
+        for name in ('gcode_macro TOOLHEAD_IDLE_STATE', 'delayed_gcode turn_off_toolhead'):
+            content = remove_section(content, name).rstrip() + '\n\n' + section(defaults, name)[0]
         changes[auxiliary] = pid_profile(content, 'heater_generic Toolhead', TOOLHEAD_PID).encode()
     for name in AUX:
         header = remove_section(header, name)
