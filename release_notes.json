@@ -10,20 +10,20 @@
     }
   },
   "lugoware_system": {
-    "version": "1.2.16",
+    "version": "1.2.17",
     "date": "2026/11/19",
     "notes": {
       "ko": [
-        "출력 중 노즐 목표 온도를 변경하면 장착된 보조 툴헤드의 목표 온도도 함께 변경됩니다.",
-        "툴 교체 중 임시 예열과 분리 상태는 제외하며, 꺼 둔 보조 히터를 자동으로 켜지 않습니다."
+        "보조 툴헤드가 장착된 상태에서는 노즐이나 툴헤드 한쪽의 수동 예열 온도를 설정하면 두 히터가 같은 목표로 예열됩니다.",
+        "노즐만 예열 중일 때 툴헤드를 장착하면 센서 연결을 확인한 뒤 보조 히터도 같은 목표로 예열됩니다."
       ],
       "en": [
-        "During printing, nozzle target changes also update the attached auxiliary toolhead target.",
-        "Temporary toolchange boosts and detached tools are excluded; an auxiliary heater switched off stays off."
+        "With the auxiliary toolhead attached, setting either heater during manual preheat gives both heaters the same target.",
+        "Attaching the toolhead during nozzle preheat starts auxiliary preheat at the same target after its sensor connection is confirmed."
       ],
       "zh_CN": [
-        "打印过程中修改喷嘴目标温度时，同步更新已安装辅助工具头的目标温度。",
-        "换工具临时升温和分离状态除外，已关闭的辅助加热器不会自动开启。"
+        "安装辅助工具头后，手动设置任一加热器的预热温度，两个加热器将使用相同的目标温度。",
+        "喷嘴预热期间安装工具头，确认传感器连接后，辅助加热器也会按相同目标温度预热。"
       ]
     }
   }

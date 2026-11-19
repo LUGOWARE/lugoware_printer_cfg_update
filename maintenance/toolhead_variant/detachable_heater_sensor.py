@@ -12,6 +12,8 @@ class DetachableHeaterSensor:
         self.dock_pending = False
         self.reconnect = None
         self.last_nozzle_target = None
+        self.manual_targets = None
+        self.manual_parked = False
         source.gcode.register_command("TOOLHEAD_DOCK_HEAT", self.dock_heat)
         source.gcode.register_command("TOOLHEAD_PARK_OFF", self.park_off)
         self.minimum = 0.
@@ -70,6 +72,7 @@ class DetachableHeaterSensor:
         self.dock_pending = bool(target)
 
     def park_off(self, gcmd):
+        self.manual_parked = True
         self.dock_pending = False
         self.heater.set_temp(0.)
         # Preserve the normal fault guard until queued PWM is physically off.
@@ -173,6 +176,8 @@ class DetachableHeaterSensor:
         self.callback(read_time, temperature)
 
     def ready(self):
+        self.nozzle_heater = self.printer.lookup_object('extruder').get_heater()
+        self.manual_controls = (self.nozzle_heater.control, self.heater.control)
         self.start_time = self.source.reactor.monotonic()
         self.source.reactor.register_timer(self.watchdog, self.source.reactor.NOW)
 
@@ -202,10 +207,54 @@ class DetachableHeaterSensor:
             return
         self.heater.set_temp(target)
 
+    def sync_manual_targets(self, now):
+        nozzle, aux = self.nozzle_heater, self.heater
+        observed = (nozzle.target_temp, aux.target_temp)
+        sensor_state = self.source.get_status(now)['state']
+        connected = sensor_state == 'connected' and self.valid_samples >= 9
+        _, state, _, blocked = self.context(now)
+        tools = self.printer.lookup_object('gcode_macro TOOL_STATE', None)
+        temperatures = self.printer.lookup_object('lugo_tool_temperature', None)
+        diagnostics = self.printer.lookup_object('lugo_diagnostics', None)
+        if sensor_state == 'disconnected':
+            self.manual_parked = False
+        previous = self.manual_targets
+        self.manual_targets = (*observed, connected)
+        if (blocked or self.manual_parked or self.dock_pending or self.reconnect is not None
+                or state not in ('standby', 'complete', 'cancelled')
+                or (tools and tools.get_status(now).get('changing', 0))
+                or (temperatures and (temperatures.depth or temperatures.start_tool is not None))
+                or (diagnostics and diagnostics.active)
+                or (nozzle.control, aux.control) != self.manual_controls):
+            return
+        if previous is None or not connected:
+            return
+        n, a = observed
+        previous_n, previous_a, was_connected = previous
+        if was_connected and a != previous_a and n == previous_n:
+            target = a
+        elif n != previous_n or not was_connected or a != previous_a:
+            target = n
+        else:
+            return
+        if target and not max(nozzle.min_temp, self.minimum) <= target <= min(nozzle.max_temp, self.maximum):
+            if a:
+                aux.set_temp(0.)
+            if n and n != target:
+                nozzle.set_temp(0.)
+            self.source.gcode.respond_info('Heaters not linked: target outside shared temperature range')
+        else:
+            if n != target:
+                nozzle.set_temp(target)
+            if a != target:
+                aux.set_temp(target)
+        self.manual_targets = (nozzle.target_temp, aux.target_temp, True)
+
     def watchdog(self, eventtime):
         if not self.failed:
             self.check_reconnect(eventtime)
             self.sync_print_target(eventtime)
+            self.sync_manual_targets(eventtime)
         if self.dock_pending and not self.failed:
             if (self.valid_samples >= 9 and
                     self.source.get_status(eventtime)['state'] == 'connected'):
