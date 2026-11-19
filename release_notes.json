@@ -10,20 +10,20 @@
     }
   },
   "lugoware_system": {
-    "version": "1.2.9",
+    "version": "1.2.10",
     "date": "2026/11/19",
     "notes": {
       "ko": [
-        "툴헤드 보조 버전의 노즐·보조 히터 PID를 새 측정값으로 통일했습니다.",
-        "설치·업데이트 시 기존 저장된 PID에도 같은 값을 적용합니다. 표준 버전과 베드 설정은 유지합니다."
+        "업데이트 후 메인세일 설정 목록에 같은 파일이 두 번 표시되는 문제를 수정했습니다.",
+        "내용이 같은 설정 파일은 다시 교체하지 않도록 개선했습니다."
       ],
       "en": [
-        "Updated the auxiliary profile with the newly measured nozzle and auxiliary heater PID values.",
-        "Installations and updates apply these values to saved PID overrides too. Standard and bed settings are unchanged."
+        "Fixed duplicate configuration file rows in Mainsail after updates.",
+        "Unchanged configuration files are no longer replaced unnecessarily."
       ],
       "zh_CN": [
-        "工具头辅助版本统一采用新测量的喷嘴和辅助加热器 PID 参数。",
-        "安装和更新时也会更新已保存的 PID 参数，标准版本和热床设置保持不变。"
+        "修复更新后 Mainsail 配置列表中同一文件重复显示的问题。",
+        "不再重复替换内容未变更的配置文件。"
       ]
     }
   }

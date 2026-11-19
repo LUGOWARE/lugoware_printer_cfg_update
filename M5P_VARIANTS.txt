@@ -66,3 +66,7 @@ Nozzle SAVE_CONFIG sensor overrides are migrated without discarding PID data.
 nozzle Kp=13.953 Ki=0.511 Kd=95.230; auxiliary Kp=37.681 Ki=9.191 Kd=38.623.
 These replace saved machine PID on auxiliary updates as requested. Standard and
 bed remain unchanged. Measured on .107; validate thermal behavior on each unit.
+
+1.2.10: Atomic profile writes stage in the unwatched backup directory on the
+same filesystem, preventing duplicate Mainsail move-event rows. Byte-identical
+files are skipped. No duplicate configuration files need to be deleted.

@@ -246,6 +246,9 @@ def plan(home, variant, assets, base_override=None):
 
 
 def commit(changes, backup):
+    # Do not manufacture file events for already-current config/UI files.
+    changes = {p: data for p, data in changes.items()
+               if not p.is_file() or p.read_bytes() != data}
     backup.mkdir(parents=True, exist_ok=False)
     previous = {p: p.read_bytes() if p.exists() else None for p in changes}
     manifest = []
@@ -256,9 +259,15 @@ def commit(changes, backup):
     (backup / 'manifest.json').write_text(json.dumps(manifest, indent=2))
     touched = []
     try:
-        for path, data in changes.items():
+        for index, (path, data) in enumerate(changes.items()):
             path.parent.mkdir(parents=True, exist_ok=True)
-            tmp = path.with_name(path.name + '.variant-stage')
+            # A staging file inside config produces a move_file notification.
+            # Mainsail's move handler appends it even if the destination exists.
+            # Stage in our unwatched backup directory: rename remains atomic,
+            # while Moonraker emits create_file (Mainsail's idempotent upsert).
+            if path.parent.stat().st_dev != backup.stat().st_dev:
+                raise ValueError('Variant backup and destination must share a filesystem')
+            tmp = backup / ('.variant-stage-' + str(index))
             tmp.write_bytes(data)
             os.replace(tmp, path)
             touched.append(path)

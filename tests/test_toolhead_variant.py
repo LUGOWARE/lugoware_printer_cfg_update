@@ -3,6 +3,7 @@ import json
 from pathlib import Path
 import tempfile
 import unittest
+from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[1]
 spec = importlib.util.spec_from_file_location('variant', ROOT/'maintenance/install_toolhead_variant.py')
@@ -21,6 +22,29 @@ def profile():
 
 
 class VariantTests(unittest.TestCase):
+    def test_atomic_staging_is_outside_watched_config(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d); config = root/'config'; config.mkdir()
+            target = config/'printer.cfg'; target.write_bytes(b'old')
+            backup = root/'backups'/'update'
+            replace = variant.os.replace
+            observed = []
+            def record(src, dst):
+                observed.append((src, dst)); replace(src, dst)
+            with patch.object(variant.os, 'replace', side_effect=record):
+                variant.commit({target: b'new'}, backup)
+            self.assertEqual(observed, [(backup/'.variant-stage-0', target)])
+            self.assertEqual(target.read_bytes(), b'new')
+            self.assertEqual((backup/'0').read_bytes(), b'old')
+            self.assertEqual(list(config.iterdir()), [target])
+
+    def test_unchanged_file_does_not_emit_replace(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d); target = root/'printer.cfg'; target.write_bytes(b'same')
+            with patch.object(variant.os, 'replace') as replace:
+                variant.commit({target:b'same'},root/'backup')
+                replace.assert_not_called()
+
     def test_release_pid_overrides_old_saved_aux_pid(self):
         old = '[heater_generic Toolhead]\nheater_pin: PB7\npid_kp = 1\npid_ki: 2\npid_kd: 3\n'
         new = variant.pid_profile(old, 'heater_generic Toolhead', variant.TOOLHEAD_PID)
