@@ -10,20 +10,20 @@
     }
   },
   "lugoware_system": {
-    "version": "1.2.11",
+    "version": "1.2.12",
     "date": "2026/11/19",
     "notes": {
       "ko": [
-        "통합 프로그램으로 업데이트한 뒤 메인세일 접속 시 Forbidden이 표시될 수 있는 문제를 수정했습니다.",
-        "웹 공개 파일의 읽기 권한을 복구하고 비공개 파일과 백업의 권한은 유지합니다."
+        "구형 CB2에서 보안 패키지를 다운로드하지 못해 설치가 중단되는 문제를 수정했습니다.",
+        "중단된 Moonraker 설치를 복구할 때도 정상적인 보안 패키지 저장소를 사용합니다."
       ],
       "en": [
-        "Fixed a possible Mainsail Forbidden error after company-managed updates.",
-        "Public web assets receive the required read permissions while private files and backups remain restricted."
+        "Fixed installation failures when downloading security packages on older CB2 systems.",
+        "Interrupted Moonraker installations also use the correct security package archive during recovery."
       ],
       "zh_CN": [
-        "修复通过公司管理程序更新后 Mainsail 可能显示 Forbidden 的问题。",
-        "恢复公开网页文件所需的读取权限，并保留私有文件和备份的权限限制。"
+        "修复旧版 CB2 系统因安全软件包下载失败而中断安装的问题。",
+        "恢复中断的 Moonraker 安装时也使用正确的安全软件包归档源。"
       ]
     }
   }

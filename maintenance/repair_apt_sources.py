@@ -19,7 +19,7 @@ def repair(root, backup):
         # Keep APT signature/expiry verification enabled; no trusted=yes options.
         security = re.compile(
             r'^(?P<head>[ \t]*deb(?:-src)?[ \t]+(?:\[[^\]\r\n]+\][ \t]+)?)'
-            r'https?://(?:security\.debian\.org(?:/debian-security)?|deb\.debian\.org/debian-security)/?'
+            r'https?://(?:security\.debian\.org(?:/debian-security)?|deb\.debian\.org/debian-security|mirrors\.huaweicloud\.com/debian-security)/?'
             r'(?P<tail>[ \t]+bullseye-security(?:[ \t][^\r\n]*)?)(?=\r?$)', re.MULTILINE)
         updated = security.sub(lambda m: m.group('head') +
             'https://archive.debian.org/debian-security' + m.group('tail'), text).encode('utf-8')

@@ -74,3 +74,14 @@ class AptRepairTests(unittest.TestCase):
             self.assertIn('https://security.debian.org/debian-security bookworm-security',result)
             self.assertNotIn('trusted=yes',result)
             self.assertNotIn('check-valid-until=no',result)
+
+    def test_huawei_security_migrated_only_for_bullseye(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp); path=root/'sources.list'
+            path.write_text('deb https://mirrors.huaweicloud.com/debian-security bullseye-security main\n'
+                            'deb https://mirrors.huaweicloud.com/debian-security bookworm-security main\n')
+            self.assertEqual(repair(root,root/'backup'),1)
+            result=path.read_text()
+            self.assertIn('https://archive.debian.org/debian-security bullseye-security',result)
+            self.assertIn('https://mirrors.huaweicloud.com/debian-security bookworm-security',result)
+            self.assertEqual(repair(root,root/'backup'),0)
