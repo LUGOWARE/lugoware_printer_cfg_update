@@ -9,6 +9,16 @@ import upgrade_moonraker as moon
 
 
 class MoonrakerUpgradeTests(unittest.TestCase):
+    def setUp(self):
+        read = Path.read_text
+        def local_read(path, *args, **kwargs):
+            if path.as_posix() == '/etc/os-release':
+                return 'VERSION_CODENAME=bullseye\n'
+            return read(path, *args, **kwargs)
+        patcher = patch.object(Path, 'read_text', local_read)
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
     def test_version_policy(self):
         self.assertLess(moon.version_key('v0.8.0-100-gabcd'), moon.MIN_VERSION)
         self.assertEqual(moon.version_key('v0.11.0-0-g68db047'), moon.MIN_VERSION)
