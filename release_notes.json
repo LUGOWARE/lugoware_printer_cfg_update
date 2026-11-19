@@ -10,20 +10,20 @@
     }
   },
   "lugoware_system": {
-    "version": "1.2.13",
+    "version": "1.2.14",
     "date": "2026/11/19",
     "notes": {
       "ko": [
-        "툴헤드 보조 버전에서 출력 취소 후 툴이 분리됐는데도 장착 상태로 판단하는 문제를 수정했습니다.",
-        "실제 툴이 남아 있거나 센서에 이상이 있을 때의 안전 보호는 유지됩니다."
+        "메인세일과 터치스크린에서 보조 툴헤드의 전력 점선을 숨겨 온도 그래프를 보기 쉽게 정리했습니다.",
+        "출력 취소 후 툴이 분리됐는데도 장착 상태로 판단하던 문제를 수정했습니다. 실제 장착 및 센서 이상에 대한 보호는 유지합니다."
       ],
       "en": [
-        "Fixed stale tool attachment status after parking during cancellation in the auxiliary toolhead version.",
-        "Existing safeguards for an attached tool and sensor faults are retained."
+        "Hid the auxiliary toolhead power curve in Mainsail and the touchscreen for a clearer temperature graph.",
+        "Fixed stale attachment detection after cancel parking while retaining tool attachment and sensor fault safeguards."
       ],
       "zh_CN": [
-        "修复工具头辅助加热版取消打印后工具已分离但仍显示为安装状态的问题。",
-        "保留工具仍连接及传感器异常时的安全保护。"
+        "隐藏 Mainsail 和触摸屏中辅助工具头的功率虚线，使温度曲线更清晰。",
+        "修复取消打印并停放工具后安装状态更新不及时的问题，保留工具连接和传感器故障保护。"
       ]
     }
   }

@@ -33,9 +33,20 @@
     return [...document.querySelectorAll('tr')].find(r =>
       r.querySelector('td.name')?.textContent.trim() === 'Toolhead' && r.querySelector('td.current')) || null;
   }
+  function hideToolheadPowerCurve() {
+    const store = document.getElementById('app')?.__vue__?.$store;
+    const settings = store?.state?.gui?.view?.tempchart?.datasetSettings;
+    if (!settings || settings['heater_generic Toolhead']?.power === false) return;
+    // Session-only display override: no saved preference or printer command.
+    // Removing this auxiliary script restores standard-profile behavior.
+    store.commit('gui/setChartDatasetStatus', {
+      objectName: 'heater_generic Toolhead', dataset: 'power', value: false
+    });
+  }
   async function update() {
     try {
       if (document.hidden) return;
+      hideToolheadPowerCurve();
       const target = row();
       if (!target) return;
       const abort = new AbortController();

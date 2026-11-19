@@ -237,7 +237,7 @@ def plan(home, variant, assets, base_override=None):
     if variant == 'toolhead':
         if '</body>' not in text:
             raise ValueError('Unsupported Mainsail index')
-        text = text.replace('</body>', '<script defer src="./lugoware-toolhead-temperature.js?v=1.2.6"></script></body>')
+        text = text.replace('</body>', '<script defer src="./lugoware-toolhead-temperature.js?v=1.2.14"></script></body>')
         changes[home / 'mainsail/lugoware-toolhead-temperature.js'] = (assets / 'lugoware-toolhead-temperature.js').read_bytes()
     changes[index] = text.encode()
     # Unused module files/auxiliary cfg remain for rollback, but no config loads

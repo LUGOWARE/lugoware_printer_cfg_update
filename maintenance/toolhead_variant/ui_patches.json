@@ -31,6 +31,10 @@
     [
       "                p_y = gsize[1][1] - (d * (gsize[1][1] - gsize[0][1]))\n            else:\n                p_y = max(gsize[0][1], min(gsize[1][1], gsize[1][1] - 1 - (d * hscale)))\n            if i == 0:\n                ctx.move_to(gsize[0][0], p_y)\n            ctx.line_to(p_x, p_y)\n        if fill:\n            ctx.stroke_preserve()\n            ctx.line_to(end_x - 1, gsize[1][1] - 1)\n",
       "                p_y = gsize[1][1] - (d * (gsize[1][1] - gsize[0][1]))\n            else:\n                p_y = max(gsize[0][1], min(gsize[1][1], gsize[1][1] - 1 - (d * hscale)))\n            if new_segment:\n                ctx.move_to(p_x, p_y)\n                new_segment = False\n            else:\n                ctx.line_to(p_x, p_y)\n        if fill:\n            ctx.stroke_preserve()\n            ctx.line_to(end_x - 1, gsize[1][1] - 1)\n"
+    ],
+    [
+      "            for dev_type in self.store[name]:\n                if d := self.printer.get_temp_store(name, dev_type, data_points):\n",
+      "            for dev_type in self.store[name]:\n                # Hide only the auxiliary toolhead PWM curve.\n                if name == \"heater_generic Toolhead\" and dev_type == \"powers\":\n                    continue\n                if d := self.printer.get_temp_store(name, dev_type, data_points):\n"
     ]
   ],
   "KlipperScreen/panels/main_menu.py": [
