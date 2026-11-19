@@ -10,20 +10,17 @@
     }
   },
   "lugoware_system": {
-    "version": "1.2.19",
+    "version": "1.2.20",
     "date": "2026/11/20",
     "notes": {
       "ko": [
-        "툴헤드 보조 버전의 툴체인지에서 슬라이서 목표를 기준으로 파킹 중 노즐을 예열하고, 보조 툴헤드가 목표보다 30°C 낮은 온도에 도달하면 프라임을 시작합니다.",
-        "출력 파일에서 오류가 발생하는 동시에 취소하면 툴 정리와 가열 종료가 멈출 수 있던 문제를 수정했습니다."
+        "툴헤드 보조 버전의 파킹 중 노즐 예열을 다음 툴 목표보다 5°C 높게 설정하도록 조정했습니다."
       ],
       "en": [
-        "Auxiliary tool changes preheat the nozzle while parking and start priming when the toolhead reaches 30°C below the slicer target.",
-        "Fixed a stall that could block tool cleanup and heater shutdown when a print-file error coincided with cancellation."
+        "During parking in the auxiliary toolhead version, the nozzle now preheats to 5°C above the next tool target."
       ],
       "zh_CN": [
-        "辅助工具头换刀时在停放阶段预热喷嘴，并在工具头达到切片目标温度减30°C时开始排料。",
-        "修复取消打印与打印文件错误同时发生时，工具整理和加热关闭可能卡住的问题。"
+        "辅助工具头版在停放时将喷嘴预热温度调整为下一工具目标温度加5°C。"
       ]
     }
   }

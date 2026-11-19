@@ -104,25 +104,25 @@
   "PARK_TOOL_0": [
     [
       "    {% if next_temp > 0 %}\n    {% set preheat_temp = [next_temp + 25, 298]|min %} \n    M104 S{preheat_temp}\n",
-      "    {% if next_temp > 0 %}\n    {% set preheat_temp = [next_temp + 40, 298]|min %} \n    M104 S{preheat_temp}\n"
+      "    {% if next_temp > 0 %}\n    {% set preheat_temp = [next_temp + 5, 298]|min %} \n    M104 S{preheat_temp}\n"
     ]
   ],
   "PARK_TOOL_1": [
     [
       "    {% if next_temp > 0 %}\n    {% set preheat_temp = [next_temp + 25, 298]|min %}\n    M104 S{preheat_temp}\n",
-      "    {% if next_temp > 0 %}\n    {% set preheat_temp = [next_temp + 40, 298]|min %}\n    M104 S{preheat_temp}\n"
+      "    {% if next_temp > 0 %}\n    {% set preheat_temp = [next_temp + 5, 298]|min %}\n    M104 S{preheat_temp}\n"
     ]
   ],
   "PARK_TOOL_2": [
     [
       "    {% if next_temp > 0 %}\n    {% set preheat_temp = [next_temp + 25, 298]|min %}\n    M104 S{preheat_temp}\n",
-      "    {% if next_temp > 0 %}\n    {% set preheat_temp = [next_temp + 40, 298]|min %}\n    M104 S{preheat_temp}\n"
+      "    {% if next_temp > 0 %}\n    {% set preheat_temp = [next_temp + 5, 298]|min %}\n    M104 S{preheat_temp}\n"
     ]
   ],
   "PARK_TOOL_3": [
     [
       "    {% if next_temp > 0 %}\n    {% set preheat_temp = [next_temp + 25, 298]|min %}\n    M104 S{preheat_temp}\n",
-      "    {% if next_temp > 0 %}\n    {% set preheat_temp = [next_temp + 40, 298]|min %}\n    M104 S{preheat_temp}\n"
+      "    {% if next_temp > 0 %}\n    {% set preheat_temp = [next_temp + 5, 298]|min %}\n    M104 S{preheat_temp}\n"
     ]
   ]
 }

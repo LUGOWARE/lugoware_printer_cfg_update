@@ -178,8 +178,15 @@ def dock_wait_profile(text, patches, variant):
         match = section(text, 'gcode_macro ' + name)
         if not match:
             raise ValueError('Missing tool-change macro: ' + name)
+        block = match[0]
+        if name.startswith('PARK_TOOL_'):
+            for _, updated in edits:
+                # Recognize the exact v1.2.19 form before applying or reverting.
+                legacy = updated.replace('[next_temp + 5, 298]|min', '[next_temp + 40, 298]|min')
+                if legacy != updated:
+                    block = block.replace(legacy, updated)
         try:
-            changed = patch_ui(match[0], edits, variant)
+            changed = patch_ui(block, edits, variant)
         except ValueError as exc:
             raise ValueError('Unsupported tool-change macro ' + name + ': ' + str(exc)) from exc
         text = text[:match.start()] + changed + text[match.end():]
