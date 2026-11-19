@@ -10,20 +10,17 @@
     }
   },
   "lugoware_system": {
-    "version": "1.2.17",
+    "version": "1.2.18",
     "date": "2026/11/19",
     "notes": {
       "ko": [
-        "보조 툴헤드가 장착된 상태에서는 노즐이나 툴헤드 한쪽의 수동 예열 온도를 설정하면 두 히터가 같은 목표로 예열됩니다.",
-        "노즐만 예열 중일 때 툴헤드를 장착하면 센서 연결을 확인한 뒤 보조 히터도 같은 목표로 예열됩니다."
+        "터치스크린 메인 화면에서 보조 툴헤드 예열 칸을 숨겼습니다. 상단 온도 표시, 그래프, 온도 메뉴 제어는 계속 사용할 수 있습니다."
       ],
       "en": [
-        "With the auxiliary toolhead attached, setting either heater during manual preheat gives both heaters the same target.",
-        "Attaching the toolhead during nozzle preheat starts auxiliary preheat at the same target after its sensor connection is confirmed."
+        "The auxiliary Toolhead preheat row is hidden on the touchscreen home screen. The top temperature display, graph, and Temperature menu controls remain available."
       ],
       "zh_CN": [
-        "安装辅助工具头后，手动设置任一加热器的预热温度，两个加热器将使用相同的目标温度。",
-        "喷嘴预热期间安装工具头，确认传感器连接后，辅助加热器也会按相同目标温度预热。"
+        "隐藏触摸屏主界面上的辅助工具头预热栏。顶部温度显示、温度曲线和温度菜单控制仍可使用。"
       ]
     }
   }
