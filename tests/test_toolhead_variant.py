@@ -21,11 +21,23 @@ def profile():
 
 
 class VariantTests(unittest.TestCase):
+    def test_release_pid_overrides_old_saved_aux_pid(self):
+        old = '[heater_generic Toolhead]\nheater_pin: PB7\npid_kp = 1\npid_ki: 2\npid_kd: 3\n'
+        new = variant.pid_profile(old, 'heater_generic Toolhead', variant.TOOLHEAD_PID)
+        self.assertIn('pid_kp: 37.681', new)
+        self.assertIn('pid_ki: 9.191', new)
+        self.assertIn('pid_kd: 38.623', new)
+        self.assertIn('heater_pin: PB7', new)
+        saved = '#*# [heater_generic Toolhead]\n#*# pid_kp = 1\n#*# pid_ki = 2\n#*# pid_kd = 3\n'
+        saved = variant.nozzle_header_profile(saved, 'toolhead')
+        self.assertIn('#*# pid_kp: 37.681', saved)
+        self.assertIn('#*# pid_kd: 38.623', saved)
+
     def test_auxiliary_pt1000_and_standard_restoration(self):
         original = profile().replace('sensor_pin: PA1', 'sensor_type: pt1000_cal\nsensor_pin: PA1\ncontrol: pid\npid_kp: 24.053')
         aux = variant.base_profile(original, 'toolhead')
         self.assertIn('sensor_type: PT1000\n', aux)
-        self.assertIn('pid_kp: 24.053', aux)
+        self.assertIn('pid_kp: 13.953', aux)
         self.assertEqual(aux, variant.base_profile(aux, 'toolhead'))
         restored = variant.base_profile(aux, 'standard')
         self.assertIn('sensor_type: pt1000_cal\n', restored)
@@ -36,7 +48,7 @@ class VariantTests(unittest.TestCase):
         original = '[extruder]\nsensor_type: pt1000_cal\n\n#*# [extruder]\n#*# sensor_type: pt1000_cal\n#*# pid_kp: 24.053\n'
         aux = variant.nozzle_header_profile(original, 'toolhead')
         self.assertEqual(aux.count('sensor_type: PT1000\n'), 2)
-        self.assertIn('#*# pid_kp: 24.053', aux)
+        self.assertIn('#*# pid_kp: 13.953', aux)
         self.assertEqual(aux, variant.nozzle_header_profile(aux, 'toolhead'))
         self.assertEqual(original, variant.nozzle_header_profile(aux, 'standard'))
 

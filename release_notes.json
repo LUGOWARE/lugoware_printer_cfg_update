@@ -10,23 +10,20 @@
     }
   },
   "lugoware_system": {
-    "version": "1.2.8",
+    "version": "1.2.9",
     "date": "2026/11/19",
     "notes": {
       "ko": [
-        "툴헤드 보조 버전에서 센서 분리 시 보조 히터를 끄고, 5초 안에 안정적으로 재연결되면 조건 확인 후 예열을 재개합니다.",
-        "툴헤드 보조 버전은 노즐 센서의 사용자 보정 대신 기본 PT1000 설정을 사용합니다. 변경 후 PID 재튜닝을 권장합니다.",
-        "표준 버전의 기존 센서 설정과 과열·센서 이상 보호는 유지합니다."
+        "툴헤드 보조 버전의 노즐·보조 히터 PID를 새 측정값으로 통일했습니다.",
+        "설치·업데이트 시 기존 저장된 PID에도 같은 값을 적용합니다. 표준 버전과 베드 설정은 유지합니다."
       ],
       "en": [
-        "The auxiliary version switches off the auxiliary heater on sensor disconnection and conditionally restores preheat after a stable reconnection within five seconds.",
-        "The auxiliary version now uses the stock PT1000 nozzle sensor profile instead of custom calibration. Retune PID after changing the sensor profile.",
-        "Standard sensor settings and overtemperature/sensor fault protection are preserved."
+        "Updated the auxiliary profile with the newly measured nozzle and auxiliary heater PID values.",
+        "Installations and updates apply these values to saved PID overrides too. Standard and bed settings are unchanged."
       ],
       "zh_CN": [
-        "辅助版本在传感器断开时关闭辅助加热器，五秒内稳定重新连接且满足条件时恢复预热。",
-        "辅助版本的喷嘴传感器改用标准 PT1000 配置，不再使用自定义校准。更改后建议重新进行 PID 调整。",
-        "保留标准版本的传感器设置以及过温和传感器故障保护。"
+        "工具头辅助版本统一采用新测量的喷嘴和辅助加热器 PID 参数。",
+        "安装和更新时也会更新已保存的 PID 参数，标准版本和热床设置保持不变。"
       ]
     }
   }

@@ -9,6 +9,8 @@ import re
 VARIANTS = ('standard', 'toolhead')
 SENSOR = 'temperature_toolhead_sensor toolhead_sensor'
 AUX = ('toolhead_temperature_test', 'heater_generic Toolhead')
+NOZZLE_PID = dict(control='pid', pid_kp='13.953', pid_ki='0.511', pid_kd='95.230')
+TOOLHEAD_PID = dict(control='pid', pid_kp='37.681', pid_ki='9.191', pid_kd='38.623')
 
 
 def selected(home):
@@ -52,14 +54,55 @@ def nozzle_sensor_profile(text, variant):
     return text[:match.start()] + block + text[match.end():]
 
 
-def nozzle_header_profile(text, variant):
+def pid_profile(text, name, values, variant='toolhead', fill=True, remember=False):
+    match = section(text, name)
+    if not match:
+        return text
+    block = match[0]
+    marker = '# lugoware_standard_pid: '
+    saved = re.search(r'(?m)^' + re.escape(marker) + r'(.+)$', block)
+    patterns = {k: r'(?m)^' + k + r'\s*[:=][^\n]*\n?' for k in values}
+    if variant == 'standard':
+        if not saved:
+            return text
+        original = json.loads(saved[1])
+        for key, pattern in patterns.items():
+            value = original.get(key, '')
+            if value and not re.fullmatch(pattern.replace('(?m)', ''), value):
+                raise ValueError('Invalid saved standard PID')
+            block = re.sub(pattern, lambda m: value, block)
+        block = re.sub(r'(?m)^' + re.escape(marker) + r'.*\n', '', block)
+    else:
+        original = {k: (re.search(p, block)[0] if re.search(p, block) else '') for k, p in patterns.items()}
+        if remember and not saved and (fill or any(original.values())):
+            line = block.index('\n') + 1
+            block = block[:line] + marker + json.dumps(original) + '\n' + block[line:]
+        for key, pattern in patterns.items():
+            value = key + ': ' + values[key] + '\n'
+            if re.search(pattern, block):
+                block = re.sub(pattern, lambda m: value, block)
+            elif fill:
+                line = block.index('\n') + 1
+                block = block[:line] + value + block[line:]
+    return text[:match.start()] + block + text[match.end():]
+
+
+def header_fields(text, variant):
     text = nozzle_sensor_profile(text, variant)
-    # SAVE_CONFIG values override ordinary sections. Preserve their PID values.
+    text = pid_profile(text, 'extruder', NOZZLE_PID, variant, fill=False, remember=True)
+    if variant == 'toolhead':
+        text = pid_profile(text, 'heater_generic Toolhead', TOOLHEAD_PID, fill=False)
+    return text
+
+
+def nozzle_header_profile(text, variant):
+    text = header_fields(text, variant)
+    # SAVE_CONFIG values override ordinary sections; apply the same release PID.
     start = re.search(r'(?m)^#\*# \[', text)
     if start:
         tail = text[start.start():]
         plain = re.sub(r'(?m)^#\*# ?', '', tail)
-        patched = nozzle_sensor_profile(plain, variant)
+        patched = header_fields(plain, variant)
         if patched != plain:
             text = text[:start.start()] + ''.join('#*# ' + line for line in patched.splitlines(True))
     return text
@@ -67,6 +110,7 @@ def nozzle_header_profile(text, variant):
 
 def base_profile(text, variant):
     text = nozzle_sensor_profile(text, variant)
+    text = pid_profile(text, 'extruder', NOZZLE_PID, variant, remember=True)
     # Remove only our exact command hooks, never motion or model coordinates.
     text = re.sub(r'(?m)^\s*TOOLHEAD_(?:DOCK_HEAT TEMP=\{normal_temp\}|PARK_OFF)\s*\n', '', text)
     sensor = section(text, SENSOR)
@@ -147,7 +191,7 @@ def plan(home, variant, assets, base_override=None):
         return changes
     auxiliary = config / 'toolhead_auxiliary.cfg'
     if variant == 'toolhead':
-        # Retain existing machine PID, also when migrating the .97 experiment.
+        # Retain wiring/limits, but apply the explicitly requested release PID.
         blocks = [section(header, n) for n in AUX]
         if all(blocks):
             content = ''.join(m[0] for m in blocks)
@@ -155,7 +199,7 @@ def plan(home, variant, assets, base_override=None):
             content = auxiliary.read_text(encoding='utf-8')
         else:
             content = (assets / 'toolhead_auxiliary.cfg').read_text(encoding='utf-8')
-        changes[auxiliary] = content.encode()
+        changes[auxiliary] = pid_profile(content, 'heater_generic Toolhead', TOOLHEAD_PID).encode()
     for name in AUX:
         header = remove_section(header, name)
     if variant == 'standard':
