@@ -11,6 +11,7 @@ class DetachableHeaterSensor:
         self.last_active = None
         self.dock_pending = False
         self.reconnect = None
+        self.last_nozzle_target = None
         source.gcode.register_command("TOOLHEAD_DOCK_HEAT", self.dock_heat)
         source.gcode.register_command("TOOLHEAD_PARK_OFF", self.park_off)
         self.minimum = 0.
@@ -175,9 +176,36 @@ class DetachableHeaterSensor:
         self.start_time = self.source.reactor.monotonic()
         self.source.reactor.register_timer(self.watchdog, self.source.reactor.NOW)
 
+    def sync_print_target(self, now):
+        nozzle = self.printer.lookup_object('extruder', None)
+        if nozzle is None:
+            return
+        target = nozzle.get_heater().target_temp
+        previous = self.last_nozzle_target
+        self.last_nozzle_target = target
+        tool, state, _, blocked = self.context(now)
+        tools = self.printer.lookup_object('gcode_macro TOOL_STATE', None)
+        temperatures = self.printer.lookup_object('lugo_tool_temperature', None)
+        changing = bool(tools and tools.get_status(now).get('changing', 0))
+        changing = changing or bool(temperatures and (
+            temperatures.depth or temperatures.changing or temperatures.start_tool is not None))
+        if (previous is None or target == previous or blocked or changing
+                or state != 'printing' or tool not in (0, 1, 2, 3)
+                or self.dock_pending or self.reconnect is not None
+                or self.heater.target_temp <= 0 or self.valid_samples < 9
+                or self.source.get_status(now)['state'] != 'connected'):
+            return
+        # Never raise an auxiliary limit or re-enable a manually disabled heater.
+        if target > self.maximum:
+            self.heater.set_temp(0.)
+            self.source.gcode.respond_info('Auxiliary heater off: nozzle target exceeds toolhead maximum')
+            return
+        self.heater.set_temp(target)
+
     def watchdog(self, eventtime):
         if not self.failed:
             self.check_reconnect(eventtime)
+            self.sync_print_target(eventtime)
         if self.dock_pending and not self.failed:
             if (self.valid_samples >= 9 and
                     self.source.get_status(eventtime)['state'] == 'connected'):

@@ -10,20 +10,20 @@
     }
   },
   "lugoware_system": {
-    "version": "1.2.15",
+    "version": "1.2.16",
     "date": "2026/11/19",
     "notes": {
       "ko": [
-        "보조 툴헤드에도 노즐과 동일한 약 10분 유휴 예열 자동 종료를 적용했습니다.",
-        "출력 중에는 예열을 유지하며, 목표 온도를 변경하면 해당 히터의 대기 시간을 다시 계산합니다."
+        "출력 중 노즐 목표 온도를 변경하면 장착된 보조 툴헤드의 목표 온도도 함께 변경됩니다.",
+        "툴 교체 중 임시 예열과 분리 상태는 제외하며, 꺼 둔 보조 히터를 자동으로 켜지 않습니다."
       ],
       "en": [
-        "Added the same approximately 10-minute idle heating timeout to the auxiliary toolhead as the nozzle.",
-        "Heating is retained while printing; changing a heater target resets its idle countdown."
+        "During printing, nozzle target changes also update the attached auxiliary toolhead target.",
+        "Temporary toolchange boosts and detached tools are excluded; an auxiliary heater switched off stays off."
       ],
       "zh_CN": [
-        "辅助工具头新增与喷嘴一致的约10分钟空闲加热自动关闭功能。",
-        "打印期间保持加热，修改目标温度后重新计算该加热器的空闲时间。"
+        "打印过程中修改喷嘴目标温度时，同步更新已安装辅助工具头的目标温度。",
+        "换工具临时升温和分离状态除外，已关闭的辅助加热器不会自动开启。"
       ]
     }
   }
