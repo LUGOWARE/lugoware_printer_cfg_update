@@ -21,6 +21,25 @@ def profile():
 
 
 class VariantTests(unittest.TestCase):
+    def test_auxiliary_pt1000_and_standard_restoration(self):
+        original = profile().replace('sensor_pin: PA1', 'sensor_type: pt1000_cal\nsensor_pin: PA1\ncontrol: pid\npid_kp: 24.053')
+        aux = variant.base_profile(original, 'toolhead')
+        self.assertIn('sensor_type: PT1000\n', aux)
+        self.assertIn('pid_kp: 24.053', aux)
+        self.assertEqual(aux, variant.base_profile(aux, 'toolhead'))
+        restored = variant.base_profile(aux, 'standard')
+        self.assertIn('sensor_type: pt1000_cal\n', restored)
+        self.assertNotIn('lugoware_standard_sensor_type', restored)
+        self.assertEqual(original, variant.base_profile(original, 'standard'))
+
+    def test_header_and_save_config_sensor_override(self):
+        original = '[extruder]\nsensor_type: pt1000_cal\n\n#*# [extruder]\n#*# sensor_type: pt1000_cal\n#*# pid_kp: 24.053\n'
+        aux = variant.nozzle_header_profile(original, 'toolhead')
+        self.assertEqual(aux.count('sensor_type: PT1000\n'), 2)
+        self.assertIn('#*# pid_kp: 24.053', aux)
+        self.assertEqual(aux, variant.nozzle_header_profile(aux, 'toolhead'))
+        self.assertEqual(original, variant.nozzle_header_profile(aux, 'standard'))
+
     def test_round_trip_and_idempotence(self):
         original = profile()
         aux = variant.base_profile(original, 'toolhead')

@@ -10,13 +10,18 @@ separate overlays; model motion coordinates are never copied from the test print
 The standard model branches were not modified by this release.
 
 The auxiliary profile matches the tested .97 software configuration:
-- Existing nozzle sensor PA1; Generic 3950 thermistor PA2, pull-up 4700 ohm.
+- Existing PT1000 nozzle sensor PA1 (stock conversion, no pt1000_cal); Generic 3950 thermistor PA2, pull-up 4700 ohm.
 - PB7 drives the DFR0457 heater interface, with a 24V 48W heater.
 - Sensor presence replaces the standard PC3 toolhead presence input.
 - Print docking arms auxiliary heating to the selected tool temperature;
   parking turns it off and confirms queued PWM is off before releasing the guard.
-- Idle detachment is allowed; heating fault, stale sensor and overtemperature
-  protection remain active. Reconnection alone does not resume heating.
+- Open-circuit detachment switches the auxiliary heater off at the first sample.
+  Stable reconnection within five seconds restores the target only if the stored
+  tool number is known/unchanged and no off/park/cancel or job change intervened.
+  Unknown tool numbers and expired windows require a new heating command.
+  Printing is paused, never automatically resumed. Temperature alone cannot
+  authenticate the physical tool identity or distinguish a broken wire.
+  Short-circuit, stale sensor and overtemperature protection remain active.
 - Graph gaps and localized absence labels; titlebar shows '-' when detached.
 - Maximum target 300 C, max_power 1.0, provisional reference PID.
   Thermal performance/PID must be validated on each hardware configuration.
@@ -51,3 +56,8 @@ Full physical installation and thermal tests on each model remain operator tests
 are accepted. Package and retained UI checks run before system upgrades; older
 screens scheduled for baseline replacement are checked after upgrade. Unknown
 code changes still stop safely with the affected file and patch number.
+
+1.2.8: Auxiliary mode uses stock PT1000 for the nozzle and preserves PID values.
+Retune PID after conversion changes. The unused calibration table may remain,
+but is not selected by the auxiliary nozzle. Standard restores its sensor choice.
+Nozzle SAVE_CONFIG sensor overrides are migrated without discarding PID data.

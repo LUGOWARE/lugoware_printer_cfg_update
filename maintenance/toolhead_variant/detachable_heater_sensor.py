@@ -10,6 +10,7 @@ class DetachableHeaterSensor:
         self.valid_samples = 0
         self.last_active = None
         self.dock_pending = False
+        self.reconnect = None
         source.gcode.register_command("TOOLHEAD_DOCK_HEAT", self.dock_heat)
         source.gcode.register_command("TOOLHEAD_PARK_OFF", self.park_off)
         self.minimum = 0.
@@ -27,9 +28,11 @@ class DetachableHeaterSensor:
         self.callback = callback
         self.heater = heater = callback.__self__
         original_set_temp = heater.set_temp
+        self.original_set_temp = original_set_temp
         original_alter_target = heater.alter_target
         original_status = heater.get_status
         def guarded_set_temp(degrees):
+            self.reconnect = None
             if not degrees:
                 self.dock_pending = False
             if degrees:
@@ -38,6 +41,7 @@ class DetachableHeaterSensor:
                     raise self.printer.command_error('Toolhead sensor is not connected; heating blocked')
             original_set_temp(degrees)
         def guarded_alter_target(degrees):
+            self.reconnect = None
             if degrees and (self.failed or self.valid_samples < 9 or self.source.get_status(
                     self.source.reactor.monotonic())['state'] != 'connected'):
                 self.fault('Sensor unavailable during heater control')
@@ -49,12 +53,14 @@ class DetachableHeaterSensor:
             if sensor['state'] != 'connected':
                 result['temperature'] = None
             result['sensor_state'] = sensor['state']
+            result['reconnect_pending'] = self.reconnect is not None
             return result
         heater.set_temp = guarded_set_temp
         heater.alter_target = guarded_alter_target
         heater.get_status = status
 
     def dock_heat(self, gcmd):
+        self.reconnect = None
         target = gcmd.get_float('TEMP', minval=0., maxval=self.maximum)
         if self.failed:
             raise self.printer.command_error('Toolhead heater safety stop is active')
@@ -90,6 +96,54 @@ class DetachableHeaterSensor:
         # MCU shutdown cancels queued PWM as well as the current output.
         self.printer.invoke_shutdown('Toolhead heater safety stop: ' + reason)
 
+    def context(self, now):
+        tool = self.printer.lookup_object('gcode_macro TOOL_STATE', None)
+        stats = self.printer.lookup_object('print_stats', None)
+        cancel = self.printer.lookup_object('fast_cancel', None)
+        tool_id = tool.get_status(now).get('active_tool', -1) if tool else -1
+        state = stats.get_status(now) if stats else {}
+        blocked = (self.printer.is_shutdown() or
+                   bool(cancel and (cancel.requested or cancel.cleaning)))
+        return tool_id, state.get('state', 'standby'), state.get('filename', ''), blocked
+
+    def detached(self, now):
+        # Called on the FIRST raw open-circuit sample, before presence debounce.
+        target = self.heater.target_temp
+        tool, state, filename, blocked = self.context(now)
+        if target > 0 and self.reconnect is None and not blocked and tool in (0, 1, 2, 3):
+            self.reconnect = (now + 5., target, tool, state, filename)
+        self.dock_pending = False
+        self.original_set_temp(0.)
+        # Schedule zero through the existing MCU heater API, not from stale ADC time.
+        print_time = self.heater.mcu_pwm.get_mcu().estimated_print_time(now)
+        self.heater.set_pwm(print_time, 0.)
+        if target > 0:
+            self.source.gcode.respond_info('Toolhead detached: auxiliary heater off; reconnect window 5 seconds')
+            if state == 'printing':
+                self.source.reactor.register_callback(self.pause_detached_print)
+
+    def pause_detached_print(self, eventtime):
+        _, state, _, blocked = self.context(eventtime)
+        if state == 'printing' and not blocked:
+            pause = self.printer.lookup_object('pause_resume')
+            if not pause.is_paused:
+                self.source.gcode.run_script('PAUSE')
+
+    def check_reconnect(self, now):
+        if self.reconnect is None:
+            return
+        deadline, target, tool, previous_state, filename = self.reconnect
+        current_tool, state, current_filename, blocked = self.context(now)
+        allowed_states = ('printing', 'paused') if previous_state == 'printing' else (previous_state,)
+        if (now >= deadline or blocked or current_tool != tool or state not in allowed_states
+                or current_filename != filename):
+            self.reconnect = None
+            return
+        if self.valid_samples >= 9 and self.source.get_status(now)['state'] == 'connected':
+            self.reconnect = None
+            self.heater.set_temp(target)
+            self.source.gcode.respond_info('Toolhead reconnected: auxiliary preheat restored; print is not automatically resumed')
+
     def sample(self, read_time, state, temperature):
         if self.heater is None or self.failed:
             return
@@ -103,8 +157,13 @@ class DetachableHeaterSensor:
             self.valid_samples = 0
             self.fault('Temperature %.3f above maximum %.3f' % (temperature, self.maximum))
             return
+        if state == 'disconnected':
+            self.valid_samples = 0
+            self.detached(now)
+            return
         if state != 'connected' or temperature is None or temperature < self.minimum:
             self.valid_samples = 0
+            self.reconnect = None
             if protected:
                 self.fault('Sensor %s, temperature %s during heating/cooldown guard' % (state, temperature))
             # Idle detachment/contact transitions must not feed the heater PID.
@@ -117,6 +176,8 @@ class DetachableHeaterSensor:
         self.source.reactor.register_timer(self.watchdog, self.source.reactor.NOW)
 
     def watchdog(self, eventtime):
+        if not self.failed:
+            self.check_reconnect(eventtime)
         if self.dock_pending and not self.failed:
             if (self.valid_samples >= 9 and
                     self.source.get_status(eventtime)['state'] == 'connected'):

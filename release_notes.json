@@ -10,23 +10,23 @@
     }
   },
   "lugoware_system": {
-    "version": "1.2.7",
-    "date": "2026/11/18",
+    "version": "1.2.8",
+    "date": "2026/11/19",
     "notes": {
       "ko": [
-        "기존 툴헤드 보조 버전의 온도 표시 코드 차이로 설치가 중단되는 문제를 수정했습니다.",
-        "구형 시험판·재설치 호환성과 설치 전 확인을 보완했습니다.",
-        "표준·보조 버전 선택과 기존 설정을 유지합니다."
+        "툴헤드 보조 버전에서 센서 분리 시 보조 히터를 끄고, 5초 안에 안정적으로 재연결되면 조건 확인 후 예열을 재개합니다.",
+        "툴헤드 보조 버전은 노즐 센서의 사용자 보정 대신 기본 PT1000 설정을 사용합니다. 변경 후 PID 재튜닝을 권장합니다.",
+        "표준 버전의 기존 센서 설정과 과열·센서 이상 보호는 유지합니다."
       ],
       "en": [
-        "Fixed installation failures caused by equivalent temperature labels in existing auxiliary versions.",
-        "Improved compatibility with older experimental installations and added pre-install checks.",
-        "Preserved Standard/Auxiliary selection and existing settings."
+        "The auxiliary version switches off the auxiliary heater on sensor disconnection and conditionally restores preheat after a stable reconnection within five seconds.",
+        "The auxiliary version now uses the stock PT1000 nozzle sensor profile instead of custom calibration. Retune PID after changing the sensor profile.",
+        "Standard sensor settings and overtemperature/sensor fault protection are preserved."
       ],
       "zh_CN": [
-        "修复已有辅助加热版本因温度显示代码写法不同而导致安装中断的问题。",
-        "改进旧测试版和重新安装的兼容性，并增加安装前检查。",
-        "保留标准版/辅助加热版选择及现有设置。"
+        "辅助版本在传感器断开时关闭辅助加热器，五秒内稳定重新连接且满足条件时恢复预热。",
+        "辅助版本的喷嘴传感器改用标准 PT1000 配置，不再使用自定义校准。更改后建议重新进行 PID 调整。",
+        "保留标准版本的传感器设置以及过温和传感器故障保护。"
       ]
     }
   }

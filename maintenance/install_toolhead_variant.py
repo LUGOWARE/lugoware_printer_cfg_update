@@ -30,7 +30,43 @@ def remove_section(text, name):
     return text[:match.start()] + text[match.end():] if match else text
 
 
+def nozzle_sensor_profile(text, variant):
+    """Use stock PT1000 only in auxiliary mode; preserve PID and return choice."""
+    match = section(text, 'extruder')
+    if not match:
+        return text
+    block = match[0]
+    marker = '# lugoware_standard_sensor_type: '
+    saved = re.search(r'(?m)^' + re.escape(marker) + r'(.+)$', block)
+    current = re.search(r'(?m)^sensor_type:[^\n]*$', block)
+    if variant == 'toolhead' and current:
+        if not saved:
+            block = block.replace(current[0], marker + json.dumps(current[0]) + '\n' + current[0], 1)
+        block = re.sub(r'(?m)^sensor_type:[^\n]*$', 'sensor_type: PT1000', block)
+    elif variant == 'standard' and saved:
+        original = json.loads(saved[1])
+        if not isinstance(original, str) or '\n' in original or not original.startswith('sensor_type:'):
+            raise ValueError('Invalid saved nozzle sensor type')
+        block = re.sub(r'(?m)^sensor_type:[^\n]*$', lambda m: original, block)
+        block = re.sub(r'(?m)^' + re.escape(marker) + r'.*\n', '', block)
+    return text[:match.start()] + block + text[match.end():]
+
+
+def nozzle_header_profile(text, variant):
+    text = nozzle_sensor_profile(text, variant)
+    # SAVE_CONFIG values override ordinary sections. Preserve their PID values.
+    start = re.search(r'(?m)^#\*# \[', text)
+    if start:
+        tail = text[start.start():]
+        plain = re.sub(r'(?m)^#\*# ?', '', tail)
+        patched = nozzle_sensor_profile(plain, variant)
+        if patched != plain:
+            text = text[:start.start()] + ''.join('#*# ' + line for line in patched.splitlines(True))
+    return text
+
+
 def base_profile(text, variant):
+    text = nozzle_sensor_profile(text, variant)
     # Remove only our exact command hooks, never motion or model coordinates.
     text = re.sub(r'(?m)^\s*TOOLHEAD_(?:DOCK_HEAT TEMP=\{normal_temp\}|PARK_OFF)\s*\n', '', text)
     sensor = section(text, SENSOR)
@@ -128,7 +164,7 @@ def plan(home, variant, assets, base_override=None):
     header = re.sub(r'(?m)^\[include toolhead_auxiliary.cfg\]\s*\n', '', header)
     if variant == 'toolhead':
         header = '[include toolhead_auxiliary.cfg]\n' + header
-    changes[header_path] = header.encode()
+    changes[header_path] = nozzle_header_profile(header, variant).encode()
     changes[base_path] = base_profile(base, variant).encode()
     patches = json.loads((assets / 'ui_patches.json').read_text(encoding='utf-8'))
     for rel, edits in patches.items():
