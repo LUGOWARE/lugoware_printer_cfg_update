@@ -10,20 +10,20 @@
     }
   },
   "lugoware_system": {
-    "version": "1.2.25",
+    "version": "1.2.26",
     "date": "2026/11/20",
     "notes": {
       "ko": [
-        "메인 화면에서 온도 그래프를 없애고 메뉴와 온도 칸을 정리했습니다. LED 버튼으로 챔버 조명을 켜고 끌 수 있습니다.",
-        "출고 QC와 화면 점검에서 챔버 필터 팬 단계를 제거했습니다."
+        "출력 취소 후 툴 분리를 확인한 뒤 안전하게 대기 위치로 복귀합니다.",
+        "프린터를 켜면 챔버 LED가 기본으로 켜집니다."
       ],
       "en": [
-        "Reorganized the home screen without the temperature graph and added a chamber light button.",
-        "Removed the chamber filter fan step from factory QC and touchscreen diagnostics."
+        "After canceling a print, the printer confirms tool detachment before returning to the standby position.",
+        "The chamber LED now turns on at startup."
       ],
       "zh_CN": [
-        "重新排列主屏幕菜单和温度区域，移除温度图表并添加腔体照明开关。",
-        "出厂质检及触屏诊断移除了腔体过滤风扇检测。"
+        "取消打印后，确认工具头已分离，再返回待机位置。",
+        "打印机启动时默认点亮腔体照明。"
       ]
     }
   }

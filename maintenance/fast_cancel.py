@@ -28,6 +28,7 @@ class FastCancel:
         self.printer.lookup_object('webhooks').register_endpoint('fast_cancel/request', self.request)
         self.gcode.register_command('FAST_CANCEL_PHASE', self.checkpoint)
         self.gcode.register_command('FAST_CANCEL_WAIT', self.dwell)
+        self.gcode.register_command('FAST_CANCEL_WAIT_DETACH', self.wait_for_detachment)
         self.gcode.register_command('FAST_CANCEL', self.cmd_cancel)
         self.gcode.register_command('FAST_CANCEL_HOME', self.home_checkpoint)
         self.gcode.register_command('FAST_CANCEL_PRIME', self.inline_prime)
@@ -314,6 +315,29 @@ class FastCancel:
         self.message = 'Cancelling at the next mechanical safe point'
         self.sd.must_pause_work = True
         self.reactor.register_callback(self.finish)
+
+    def wait_for_detachment(self, cmd):
+        if not self.cleaning:
+            raise cmd.error('Cancel cleanup is not active')
+        sensor = self.printer.lookup_object('filament_switch_sensor toolhead_sensor')
+        now = self.reactor.monotonic()
+        deadline = now + 1.2
+        clear_since = None
+        while not self.printer.is_shutdown():
+            status = sensor.get_status(now)
+            if status.get('source') != 'PA2 thermistor':
+                return  # Standard switch uses the existing return guard.
+            if status.get('state') == 'disconnected' and status.get('filament_detected') is False:
+                if clear_since is None:
+                    clear_since = now
+                elif now - clear_since >= .15:
+                    return
+            else:
+                clear_since = None
+            if now >= deadline:
+                raise cmd.error('Tool still detected after parking; inspect the head')
+            now = self.reactor.pause(min(deadline, now + .05))
+        raise cmd.error('Printer shut down during cancel parking')
 
     def save_print_offset(self, cmd=None):
         # Save and request a single MCU restart after end/cancel cleanup.

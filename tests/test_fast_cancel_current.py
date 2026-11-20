@@ -6,6 +6,42 @@ sys.path.insert(0,str(Path(__file__).resolve().parents[1]/"maintenance"))
 from fast_cancel import FastCancel, MeshCancelled
 
 class Tests(unittest.TestCase):
+    def test_cancel_waits_for_stable_disconnection_without_motion(self):
+        self.obj.cleaning = True
+        clock = [0.]
+        def pause(when):
+            clock[0] = when
+            return when
+        def status(now):
+            connected = now < .25 or .4 <= now < .5
+            return {'source': 'PA2 thermistor', 'filament_detected': connected,
+                    'state': 'connected' if connected else 'disconnected'}
+        self.obj.reactor = Obj(monotonic=lambda: clock[0], pause=pause)
+        self.objects['filament_switch_sensor toolhead_sensor'].get_status = status
+        self.obj.wait_for_detachment(Obj(error=ValueError))
+        self.assertGreaterEqual(clock[0], .65)
+        self.assertEqual(self.log, [])
+
+    def test_cancel_does_not_return_on_attached_or_invalid_sensor(self):
+        self.obj.cleaning = True
+        for state in ('connected', 'stale', 'short_circuit'):
+            clock = [0.]
+            def pause(when):
+                clock[0] = when
+                return when
+            self.obj.reactor = Obj(monotonic=lambda: clock[0], pause=pause)
+            self.objects['filament_switch_sensor toolhead_sensor'].get_status = lambda time: {
+                'source': 'PA2 thermistor', 'state': state, 'filament_detected': state == 'connected'}
+            with self.assertRaisesRegex(ValueError, 'Tool still detected after parking'):
+                self.obj.wait_for_detachment(Obj(error=ValueError))
+            self.assertAlmostEqual(clock[0], 1.2)
+            self.assertEqual(self.log, [])
+
+    def test_standard_switch_uses_existing_return_guard(self):
+        self.obj.cleaning = True
+        self.obj.wait_for_detachment(Obj(error=ValueError))
+        self.assertEqual(self.log, [])
+
     def test_finish_delegates_motion_and_finalization_to_cfg(self):
         self.obj.phase, self.obj.slot = 'docked', 2
         self.obj.prime_skipped = True

@@ -110,7 +110,18 @@ def _feature_macros(text):
 
 def feature_macros(text):
     from mesh_features import config
-    return end_print_autosave(config(_feature_macros(text)))
+    return cancel_return_wait(end_print_autosave(config(_feature_macros(text))))
+
+
+def cancel_return_wait(text):
+    section = re.search(r'(?ms)^\[gcode_macro _FAST_CANCEL_MOTION\][^\n]*\n.*?(?=^\[|\Z)', text)
+    if section is None or 'FAST_CANCEL_WAIT_DETACH' in section[0]:
+        return text
+    block, count = re.subn(r'(?m)^([ \t]+)(_FAST_CANCEL_RETURN\b[^\n]*)$',
+                           r'\1FAST_CANCEL_WAIT_DETACH\n\1\2', section[0])
+    if count > 1:
+        raise ValueError('Unable to locate the cancel return command')
+    return text[:section.start()] + block + text[section.end():]
 
 
 def end_print_autosave(text):

@@ -33,15 +33,12 @@ def printer_config(text):
     pin = existing or get_pin('output_pin LED') or get_pin(old_names[0]) or get_pin(old_names[1])
     if pin is None:
         return text
-    if existing and f'[gcode_macro {TOGGLE}]' in body and not any(
-            f'[{name}]' in body for name in (*old_names, 'delayed_gcode chamber_fan_auto_on')):
-        return text
     retired = (*old_names, 'delayed_gcode chamber_fan_auto_on',
                'output_pin chamber_led', f'gcode_macro {TOGGLE}')
     block = f'''[output_pin chamber_led]
 pin: {pin}
 pwm: False
-value: 0
+value: 1
 shutdown_value: 0
 
 [gcode_macro {TOGGLE}]
