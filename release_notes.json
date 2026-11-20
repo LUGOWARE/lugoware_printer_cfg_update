@@ -10,17 +10,20 @@
     }
   },
   "lugoware_system": {
-    "version": "1.2.20",
+    "version": "1.2.21",
     "date": "2026/11/20",
     "notes": {
       "ko": [
-        "툴헤드 보조 버전의 파킹 중 노즐 예열을 다음 툴 목표보다 5°C 높게 설정하도록 조정했습니다."
+        "출력 화면의 체적 유량 표시를 베드 높이로 바꾸고 팬, 툴체인지, 툴헤드 감지 표시를 위로 정리했습니다.",
+        "툴헤드 보조 버전에서 파킹 직전 낮은 히터 출력도 확실하게 0%로 전환하도록 수정했습니다."
       ],
       "en": [
-        "During parking in the auxiliary toolhead version, the nozzle now preheats to 5°C above the next tool target."
+        "Replaced the flow rate in the print summary with bed height and moved the fan, tool change, and toolhead detection indicators up.",
+        "The auxiliary toolhead heater now sends a zero-output command before parking even at low power."
       ],
       "zh_CN": [
-        "辅助工具头版在停放时将喷嘴预热温度调整为下一工具目标温度加5°C。"
+        "在打印界面用热床高度替换体积流量，并上移风扇、换刀和工具头检测信息。",
+        "辅助工具头停放前即使处于低功率也会发送零输出命令。"
       ]
     }
   }

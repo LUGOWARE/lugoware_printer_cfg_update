@@ -115,7 +115,14 @@ class DetachableHeaterSensor:
         mcu = self.heater.mcu_pwm.get_mcu()
         now = reactor.monotonic()
         print_time = mcu.estimated_print_time(now)
-        self.heater.set_pwm(print_time, 0.)
+        # Park requires a real zero command even below the PID update deadband.
+        with self.heater.lock:
+            deadband = self.heater.min_pwm_change
+            try:
+                self.heater.min_pwm_change = 0.
+                self.heater.set_pwm(print_time, 0.)
+            finally:
+                self.heater.min_pwm_change = deadband
         off_time = print_time + self.heater.get_pwm_delay() + .05
         while mcu.estimated_print_time(reactor.monotonic()) < off_time:
             reactor.pause(reactor.monotonic() + .025)

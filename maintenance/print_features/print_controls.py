@@ -238,8 +238,8 @@ def add_controls(panel, info):
     panel._toolchange_count = '0'
     panel._toolchange_file = None
     panel._toolchange_total = None
-    info.attach(toolchange, 1, 3, 1, 1)
-    info.attach(sensor, 1, 4, 1, 1)
+    info.attach(toolchange, 1, 2, 1, 1)
+    info.attach(sensor, 1, 3, 1, 1)
     from ks_includes.lugo_i18n import translate_text
     row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=0,
                   valign=Gtk.Align.CENTER, hexpand=True)
@@ -258,7 +258,7 @@ def add_controls(panel, info):
     row.pack_start(icon, False, False, 0)
     panel._head_status = Gtk.Label(xalign=0)
     row.pack_start(panel._head_status, False, False, 0)
-    info.attach(row, 1, 4, 1, 1)
+    info.attach(row, 1, 3, 1, 1)
 
 
 def mount_controls(panel):

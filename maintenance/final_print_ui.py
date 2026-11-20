@@ -7,7 +7,32 @@ def once(text, old, new):
     return text.replace(old, new, 1)
 
 
+def status_layout(text):
+    """Compact printing summary with Z in the former flow-rate slot."""
+    old = """        szfe.attach(self.buttons["speed"], 0, 0, 3, 1)
+        szfe.attach(self.buttons["z"], 2, 0, 2, 1)
+        if self._printer.get_tools():
+            szfe.attach(self.buttons["extrusion"], 0, 1, 3, 1)
+        if self._printer.get_fans():
+            szfe.attach(self.buttons["fan"], 2, 1, 2, 1)
+"""
+    new = """        has_fans = bool(self._printer.get_fans())
+        szfe.attach(self.buttons["speed"], 0, 0, 2 if has_fans else 4, 1)
+        if has_fans:
+            szfe.attach(self.buttons["fan"], 2, 0, 2, 1)
+"""
+    intermediate = new + '        szfe.attach(self.buttons["z"], 0, 1, 4, 1)\n'
+    if intermediate in text:
+        text = text.replace(intermediate, new, 1)
+    text = once(text, old, new)
+    return once(text, '        info.attach(szfe, 0, 1, 2, 2)\n',
+                '        info.attach(szfe, 0, 1, 2, 1)\n'
+                '        info.attach(self.buttons["z"], 0, 2, 1, 1)\n')
+
+
 def job_status(text):
+    if "    def create_status_grid(" in text:
+        text = status_layout(text)
     old = '                self.labels["lcdmessage"].set_label(f"{data[\'display_status\'][\'message\']}")'
     new = ('                from ks_includes.lugo_i18n import translate_text\n'
            '                self.labels["lcdmessage"].set_label(translate_text(str(data["display_status"]["message"])))')
