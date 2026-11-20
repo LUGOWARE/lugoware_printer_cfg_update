@@ -10,20 +10,17 @@
     }
   },
   "lugoware_system": {
-    "version": "1.2.32",
+    "version": "1.2.33",
     "date": "2026/11/20",
     "notes": {
       "ko": [
-        "툴헤드 예열 보조 설정에 한글·영문 설명을 추가했습니다. 새 설정의 수동 예열 연동은 기본으로 꺼져 있으며, 업데이트 시 기존 선택을 유지합니다.",
-        "printer.cfg 상단에서 출력 관련 항목을 모아 보기 쉽게 정리했습니다."
+        "툴헤드 예열 보조 버전에서 도킹 후 프라임을 기다리는 최대 시간을 40초로 줄였습니다."
       ],
       "en": [
-        "Auxiliary toolhead settings now have Korean and English descriptions. Manual preheat linking defaults to off for new settings. Updates preserve the existing choice.",
-        "Print-related sections are grouped near the top of printer.cfg."
+        "The auxiliary toolhead heating variant now waits up to 40 seconds after docking before priming."
       ],
       "zh_CN": [
-        "辅助工具头设置现附有韩语和英语说明。新设置默认关闭手动预热联动，更新时保留现有选项。",
-        "printer.cfg 顶部的打印相关配置已集中排列。"
+        "辅助工具头预热版本将对接后预挤出的最长等待时间缩短至 40 秒。"
       ]
     }
   }

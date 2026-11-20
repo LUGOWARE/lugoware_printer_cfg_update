@@ -90,11 +90,28 @@ class Tests(unittest.TestCase):
   self.h.set_temp(230)
   self.cancel.stop_wait = lambda: False
   self.a.source.prime_temperature_margin = 15.
-  self.a.source.prime_timeout = 60.
+  self.a.source.prime_timeout = 40.
   self.a.source.get_status = lambda now: {'state': 'short_circuit'}
   gcmd = N(get_float=lambda key, **limits: {'TARGET': 230.}[key], error=RuntimeError)
   with self.assertRaisesRegex(RuntimeError, 'short_circuit'):
    self.a.wait_for_prime(gcmd)
+  self.assertEqual(self.h.target_temp, 0.)
+
+ def test_prime_stops_at_new_release_deadline(self):
+  self.h.set_temp(230)
+  self.cancel.stop_wait = lambda: False
+  self.a.source.prime_temperature_margin = 15.
+  self.a.source.prime_timeout = 40.
+  self.a.source.get_status = lambda now: {'state': 'connected', 'temperature': 210.}
+  pauses = []
+  def pause(until):
+   pauses.append(until)
+   return until
+  self.a.source.reactor.pause = pause
+  gcmd = N(get_float=lambda key, **limits: {'TARGET': 230.}[key], error=RuntimeError)
+  with self.assertRaisesRegex(RuntimeError, '215.0 C before prime'):
+   self.a.wait_for_prime(gcmd)
+  self.assertEqual(pauses[-1] - self.now, 40.)
   self.assertEqual(self.h.target_temp, 0.)
 
 if __name__=='__main__':unittest.main(verbosity=2)
