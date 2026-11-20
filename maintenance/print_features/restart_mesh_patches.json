@@ -1,0 +1,22 @@
+[
+  [
+    "        self.grid.attach(self.buttons[\"button_grid\"], 0, 3, 4, 1)\n",
+    "        bottom = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)\n        self.restart_mesh_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)\n        self.restart_mesh_row.get_style_context().add_class(\"trial-sensor-pill\")\n        self.restart_mesh_row.set_margin_start(6)\n        self.restart_mesh_row.set_margin_end(6)\n        language = self._config.get_main_config().get(\"language\", \"en\")\n        mesh_label = Gtk.Label(label=\"베드 메쉬\" if language.startswith(\"ko\") else _(\"Bed Mesh\"), xalign=0)\n        self.restart_mesh_switch = Gtk.Switch(active=True, halign=Gtk.Align.END, valign=Gtk.Align.CENTER)\n        self.restart_mesh_row.pack_start(mesh_label, True, True, 0)\n        self.restart_mesh_row.pack_end(self.restart_mesh_switch, False, False, 0)\n        self.restart_mesh_row.show_all()\n        self.restart_mesh_row.set_no_show_all(True)\n        self.restart_mesh_row.hide()\n        bottom.pack_start(self.restart_mesh_row, False, False, 0)\n        bottom.pack_start(self.buttons[\"button_grid\"], False, False, 0)\n        self.grid.attach(bottom, 0, 3, 4, 1)\n"
+  ],
+  [
+    "    def restart(self, widget):\n",
+    "    def restart(self, widget):\n        if self.state == \"cancelled\" and \"SCREEN_MESH_SELECT\" in self._printer.available_commands:\n            self.restart_cancelled()\n            return\n"
+  ],
+  [
+    "    def restart_print(self):\n",
+    "    def restart_cancelled(self):\n        if not self.filename or not self.buttons[\"restart\"].get_sensitive():\n            return\n        from ks_includes.print_controls import set_policy\n\n        filename = self.filename\n        socket = self._screen._ws\n        enabled = int(self.restart_mesh_switch.get_active())\n        self.disable_button(\"restart\")\n        self.restart_mesh_switch.set_sensitive(False)\n\n        def current():\n            return self.state == \"cancelled\" and self.filename == filename and self._screen._ws is socket\n\n        def failed(message=None):\n            self.restart_mesh_switch.set_sensitive(True)\n            if self.state == \"cancelled\" and self.filename == filename:\n                self.enable_button(\"restart\")\n            if message:\n                self._screen.show_popup_message(str(message))\n\n        def mesh_selected(result, *args):\n            if not current() or \"error\" in result:\n                failed(result.get(\"error\"))\n                return\n            self.restart_print()\n\n        def select_mesh():\n            if not current():\n                failed()\n                return\n            if not socket.send_method(\"printer.gcode.script\",\n                                      {\"script\": f\"SCREEN_MESH_SELECT ENABLE={enabled}\"}, mesh_selected):\n                failed(_(\"Printer connection unavailable\"))\n\n        def policy_finished(result=None):\n            if not result or \"error\" in result:\n                failed()\n\n        set_policy(self._screen, False, select_mesh, finished=policy_finished)\n\n    def restart_print(self):\n"
+  ],
+  [
+    "    def new_print(self):\n",
+    "    def new_print(self):\n        self.restart_mesh_switch.set_active(True)\n        self.restart_mesh_switch.set_sensitive(True)\n"
+  ],
+  [
+    "    def show_buttons_for_state(self):\n",
+    "    def show_buttons_for_state(self):\n        self.restart_mesh_row.set_visible(\n            self.state == \"cancelled\" and \"SCREEN_MESH_SELECT\" in self._printer.available_commands\n        )\n"
+  ]
+]

@@ -8,7 +8,7 @@ import re
 from patch_print_controls import feature_macros
 from home_lighting import home_panel
 from october_features import job, notification, popup
-from final_print_ui import status_layout
+from final_print_ui import once, status_layout
 
 
 def patch_ui(source, name):
@@ -69,7 +69,17 @@ def patch_ui(source, name):
         source = patch_screen(source)
     if name == "job_status.py":
         source = status_layout(source)
+        source = restart_mesh(source)
     compile(source, name, 'exec')
+    return source
+
+
+def restart_mesh(source):
+    path = Path(__file__).with_name('print_features') / 'restart_mesh_patches.json'
+    source = source.replace('        if self.state == "cancelled":\n            self.restart_cancelled()\n            return\n',
+                            '        if self.state == "cancelled" and "SCREEN_MESH_SELECT" in self._printer.available_commands:\n            self.restart_cancelled()\n            return\n')
+    for before, after in json.loads(path.read_text(encoding='utf-8')):
+        source = once(source, before, after)
     return source
 
 
