@@ -110,4 +110,39 @@ def _feature_macros(text):
 
 def feature_macros(text):
     from mesh_features import config
-    return config(_feature_macros(text))
+    return end_print_autosave(config(_feature_macros(text)))
+
+
+def end_print_autosave(text):
+    section = re.search(r'(?m)^\[gcode_macro END_PRINT\][^\n]*\n.*?(?=^\[|\Z)',
+                        text, re.S)
+    if not section:
+        return text
+    block = re.sub(r'(?m)^([ \t]*Z_OFFSET_APPLY_PROBE[ \t]*\n[ \t]*SAVE_CONFIG)[ \t]*$',
+                   r'\1 LUGO_FIRMWARE_RESTART=1', section[0], count=1)
+    return text[:section.start()] + block + text[section.end():]
+SAVE_CONFIG_START = '    def cmd_SAVE_CONFIG(self, gcmd):\n'
+SAVE_CONFIG_RESTART = "        gcode.request_restart('restart')\n"
+AUTOSAVE_OPTION = "        firmware_restart = gcmd.get_int('LUGO_FIRMWARE_RESTART', 0, minval=0, maxval=1)\n"
+AUTOSAVE_RESTART = (
+    "        if firmware_restart:\n"
+    "            if not self.printer.is_shutdown():\n"
+    "                gcode.request_restart('firmware_restart')\n"
+    "        else:\n"
+    "            gcode.request_restart('restart')\n"
+)
+
+
+def save_config_patch(text):
+    before, start, remainder = text.partition(SAVE_CONFIG_START)
+    body, end, after = remainder.partition('\n    def ')
+    if not start:
+        raise ValueError('Unsupported Klipper SAVE_CONFIG implementation')
+    if body.startswith(AUTOSAVE_OPTION) and AUTOSAVE_RESTART in body:
+        return text
+    save_position = body.find('os.rename(temp_name, cfgname)')
+    if (body.count(SAVE_CONFIG_RESTART) != 1
+            or not 0 <= save_position < body.index(SAVE_CONFIG_RESTART)):
+        raise ValueError('Unsupported Klipper SAVE_CONFIG restart path')
+    body = AUTOSAVE_OPTION + body.replace(SAVE_CONFIG_RESTART, AUTOSAVE_RESTART, 1)
+    return before + start + body + end + after

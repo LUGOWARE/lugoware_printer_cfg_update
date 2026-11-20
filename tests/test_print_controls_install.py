@@ -3,11 +3,61 @@ import sys
 import unittest
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'maintenance'))
-from patch_print_controls import macros
+from patch_print_controls import end_print_autosave, macros, save_config_patch
 from install_print_controls import config_patch, panel_patch, screen_patch, MHZ_PATTERN
 
 
 class Tests(unittest.TestCase):
+    def test_save_config_restarts_only_after_successful_write(self):
+        from types import SimpleNamespace
+        source = """class AutoSave:
+    def cmd_SAVE_CONFIG(self, gcmd):
+        if not self.pending:
+            return
+        os.rename(temp_name, cfgname)
+        gcode = self.printer.get_gcode()
+        gcode.request_restart('restart')
+"""
+        patched = save_config_patch(source)
+        self.assertEqual(save_config_patch(patched), patched)
+        with self.assertRaises(ValueError):
+            save_config_patch(source.replace('os.rename(temp_name, cfgname)', 'pass'))
+        events = []
+        def write(*args):
+            events.append('write')
+            if fail:
+                raise OSError('save failed')
+        namespace = {'os': SimpleNamespace(rename=write), 'temp_name': 'tmp', 'cfgname': 'cfg'}
+        exec(patched, namespace)
+        autosave = namespace['AutoSave']()
+        autosave.printer = SimpleNamespace(
+            get_gcode=lambda: SimpleNamespace(request_restart=events.append),
+            is_shutdown=lambda: shutdown)
+        for flag, pending, shutdown, fail, expected in (
+                (0, True, False, False, ['write', 'restart']),
+                (1, True, False, False, ['write', 'firmware_restart']),
+                (1, False, False, False, []),
+                (1, True, True, False, ['write']),
+                (1, True, False, True, ['write'])):
+            with self.subTest(flag=flag, pending=pending, shutdown=shutdown, fail=fail):
+                autosave.pending = pending
+                events.clear()
+                gcmd = SimpleNamespace(get_int=lambda *args, **kwargs: flag)
+                if fail:
+                    with self.assertRaises(OSError):
+                        autosave.cmd_SAVE_CONFIG(gcmd)
+                else:
+                    autosave.cmd_SAVE_CONFIG(gcmd)
+                self.assertEqual(events, expected)
+
+    def test_end_print_autosave_leaves_manual_save_alone(self):
+        source = ('[gcode_macro END_PRINT]\ngcode:\n  Z_OFFSET_APPLY_PROBE\n  SAVE_CONFIG\n'
+                  '[gcode_macro MANUAL_SAVE]\ngcode:\n  Z_OFFSET_APPLY_PROBE\n  SAVE_CONFIG\n')
+        result = end_print_autosave(source)
+        self.assertIn('  SAVE_CONFIG LUGO_FIRMWARE_RESTART=1\n[gcode_macro MANUAL_SAVE]', result)
+        self.assertTrue(result.endswith('  SAVE_CONFIG\n'))
+        self.assertEqual(end_print_autosave(result), result)
+
     def test_final_macros_are_preserved_and_legacy_is_rejected(self):
         source = ''.join('[gcode_macro '+name+']\ngcode:\n    G1 X334\n' for name in
                          ['CANCEL_PRINT','_FAST_CANCEL_MOTION','_FAST_CANCEL_RETURN','_FAST_CANCEL_FINALIZE','PAUSE','RESUME'])

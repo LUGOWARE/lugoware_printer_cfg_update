@@ -316,7 +316,7 @@ class FastCancel:
         self.reactor.register_callback(self.finish)
 
     def save_print_offset(self, cmd=None):
-        # Called only after end/cancel cleanup. SAVE_CONFIG restarts Klipper.
+        # Save and request a single MCU restart after end/cancel cleanup.
         if self.printer.is_shutdown():
             return
         tracker = self.printer.lookup_object('gcode_macro Z_OFFSET_TRACKER', None)
@@ -332,7 +332,7 @@ class FastCancel:
             return
         logging.info('Saving print Z offset: initial=%s final=%s', initial, offset)
         self.gcode.run_script_from_command('Z_OFFSET_APPLY_PROBE')
-        self.gcode.run_script_from_command('SAVE_CONFIG')
+        self.gcode.run_script_from_command('SAVE_CONFIG LUGO_FIRMWARE_RESTART=1')
 
     def finish(self, eventtime):
         # Wait for the executing macro stack to unwind before recovery moves.
@@ -378,6 +378,7 @@ class FastCancel:
                 try:
                     self.gcode.run_script_from_command('_FAST_CANCEL_FINALIZE')
                 except Exception:
+                    cleanup_complete = False
                     logging.exception('CFG cancel finalization failed; applying heater fallback')
                 finally:
                     # Safety fallback even if a user-edited CFG macro fails.

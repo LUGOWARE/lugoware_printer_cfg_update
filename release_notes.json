@@ -10,17 +10,17 @@
     }
   },
   "lugoware_system": {
-    "version": "1.2.23",
+    "version": "1.2.24",
     "date": "2026/11/20",
     "notes": {
       "ko": [
-        "업데이트할 때 기기에 설정된 모터 드라이버의 구동·유지 전류를 보존합니다."
+        "출력 종료나 취소 후 Z 오프셋을 자동 저장할 때, 재연결에 실패해 수동 펌웨어 재시작이 필요하던 문제를 수정했습니다."
       ],
       "en": [
-        "Updates preserve the printer's configured motor driver run and hold currents."
+        "Fixed a reconnection issue that could require a manual firmware restart after saving the Z offset at print completion or cancellation."
       ],
       "zh_CN": [
-        "更新时保留打印机已配置的电机驱动运行电流和保持电流。"
+        "修复打印结束或取消后自动保存 Z 偏移时可能无法重新连接、需要手动重启固件的问题。"
       ]
     }
   }

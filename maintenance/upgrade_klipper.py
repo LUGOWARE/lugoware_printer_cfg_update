@@ -48,7 +48,15 @@ def upgrade(folder, backup, check=False):
     if os.environ.get('LUGOWARE_SYSTEM_ONLY') == '1':
         raise RuntimeError('Base Klipper/Linux MCU migration requires the SSH installer; unattended permission is intentionally limited')
     changes = output('git', '-C', str(folder), 'diff', 'HEAD', '--name-only').splitlines()
-    if set(changes) - {'klippy/extras/multi_pin.py'}:
+    allowed = {'klippy/extras/multi_pin.py'}
+    autosave = 'klippy/configfile.py'
+    if autosave in changes:
+        from patch_print_controls import save_config_patch
+        original = subprocess.check_output(
+            ['git', '-C', str(folder), 'show', 'HEAD:' + autosave], encoding='utf-8')
+        if (folder / autosave).read_text(encoding='utf-8') == save_config_patch(original):
+            allowed.add(autosave)
+    if set(changes) - allowed:
         raise RuntimeError('Unrecognized local Klipper edits; preserved: ' + ', '.join(changes))
     if check:
         print('[예정] Klipper 및 CB2 MCU를 배포 기준으로 업데이트', flush=True)
@@ -82,7 +90,7 @@ def upgrade(folder, backup, check=False):
     run('sudo', 'systemctl', 'stop', 'klipper-mcu')
     pending.write_text('Linux MCU build and installation required\n')
     if changes and update_host:
-        run('git', '-C', str(folder), 'stash', 'push', '-m', 'LUGOWARE upgrade backup', '--', 'klippy/extras/multi_pin.py')
+        run('git', '-C', str(folder), 'stash', 'push', '-m', 'LUGOWARE upgrade backup', '--', *changes)
     if update_host:
         run('git', '-C', str(folder), 'checkout', '--detach', BASELINE)
     shutil.copy2(backup / 'multi_pin.py', folder / 'klippy/extras/multi_pin.py')

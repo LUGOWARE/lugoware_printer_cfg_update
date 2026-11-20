@@ -4,7 +4,7 @@ import os
 from pathlib import Path
 import re
 import shutil
-from patch_print_controls import macros
+from patch_print_controls import macros, save_config_patch
 from final_print_ui import job_status, notification, popup, temperature
 
 
@@ -84,6 +84,8 @@ def install(config, screen, klipper, backup, config_only=False):
     if os.environ.get('LUGOWARE_SYSTEM_ONLY') != '1':
         changes[config/'printer_base.cfg'] = macros((config/'printer_base.cfg').read_text(encoding='utf-8'))
     if not config_only:
+        autosave = klipper/'klippy/configfile.py'
+        changes[autosave] = save_config_patch(autosave.read_text(encoding='utf-8'))
         probe = (klipper/'klippy/extras/probe.py').read_text(encoding='utf-8')
         mesh = (klipper/'klippy/extras/bed_mesh.py').read_text(encoding='utf-8')
         for needle in ('class SampleAveragingHelper:', 'def _probe(self, gcmd):', 'self.hw_probe_session', 'def _invoke_callback(self, results):'):

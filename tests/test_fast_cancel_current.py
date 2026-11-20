@@ -39,7 +39,7 @@ class Tests(unittest.TestCase):
             self.offset(0, 0.03)
             self.obj.requested = False
             self.obj.save_print_offset()
-            self.assertEqual(self.log, ['Z_OFFSET_APPLY_PROBE', 'SAVE_CONFIG'])
+            self.assertEqual(self.log, ['Z_OFFSET_APPLY_PROBE', 'SAVE_CONFIG LUGO_FIRMWARE_RESTART=1'])
 
     def test_unchanged_zero_or_shutdown_does_not_save(self):
             for initial, final in ((0,0), (0.02,0.02), (0,0.0000001), (0.02,0)):
