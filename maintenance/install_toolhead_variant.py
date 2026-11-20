@@ -12,6 +12,7 @@ SENSOR = 'temperature_toolhead_sensor toolhead_sensor'
 AUX = ('toolhead_temperature_test', 'heater_generic Toolhead')
 NOZZLE_PID = dict(control='pid', pid_kp='13.953', pid_ki='0.511', pid_kd='95.230')
 TOOLHEAD_PID = dict(control='pid', pid_kp='37.681', pid_ki='9.191', pid_kd='38.623')
+TOOLHEAD_TUNING = ('prime_temperature_margin', 'prime_timeout', 'park_nozzle_preheat_offset')
 
 
 def selected(home):
@@ -179,10 +180,17 @@ def dock_wait_profile(text, patches, variant):
         if not match:
             raise ValueError('Missing tool-change macro: ' + name)
         block = match[0]
-        if name.startswith('PARK_TOOL_'):
-            for _, updated in edits:
-                # Recognize the exact v1.2.19 form before applying or reverting.
-                legacy = updated.replace('[next_temp + 5, 298]|min', '[next_temp + 40, 298]|min')
+        for _, updated in edits:
+            # Normalize older auxiliary macros before applying or reverting the profile.
+            if name.startswith('PARK_TOOL_'):
+                for offset in (5, 40):
+                    legacy = updated.replace('printer.toolhead_temperature_test.park_nozzle_preheat_offset',
+                                             str(offset))
+                    if legacy != updated:
+                        block = block.replace(legacy, updated)
+            elif name.startswith('DOCK_TOOL_'):
+                legacy = updated.replace('TOOLHEAD_WAIT_FOR_PRIME TARGET={slicer_temp}\n',
+                                         'TOOLHEAD_WAIT_FOR_PRIME TARGET={slicer_temp} TIMEOUT=60\n')
                 if legacy != updated:
                     block = block.replace(legacy, updated)
         try:
@@ -191,6 +199,21 @@ def dock_wait_profile(text, patches, variant):
             raise ValueError('Unsupported tool-change macro ' + name + ': ' + str(exc)) from exc
         text = text[:match.start()] + changed + text[match.end():]
     return text
+
+
+def apply_release_tuning(content, defaults):
+    installed = section(content, AUX[0])
+    release = section(defaults, AUX[0])
+    if not installed or not release:
+        raise ValueError('Missing toolhead sensor section')
+    block = installed[0]
+    for option in TOOLHEAD_TUNING:
+        pattern = r'(?mi)^[ \t]*' + option + r'[ \t]*[:=][^\n]*\n?'
+        values = re.findall(pattern, release[0])
+        if len(values) != 1:
+            raise ValueError('Expected one release setting for ' + option)
+        block = re.sub(pattern, '', block).rstrip() + '\n' + values[0].strip() + '\n'
+    return content[:installed.start()] + block + '\n' + content[installed.end():]
 
 
 def plan(home, variant, assets, base_override=None):
@@ -222,6 +245,7 @@ def plan(home, variant, assets, base_override=None):
             content = (assets / 'toolhead_auxiliary.cfg').read_text(encoding='utf-8')
         # Upgrade existing auxiliary configs as well as fresh installations.
         defaults = (assets / 'toolhead_auxiliary.cfg').read_text(encoding='utf-8')
+        content = apply_release_tuning(content, defaults)
         for name in ('gcode_macro TOOLHEAD_IDLE_STATE', 'delayed_gcode turn_off_toolhead'):
             content = remove_section(content, name).rstrip() + '\n\n' + section(defaults, name)[0]
         changes[auxiliary] = pid_profile(content, 'heater_generic Toolhead', TOOLHEAD_PID).encode()

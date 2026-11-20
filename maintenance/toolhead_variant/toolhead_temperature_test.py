@@ -1,4 +1,6 @@
 # Detachable thermistor with guarded heater adapter.
+from math import isfinite
+
 from . import thermistor
 from .detachable_heater_sensor import DetachableHeaterSensor
 
@@ -9,6 +11,14 @@ class ToolheadTemperatureTest:
         self.reactor = self.printer.get_reactor()
         self.gcode = self.printer.lookup_object('gcode')
         self.heater_adapter = None
+        self.prime_temperature_margin = config.getfloat(
+            'prime_temperature_margin', 15., minval=0., maxval=20.)
+        self.prime_timeout = config.getfloat('prime_timeout', 60., above=0., maxval=180.)
+        self.park_nozzle_preheat_offset = config.getfloat(
+            'park_nozzle_preheat_offset', 5., minval=0., maxval=40.)
+        if not all(map(isfinite, (self.prime_temperature_margin, self.prime_timeout,
+                                 self.park_nozzle_preheat_offset))):
+            raise config.error('Toolhead tuning values must be finite')
         self.printer.load_object(config, 'heaters').add_sensor_factory(
             'DetachableToolhead', lambda cfg: DetachableHeaterSensor(self, cfg))
         self.converter = thermistor.Thermistor(
@@ -57,7 +67,8 @@ class ToolheadTemperatureTest:
             state = 'checking'
         return {'state': state, 'sensor_connected': state == 'connected',
                 'temperature': self.temperature if state == 'connected' else None,
-                'adc': self.raw, 'diagnostic_only': self.heater_adapter is None}
+                'adc': self.raw, 'diagnostic_only': self.heater_adapter is None,
+                'park_nozzle_preheat_offset': self.park_nozzle_preheat_offset}
 
     def _message(self):
         status = self.get_status(self.reactor.monotonic())

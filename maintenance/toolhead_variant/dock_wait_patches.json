@@ -24,7 +24,7 @@
     ],
     [
       "\n    {% set preheat_temp = normal_temp + (10 if is_175 else 12) %}\n    M104 S{preheat_temp}\n    TOOLHEAD_DOCK_HEAT TEMP={normal_temp}\n    FAST_CANCEL_WAIT P={(h_d * 1000)|int}\n    FAST_CANCEL_PRIME STATE=begin TOOL=0\n",
-      "\n    {% set preheat_temp = normal_temp + (5 if is_175 else 5) %}\n    # M104 S{preheat_temp}\n    TOOLHEAD_DOCK_HEAT TEMP={slicer_temp}\n    # FAST_CANCEL_WAIT P={(h_d * 1000)|int}\n    TOOLHEAD_WAIT_FOR_PRIME TARGET={slicer_temp} TIMEOUT=60\n    FAST_CANCEL_PRIME STATE=begin TOOL=0\n"
+      "\n    {% set preheat_temp = normal_temp + (5 if is_175 else 5) %}\n    # M104 S{preheat_temp}\n    TOOLHEAD_DOCK_HEAT TEMP={slicer_temp}\n    # FAST_CANCEL_WAIT P={(h_d * 1000)|int}\n    TOOLHEAD_WAIT_FOR_PRIME TARGET={slicer_temp}\n    FAST_CANCEL_PRIME STATE=begin TOOL=0\n"
     ],
     [
       "    {% set preheat_temp = normal_temp + (5 if is_175 else 10) %}\n    M104 S{preheat_temp}\n    # 2차 프라임: P2 를 MVS 로\n",
@@ -46,7 +46,7 @@
     ],
     [
       "\n    {% set preheat_temp = normal_temp + (10 if is_175 else 12) %}\n    M104 S{preheat_temp}\n    TOOLHEAD_DOCK_HEAT TEMP={normal_temp}\n    FAST_CANCEL_WAIT P={(h_d * 1000)|int}\n    FAST_CANCEL_PRIME STATE=begin TOOL=1\n",
-      "\n    {% set preheat_temp = normal_temp + (5 if is_175 else 5) %}\n    # M104 S{preheat_temp}\n    TOOLHEAD_DOCK_HEAT TEMP={slicer_temp}\n    # FAST_CANCEL_WAIT P={(h_d * 1000)|int}\n    TOOLHEAD_WAIT_FOR_PRIME TARGET={slicer_temp} TIMEOUT=60\n    FAST_CANCEL_PRIME STATE=begin TOOL=1\n"
+      "\n    {% set preheat_temp = normal_temp + (5 if is_175 else 5) %}\n    # M104 S{preheat_temp}\n    TOOLHEAD_DOCK_HEAT TEMP={slicer_temp}\n    # FAST_CANCEL_WAIT P={(h_d * 1000)|int}\n    TOOLHEAD_WAIT_FOR_PRIME TARGET={slicer_temp}\n    FAST_CANCEL_PRIME STATE=begin TOOL=1\n"
     ],
     [
       "    {% set preheat_temp = normal_temp + (5 if is_175 else 10) %}\n    M104 S{preheat_temp}\n    # 2차 프라임: P2 를 MVS 로\n",
@@ -68,7 +68,7 @@
     ],
     [
       "\n    {% set preheat_temp = normal_temp + (10 if is_175 else 12) %}\n    M104 S{preheat_temp}\n    TOOLHEAD_DOCK_HEAT TEMP={normal_temp}\n    FAST_CANCEL_WAIT P={(h_d * 1000)|int}\n    FAST_CANCEL_PRIME STATE=begin TOOL=2\n",
-      "\n    {% set preheat_temp = normal_temp + (5 if is_175 else 5) %}\n    # M104 S{preheat_temp}\n    TOOLHEAD_DOCK_HEAT TEMP={slicer_temp}\n    # FAST_CANCEL_WAIT P={(h_d * 1000)|int}\n    TOOLHEAD_WAIT_FOR_PRIME TARGET={slicer_temp} TIMEOUT=60\n    FAST_CANCEL_PRIME STATE=begin TOOL=2\n"
+      "\n    {% set preheat_temp = normal_temp + (5 if is_175 else 5) %}\n    # M104 S{preheat_temp}\n    TOOLHEAD_DOCK_HEAT TEMP={slicer_temp}\n    # FAST_CANCEL_WAIT P={(h_d * 1000)|int}\n    TOOLHEAD_WAIT_FOR_PRIME TARGET={slicer_temp}\n    FAST_CANCEL_PRIME STATE=begin TOOL=2\n"
     ],
     [
       "    {% set preheat_temp = normal_temp + (5 if is_175 else 10) %}\n    M104 S{preheat_temp}\n    # 2차 프라임: P2 를 MVS 로\n",
@@ -90,7 +90,7 @@
     ],
     [
       "\n    {% set preheat_temp = normal_temp + (10 if is_175 else 12) %}\n    M104 S{preheat_temp}\n    TOOLHEAD_DOCK_HEAT TEMP={normal_temp}\n    FAST_CANCEL_WAIT P={(h_d * 1000)|int}\n    FAST_CANCEL_PRIME STATE=begin TOOL=3\n",
-      "\n    {% set preheat_temp = normal_temp + (5 if is_175 else 5) %}\n    # M104 S{preheat_temp}\n    TOOLHEAD_DOCK_HEAT TEMP={slicer_temp}\n    # FAST_CANCEL_WAIT P={(h_d * 1000)|int}\n    TOOLHEAD_WAIT_FOR_PRIME TARGET={slicer_temp} TIMEOUT=60\n    FAST_CANCEL_PRIME STATE=begin TOOL=3\n"
+      "\n    {% set preheat_temp = normal_temp + (5 if is_175 else 5) %}\n    # M104 S{preheat_temp}\n    TOOLHEAD_DOCK_HEAT TEMP={slicer_temp}\n    # FAST_CANCEL_WAIT P={(h_d * 1000)|int}\n    TOOLHEAD_WAIT_FOR_PRIME TARGET={slicer_temp}\n    FAST_CANCEL_PRIME STATE=begin TOOL=3\n"
     ],
     [
       "    {% set preheat_temp = normal_temp + (5 if is_175 else 10) %}\n    M104 S{preheat_temp}\n    # 2차 프라임: P2 를 MVS 로\n",
@@ -104,25 +104,25 @@
   "PARK_TOOL_0": [
     [
       "    {% if next_temp > 0 %}\n    {% set preheat_temp = [next_temp + 25, 298]|min %} \n    M104 S{preheat_temp}\n",
-      "    {% if next_temp > 0 %}\n    {% set preheat_temp = [next_temp + 5, 298]|min %} \n    M104 S{preheat_temp}\n"
+      "    {% if next_temp > 0 %}\n    {% set preheat_temp = [next_temp + printer.toolhead_temperature_test.park_nozzle_preheat_offset, 298]|min %} \n    M104 S{preheat_temp}\n"
     ]
   ],
   "PARK_TOOL_1": [
     [
       "    {% if next_temp > 0 %}\n    {% set preheat_temp = [next_temp + 25, 298]|min %}\n    M104 S{preheat_temp}\n",
-      "    {% if next_temp > 0 %}\n    {% set preheat_temp = [next_temp + 5, 298]|min %}\n    M104 S{preheat_temp}\n"
+      "    {% if next_temp > 0 %}\n    {% set preheat_temp = [next_temp + printer.toolhead_temperature_test.park_nozzle_preheat_offset, 298]|min %}\n    M104 S{preheat_temp}\n"
     ]
   ],
   "PARK_TOOL_2": [
     [
       "    {% if next_temp > 0 %}\n    {% set preheat_temp = [next_temp + 25, 298]|min %}\n    M104 S{preheat_temp}\n",
-      "    {% if next_temp > 0 %}\n    {% set preheat_temp = [next_temp + 5, 298]|min %}\n    M104 S{preheat_temp}\n"
+      "    {% if next_temp > 0 %}\n    {% set preheat_temp = [next_temp + printer.toolhead_temperature_test.park_nozzle_preheat_offset, 298]|min %}\n    M104 S{preheat_temp}\n"
     ]
   ],
   "PARK_TOOL_3": [
     [
       "    {% if next_temp > 0 %}\n    {% set preheat_temp = [next_temp + 25, 298]|min %}\n    M104 S{preheat_temp}\n",
-      "    {% if next_temp > 0 %}\n    {% set preheat_temp = [next_temp + 5, 298]|min %}\n    M104 S{preheat_temp}\n"
+      "    {% if next_temp > 0 %}\n    {% set preheat_temp = [next_temp + printer.toolhead_temperature_test.park_nozzle_preheat_offset, 298]|min %}\n    M104 S{preheat_temp}\n"
     ]
   ]
 }

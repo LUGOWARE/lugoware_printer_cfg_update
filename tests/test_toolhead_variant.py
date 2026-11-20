@@ -135,6 +135,40 @@ class VariantTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             variant.base_profile(profile()+'\n[output_pin other]\npin: PB7\n', 'toolhead')
 
+    def test_release_tuning_replaces_only_managed_options(self):
+        defaults = (ROOT/'maintenance/toolhead_variant/toolhead_auxiliary.cfg').read_text()
+        installed = (
+            '[toolhead_temperature_test]\nsensor_pin: PA2\npullup_resistor: 5000\n'
+            'prime_temperature_margin = 18\nprime_timeout: 72\n'
+            'park_nozzle_preheat_offset: 2\n\n[heater_generic Toolhead]\nmax_temp: 295\n'
+        )
+        for original in (installed, installed.split('prime_temperature_margin')[0], defaults):
+            updated = variant.apply_release_tuning(original, defaults)
+            self.assertEqual(variant.apply_release_tuning(updated, defaults), updated)
+            for line in ('prime_temperature_margin: 15', 'prime_timeout: 60',
+                         'park_nozzle_preheat_offset: 5'):
+                self.assertEqual(updated.count(line), 1)
+        updated = variant.apply_release_tuning(installed, defaults)
+        self.assertIn('pullup_resistor: 5000\n', updated)
+        self.assertIn('max_temp: 295\n', updated)
+        self.assertNotIn('prime_timeout: 72', updated)
+
+    def test_legacy_and_cfg_toolchange_macros_round_trip(self):
+        assets = ROOT/'maintenance/toolhead_variant'
+        patches = json.loads((assets/'dock_wait_patches.json').read_text(encoding='utf-8'))
+        standard = ''.join('[gcode_macro ' + name + ']\ngcode:\n' +
+                           ''.join(before for before, _ in edits)
+                           for name, edits in patches.items())
+        auxiliary = variant.dock_wait_profile(standard, patches, 'toolhead')
+        self.assertEqual(auxiliary.count('TOOLHEAD_WAIT_FOR_PRIME TARGET={slicer_temp}\n'), 4)
+        self.assertEqual(auxiliary.count('printer.toolhead_temperature_test.park_nozzle_preheat_offset'), 4)
+        for offset in (5, 40):
+            legacy = auxiliary.replace('TARGET={slicer_temp}\n', 'TARGET={slicer_temp} TIMEOUT=60\n')
+            legacy = legacy.replace('printer.toolhead_temperature_test.park_nozzle_preheat_offset', str(offset))
+            self.assertEqual(variant.dock_wait_profile(legacy, patches, 'toolhead'), auxiliary)
+            self.assertEqual(variant.dock_wait_profile(legacy, patches, 'standard'), standard)
+        self.assertEqual(variant.dock_wait_profile(auxiliary, patches, 'standard'), standard)
+
     def test_missing_macro_blocks(self):
         with self.assertRaises(ValueError):
             variant.base_profile(profile().replace('[gcode_macro PARK_2]', '[gcode_macro OTHER]'), 'toolhead')
