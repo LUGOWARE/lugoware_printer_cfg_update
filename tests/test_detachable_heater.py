@@ -13,7 +13,8 @@ class Tests(unittest.TestCase):
   p=N(lookup_object=lambda key,default=None:self.objects.get(key,default),register_event_handler=lambda *a:None,command_error=RuntimeError,invoke_shutdown=self.shutdown.append,is_shutdown=lambda:bool(self.shutdown))
   g=N(register_command=lambda *a, **kw:None,respond_info=lambda *a:None,run_script=self.commands.append)
   reactor=N(monotonic=lambda:self.now,register_callback=self.callbacks.append)
-  source=N(printer=p,gcode=g,reactor=reactor,get_status=lambda t:{'state':self.state},last=1.)
+  source=N(printer=p,gcode=g,reactor=reactor,get_status=lambda t:{'state':self.state},last=1.,
+           sync_manual_preheat=True)
   class Heater:
    target_temp=0.;last_pwm_value=0.;control=None
    def set_temp(h,v):h.target_temp=v

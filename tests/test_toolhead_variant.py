@@ -152,6 +152,9 @@ class VariantTests(unittest.TestCase):
         self.assertIn('pullup_resistor: 5000\n', updated)
         self.assertIn('max_temp: 295\n', updated)
         self.assertNotIn('prime_timeout: 72', updated)
+        self.assertIn('sync_manual_preheat: True', updated)
+        independent = updated.replace('sync_manual_preheat: True', 'sync_manual_preheat: False')
+        self.assertEqual(variant.apply_release_tuning(independent, defaults), independent)
 
     def test_legacy_and_cfg_toolchange_macros_round_trip(self):
         assets = ROOT/'maintenance/toolhead_variant'

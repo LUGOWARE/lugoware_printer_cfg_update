@@ -10,17 +10,17 @@
     }
   },
   "lugoware_system": {
-    "version": "1.2.30",
+    "version": "1.2.31",
     "date": "2026/11/20",
     "notes": {
       "ko": [
-        "툴헤드 예열 보조 설정의 항목 이름을 [toolhead_auxiliary]로 변경했습니다. 기존 설정 파일은 업데이트 시 자동으로 변환됩니다."
+        "툴헤드 예열 보조 버전에서 수동 예열 시 노즐과 툴헤드를 함께 예열하거나 각각 조절할 수 있습니다. 출력 중에는 툴헤드가 노즐 목표 온도를 따릅니다."
       ],
       "en": [
-        "The auxiliary toolhead heating settings now use the [toolhead_auxiliary] section. Existing configuration files are migrated during the update."
+        "With auxiliary toolhead heating, manual preheating can link both heaters or let you adjust them separately. During a print, the toolhead follows the nozzle target."
       ],
       "zh_CN": [
-        "辅助工具头预热设置已改用 [toolhead_auxiliary] 配置段。更新时会自动迁移现有配置。"
+        "辅助工具头预热版本支持手动预热时联动或分别调节。打印时，工具头跟随喷嘴的目标温度。"
       ]
     }
   }

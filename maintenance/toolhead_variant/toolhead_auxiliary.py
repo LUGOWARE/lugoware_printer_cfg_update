@@ -11,6 +11,7 @@ class ToolheadAuxiliary:
         self.reactor = self.printer.get_reactor()
         self.gcode = self.printer.lookup_object('gcode')
         self.heater_adapter = None
+        self.sync_manual_preheat = config.getboolean('sync_manual_preheat', True)
         self.prime_temperature_margin = config.getfloat(
             'prime_temperature_margin', 15., minval=0., maxval=20.)
         self.prime_timeout = config.getfloat('prime_timeout', 60., above=0., maxval=180.)

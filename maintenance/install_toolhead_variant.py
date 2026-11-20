@@ -220,6 +220,12 @@ def apply_release_tuning(content, defaults):
     if not installed or not release:
         raise ValueError('Missing toolhead sensor section')
     block = installed[0]
+    manual_option = r'(?mi)^[ \t]*sync_manual_preheat[ \t]*[:=][^\n]*'
+    if not re.search(manual_option, block):
+        default = re.search(manual_option, release[0])
+        if not default:
+            raise ValueError('Missing release default for sync_manual_preheat')
+        block = block.rstrip() + '\n' + default[0].strip() + '\n'
     for option in TOOLHEAD_TUNING:
         pattern = r'(?mi)^[ \t]*' + option + r'[ \t]*[:=][^\n]*\n?'
         values = re.findall(pattern, release[0])
