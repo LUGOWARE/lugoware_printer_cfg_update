@@ -40,6 +40,26 @@ class SensorPinsTest(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     sensor_pins(main)
 
+    def test_preserves_driver_currents_and_implicit_hold_current(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            (root / 'base.cfg').write_text(
+                '[tmc5160 stepper_x]\nrun_current: 2.75\nhold_current: 1.20\n'
+                '[tmc2209 stepper_z]\nrun_current: 0.92\n')
+            (root / 'custom.cfg').write_text('[tmc5160 stepper_x]\nrun_current: 2.85\n')
+            main = root / 'printer.cfg'
+            main.write_text('[include base.cfg]\n[include custom.cfg]\n')
+            template = ('# Updated profile\n[tmc5160 stepper_x]\nrun_current = 3.0 # amps\n'
+                        'sense_resistor: 0.075\n[tmc2209 stepper_z]\nrun_current: 1.6\n'
+                        'hold_current: 0.8\n[tmc2209 extruder]\nrun_current: 0.7\n')
+            result = preserve(template, main)
+            self.assertIn('run_current = 2.85 # amps', result)
+            self.assertIn('hold_current: 1.20', result)
+            self.assertIn('sense_resistor: 0.075', result)
+            self.assertIn('[tmc2209 stepper_z]\nrun_current: 0.92\n[tmc2209 extruder]', result)
+            self.assertTrue(result.endswith('run_current: 0.7\n'))
+            self.assertEqual(preserve(result, main), result)
+
 
 if __name__ == '__main__':
     unittest.main()

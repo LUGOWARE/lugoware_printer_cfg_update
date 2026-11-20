@@ -5,3 +5,4 @@
 - Replace release notes with only the changes in that release; do not append older release content. Use concise customer-facing Korean, English and Simplified Chinese.
 - Keep equivalent system releases aligned across GitHub M5P/M8P and Gitee M5P. Preserve repository-specific exclusions.
 - Config-only publishing must preserve the existing system version and notes.
+- Preserve each installed TMC driver's configured run and hold currents in installer and config updates unless the owner explicitly requests a current change. Keep implicit hold-current defaults.
