@@ -76,7 +76,7 @@ class DetachableHeaterSensor:
     def wait_for_prime(self, gcmd):
         target = gcmd.get_float('TARGET', above=30., maxval=self.maximum)
         timeout = gcmd.get_float('TIMEOUT', 60., above=0., maxval=180.)
-        threshold = target - 30.
+        threshold = target - 15.
         reactor = self.source.reactor
         fast_cancel = self.printer.lookup_object('fast_cancel', None)
         now = reactor.monotonic()

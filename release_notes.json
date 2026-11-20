@@ -10,17 +10,17 @@
     }
   },
   "lugoware_system": {
-    "version": "1.2.27",
+    "version": "1.2.28",
     "date": "2026/11/20",
     "notes": {
       "ko": [
-        "출력을 취소한 뒤 바로 재시작할 때 베드 메쉬를 ON/OFF 스위치로 선택할 수 있습니다."
+        "툴헤드 예열 보조 버전에서 도킹 후 목표 온도보다 15°C 낮은 온도부터 프라임을 시작합니다."
       ],
       "en": [
-        "Choose whether to run bed mesh calibration with an ON/OFF switch before restarting a canceled print."
+        "In the auxiliary toolhead heating variant, priming starts once the temperature reaches 15°C below the target after docking."
       ],
       "zh_CN": [
-        "取消打印后重新开始时，可通过开关选择是否重新测量热床网格。"
+        "在辅助工具头预热版本中，对接后温度达到目标温度减 15°C 时开始预挤出。"
       ]
     }
   }
