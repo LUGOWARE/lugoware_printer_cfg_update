@@ -10,20 +10,17 @@
     }
   },
   "lugoware_system": {
-    "version": "1.2.21",
+    "version": "1.2.22",
     "date": "2026/11/20",
     "notes": {
       "ko": [
-        "출력 화면의 체적 유량 표시를 베드 높이로 바꾸고 팬, 툴체인지, 툴헤드 감지 표시를 위로 정리했습니다.",
-        "툴헤드 보조 버전에서 파킹 직전 낮은 히터 출력도 확실하게 0%로 전환하도록 수정했습니다."
+        "출력 화면 변경을 적용할 때 업데이트가 미완료로 끝날 수 있던 문제를 수정했습니다. 이전에 중단된 업데이트도 다시 적용할 수 있습니다."
       ],
       "en": [
-        "Replaced the flow rate in the print summary with bed height and moved the fan, tool change, and toolhead detection indicators up.",
-        "The auxiliary toolhead heater now sends a zero-output command before parking even at low power."
+        "Fixed an installation order issue that could leave the print screen update incomplete. Interrupted updates can be retried."
       ],
       "zh_CN": [
-        "在打印界面用热床高度替换体积流量，并上移风扇、换刀和工具头检测信息。",
-        "辅助工具头停放前即使处于低功率也会发送零输出命令。"
+        "修复打印界面更新可能因安装顺序而中断的问题。此前中断的更新可重新安装。"
       ]
     }
   }

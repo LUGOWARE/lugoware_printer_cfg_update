@@ -7,9 +7,12 @@ import subprocess
 import re
 from patch_print_controls import feature_macros
 from october_features import job, notification, popup
+from final_print_ui import status_layout
 
 
 def patch_ui(source, name):
+    if name == "job_status.py":
+        source = status_layout(source, reverse=True)
     # Temporarily remove the additive subscription for legacy block matching.
     # Restore it after migration; never discard the preanalysis status hook.
     preanalysis_line = '                "lugo_preanalysis": None,\n'
@@ -63,6 +66,8 @@ def patch_ui(source, name):
     if had_preanalysis:
         from install_preanalysis import patch_screen
         source = patch_screen(source)
+    if name == "job_status.py":
+        source = status_layout(source)
     compile(source, name, 'exec')
     return source
 
