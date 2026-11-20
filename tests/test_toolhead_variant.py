@@ -1,3 +1,4 @@
+import configparser
 import importlib.util
 import json
 from pathlib import Path
@@ -136,7 +137,7 @@ class VariantTests(unittest.TestCase):
             variant.base_profile(profile()+'\n[output_pin other]\npin: PB7\n', 'toolhead')
 
     def test_release_tuning_replaces_only_managed_options(self):
-        defaults = (ROOT/'maintenance/toolhead_variant/toolhead_auxiliary.cfg').read_text()
+        defaults = (ROOT/'maintenance/toolhead_variant/toolhead_auxiliary.cfg').read_text(encoding='utf-8')
         installed = (
             '[toolhead_auxiliary]\nsensor_pin: PA2\npullup_resistor: 5000\n'
             'prime_temperature_margin = 18\nprime_timeout: 72\n'
@@ -149,12 +150,24 @@ class VariantTests(unittest.TestCase):
                          'park_nozzle_preheat_offset: 5'):
                 self.assertEqual(updated.count(line), 1)
         updated = variant.apply_release_tuning(installed, defaults)
-        self.assertIn('pullup_resistor: 5000\n', updated)
+        self.assertIn('pullup_resistor: 5000  # 센서 풀업 저항(Ω) / Sensor pull-up resistance (ohms)\n', updated)
         self.assertIn('max_temp: 295\n', updated)
         self.assertNotIn('prime_timeout: 72', updated)
-        self.assertIn('sync_manual_preheat: True', updated)
-        independent = updated.replace('sync_manual_preheat: True', 'sync_manual_preheat: False')
-        self.assertEqual(variant.apply_release_tuning(independent, defaults), independent)
+        self.assertIn('sync_manual_preheat: False', updated)
+
+        for saved, expected in (('True', True), ('on', True), ('False', False)):
+            previous = installed.replace('sensor_pin: PA2', 'sensor_pin: PA6\n'
+                                         + f'sync_manual_preheat = {saved}  ; previous comment')
+            updated = variant.apply_release_tuning(previous, defaults)
+            self.assertEqual(variant.apply_release_tuning(updated, defaults), updated)
+            parser = configparser.RawConfigParser(inline_comment_prefixes=(';', '#'))
+            parser.read_string(updated)
+            sensor = parser['toolhead_auxiliary']
+            self.assertIs(sensor.getboolean('sync_manual_preheat'), expected)
+            self.assertEqual(sensor['sensor_pin'], 'PA6')
+            self.assertEqual(sensor.getint('pullup_resistor'), 5000)
+            self.assertEqual(sensor.getint('prime_timeout'), 60)
+            self.assertIn(f'sync_manual_preheat: {saved}  # 대기 중', updated)
 
     def test_legacy_and_cfg_toolchange_macros_round_trip(self):
         assets = ROOT/'maintenance/toolhead_variant'
@@ -183,6 +196,24 @@ class VariantTests(unittest.TestCase):
         self.assertEqual(variant.migrate_auxiliary_section(legacy), new)
         self.assertEqual(variant.migrate_auxiliary_section(new + legacy), new)
         self.assertEqual(variant.migrate_auxiliary_section(legacy + new), new)
+
+    def test_header_grouping_keeps_saved_bytes_and_custom_settings(self):
+        head = ('[include toolhead_auxiliary.cfg]\n# MCU settings\n\n'
+                '[include mainsail.cfg]\n[include printer_base.cfg]\n'
+                '[include printer_custom.cfg]\n[exclude_tool_guard]\n\n'
+                '[probe_auto_recovery]\nattempts: 2\n\n[mcu]\ncanbus_uuid: aabbcc\n\n'
+                '[lugo_recovery]\n\n[lugo_preanalysis]\n\n[custom]\nvalue: one\n\n')
+        marker = '#*# <---------------------- SAVE_CONFIG ---------------------->'
+        saved = marker + '\r\n#*# [probe]\r\n#*# z_offset = 0.321\r\n'
+        organized = variant.organize_printer_header(head + saved)
+        self.assertTrue(organized.startswith('# MCU settings\n'))
+        self.assertIn('[exclude_tool_guard]\n[include toolhead_auxiliary.cfg]\n'
+                      '[lugo_recovery]\n[lugo_preanalysis]\n\n[probe_auto_recovery]', organized)
+        self.assertIn('[mcu]\ncanbus_uuid: aabbcc\n\n[custom]\nvalue: one\n', organized)
+        self.assertEqual(organized[organized.index(marker):], saved)
+        self.assertEqual(variant.organize_printer_header(organized), organized)
+        standard = head.replace('[include toolhead_auxiliary.cfg]\n', '')
+        self.assertNotIn('toolhead_auxiliary.cfg', variant.organize_printer_header(standard))
 
     def test_legacy_embedded_config_is_captured_before_header_refresh(self):
         with tempfile.TemporaryDirectory() as d:

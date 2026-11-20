@@ -4,7 +4,7 @@ import jinja2
 
 class IdleTests(unittest.TestCase):
     def render(self, state='standby', target=220, previous=220, count=9):
-        text=(Path(__file__).resolve().parents[1]/'maintenance/toolhead_variant/toolhead_auxiliary.cfg').read_text()
+        text=(Path(__file__).resolve().parents[1]/'maintenance/toolhead_variant/toolhead_auxiliary.cfg').read_text(encoding='utf-8')
         body=text.split('[delayed_gcode turn_off_toolhead]')[1].split('gcode:',1)[1]
         env=jinja2.Environment(variable_start_string='{',variable_end_string='}')
         return env.from_string(body).render(printer={

@@ -220,19 +220,53 @@ def apply_release_tuning(content, defaults):
     if not installed or not release:
         raise ValueError('Missing toolhead sensor section')
     block = installed[0]
-    manual_option = r'(?mi)^[ \t]*sync_manual_preheat[ \t]*[:=][^\n]*'
-    if not re.search(manual_option, block):
-        default = re.search(manual_option, release[0])
-        if not default:
-            raise ValueError('Missing release default for sync_manual_preheat')
-        block = block.rstrip() + '\n' + default[0].strip() + '\n'
-    for option in TOOLHEAD_TUNING:
-        pattern = r'(?mi)^[ \t]*' + option + r'[ \t]*[:=][^\n]*\n?'
-        values = re.findall(pattern, release[0])
-        if len(values) != 1:
+    options = []
+    for option in ('sensor_pin', 'pullup_resistor', 'sync_manual_preheat', *TOOLHEAD_TUNING):
+        pattern = re.compile(r'(?mi)^[ \t]*' + option +
+                             r'[ \t]*[:=][ \t]*([^\n]*?)([ \t]+[#;][^\n]*)?[ \t]*(?:\n|$)')
+        defaults_for_option = pattern.findall(release[0])
+        if len(defaults_for_option) != 1:
             raise ValueError('Expected one release setting for ' + option)
-        block = re.sub(pattern, '', block).rstrip() + '\n' + values[0].strip() + '\n'
-    return content[:installed.start()] + block + '\n' + content[installed.end():]
+        value, comment = defaults_for_option[0]
+        existing = pattern.findall(block)
+        if existing and option not in TOOLHEAD_TUNING:
+            value = existing[-1][0]
+        options.append(option + ': ' + value + comment + '\n')
+        block = pattern.sub('', block)
+    return content[:installed.start()] + block.rstrip() + '\n' + ''.join(options) + '\n' + content[installed.end():]
+
+
+def header_block(text, name):
+    match = section(text, name)
+    if not match:
+        return None
+    lines = match[0].splitlines(keepends=True)
+    # Keep comments between sections in place, including the top-level heading.
+    while len(lines) > 1 and (not lines[-1].strip() or lines[-1].lstrip().startswith(('#', ';'))):
+        lines.pop()
+    return match.start(), ''.join(lines)
+
+
+def organize_printer_header(text):
+    marker = '#*# <---------------------- SAVE_CONFIG ---------------------->'
+    body, separator, saved = text.partition(marker)
+    anchor = 'exclude_tool_guard'
+    if not section(body, anchor):
+        return text
+    eol = '\r\n' if '\r\n' in body else '\n'
+    grouped = []
+    for name in ('include toolhead_auxiliary.cfg', 'lugo_recovery', 'lugo_preanalysis'):
+        found = header_block(body, name)
+        if found:
+            start, block = found
+            grouped.append(block.rstrip('\r\n'))
+            body = body[:start] + body[start + len(block):].lstrip('\r\n')
+    if not grouped:
+        return text
+    start, block = header_block(body, anchor)
+    end = start + len(block)
+    header = body[:end].rstrip('\r\n') + eol + eol.join(grouped)
+    return header + eol * 2 + body[end:].lstrip('\r\n') + separator + saved
 
 
 def plan(home, variant, assets, base_override=None):
@@ -240,7 +274,8 @@ def plan(home, variant, assets, base_override=None):
         raise ValueError('Invalid variant')
     config = home / 'printer_data/config'
     header_path = config / 'printer.cfg'
-    header = migrate_auxiliary_section(header_path.read_text(encoding='utf-8'))
+    original_header = header_path.read_bytes().decode('utf-8')
+    header = migrate_auxiliary_section(original_header)
     base_path = config / 'printer_base.cfg'
     base = base_override if base_override is not None else base_path.read_text(encoding='utf-8')
     marker = home / '.local/share/lugoware/variant.json'
@@ -249,7 +284,9 @@ def plan(home, variant, assets, base_override=None):
                         or '[include toolhead_auxiliary.cfg]' in header)
     changes = {}
     if variant == 'standard' and previous != 'toolhead' and not experimental:
-        # Ordinary standard machines keep byte-identical config/UI behavior.
+        organized = organize_printer_header(header)
+        if organized != original_header:
+            changes[header_path] = organized.encode()
         changes[marker] = json.dumps({'variant': variant}).encode()
         return changes
     auxiliary = config / 'toolhead_auxiliary.cfg'
@@ -276,7 +313,7 @@ def plan(home, variant, assets, base_override=None):
     header = re.sub(r'(?m)^\[include toolhead_auxiliary.cfg\]\s*\n', '', header)
     if variant == 'toolhead':
         header = '[include toolhead_auxiliary.cfg]\n' + header
-    changes[header_path] = nozzle_header_profile(header, variant).encode()
+    changes[header_path] = organize_printer_header(nozzle_header_profile(header, variant)).encode()
     dock_patches = json.loads((assets / 'dock_wait_patches.json').read_text(encoding='utf-8'))
     if ('TOOLHEAD_WAIT_FOR_PRIME TARGET={slicer_temp}' in base
             or '.park_nozzle_preheat_offset' in base):
