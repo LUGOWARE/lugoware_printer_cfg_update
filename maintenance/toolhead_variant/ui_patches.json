@@ -37,16 +37,6 @@
       "            for dev_type in self.store[name]:\n                # Hide only the auxiliary toolhead PWM curve.\n                if name == \"heater_generic Toolhead\" and dev_type == \"powers\":\n                    continue\n                if d := self.printer.get_temp_store(name, dev_type, data_points):\n"
     ]
   ],
-  "KlipperScreen/panels/main_menu.py": [
-    [
-      "            return False\n\n        temperature = self._printer.get_stat(device, \"temperature\")\n        if temperature is None:\n            return False\n        logging.info(f\"Adding device: {device}\")\n        if device.startswith(\"extruder\"):\n",
-      "            return False\n\n        temperature = self._printer.get_stat(device, \"temperature\")\n        if temperature is None and device != \"heater_generic Toolhead\":\n            return False\n        logging.info(f\"Adding device: {device}\")\n        if device.startswith(\"extruder\"):\n"
-    ],
-    [
-      "        devices = sorted(self.devices)\n        pos = devices.index(device) + 1\n\n        self.labels[\"devices\"].insert_row(pos)\n        self.labels[\"devices\"].attach(name, 0, pos, 1, 1)\n        self.labels[\"devices\"].attach(temp, 1, pos, 1, 1)\n        self.labels[\"devices\"].show_all()\n",
-      "        # Keep the graph data, but omit the Toolhead preheat row on the home screen.\n        if device != \"heater_generic Toolhead\":\n            devices = sorted(name for name in self.devices if name != \"heater_generic Toolhead\")\n            pos = devices.index(device) + 1\n            self.labels[\"devices\"].insert_row(pos)\n            self.labels[\"devices\"].attach(name, 0, pos, 1, 1)\n            self.labels[\"devices\"].attach(temp, 1, pos, 1, 1)\n            self.labels[\"devices\"].show_all()\n"
-    ]
-  ],
   "KlipperScreen/panels/base_panel.py": [
     [
       "\ngi.require_version(\"Gtk\", \"3.0\")\nfrom datetime import datetime\nfrom math import log\n\nfrom gi.repository import GdkPixbuf, Gio, GLib, Gtk, Pango\nfrom jinja2 import Environment\n",

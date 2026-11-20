@@ -58,8 +58,9 @@ def apply_config(repo, home, backup):
     screen = merge(previous_screen, template)
     if (home / 'klipper/klippy/extras/lugo_diagnostics.py').is_file():
         from install_diagnostics import strip_legacy, screen_menu
-        base = strip_legacy(base)
-        screen = screen_menu(screen)
+        from home_lighting import printer_config, screen_config
+        base = printer_config(strip_legacy(base))
+        screen = screen_menu(screen_config(screen))
     validate_config(base, screen, home)
     changes = {'printer_base.cfg': base.encode(), 'KlipperScreen.conf': screen.encode()}
     variant_changes = variant_plan(home, selected_variant(home), Path(__file__).with_name('toolhead_variant'), base_override=base)

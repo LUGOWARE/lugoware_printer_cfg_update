@@ -208,7 +208,7 @@ class Panel(ScreenPanel):
                 elif phase == 'fan_nozzle':
                     activity = _('Nozzle fan check (5 s)')
                 else:
-                    activity = (_('Part cooling fan') if data.get('stage', 1) == 1 else _('Chamber filter fan'))
+                    activity = _('Part cooling fan')
                     activity += f" {data.get('percent', 0)}%"
             if activity:
                 text += ' - ' + activity
@@ -257,10 +257,10 @@ class Panel(ScreenPanel):
                 value = 100
             elif phase == 'fan_nozzle':
                 value = 95
-            elif phase == 'fan_heating' or 'chamber' in completed:
+            elif phase == 'fan_heating' or 'part' in completed:
                 value = 80
             else:
-                value = (40 if data.get('stage', 1) == 2 else 0) + data.get('percent', 0) * .4
+                value = data.get('percent', 0) * .8
         else:
             value = 0
         return max(0, min(100, int(value)))
@@ -385,7 +385,6 @@ class Panel(ScreenPanel):
             note(guidance, _('Check for noise during movement and whether it occurs at a particular position.'))
         elif kind == 'fan':
             for key, title in [('part', _('Part cooling fan')),
-                               ('chamber', _('Chamber filter fan')),
                                ('nozzle', _('Nozzle cooling fan'))]:
                 box = card(title)
                 if data.get('schema') == 3:

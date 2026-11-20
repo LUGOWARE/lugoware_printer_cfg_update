@@ -293,7 +293,6 @@ class RecoveryExecution:
         run('SET_VELOCITY_LIMIT VELOCITY=%.6f ACCEL=%.6f SQUARE_CORNER_VELOCITY=%.6f MINIMUM_CRUISE_RATIO=%.6f' %
             tuple(limits[k] for k in ('max_velocity', 'max_accel', 'square_corner_velocity', 'minimum_cruise_ratio')))
         run('M106 S%.6f' % (255 * snap.get('fan', {}).get('speed', 0)))
-        run('SET_FAN_SPEED FAN=chamber_fan SPEED=%.6f' % snap.get('fan_generic chamber_fan', {}).get('speed', 0))
         run('FAST_CANCEL_PHASE PHASE=docked TOOL=%d\nPRINT_SENSOR_GATE ENABLE=0' % tool)
         temperatures = self.printer.lookup_object('lugo_tool_temperature', None)
         if temperatures and snap.get('temperature_internal'):

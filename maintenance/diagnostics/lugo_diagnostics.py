@@ -438,26 +438,19 @@ class Diagnostics:
         if not self.saved.get('fan_test'):
             self.saved['fan_test'] = True
             self.data = {'schema': 3, 'completed': [], 'stage': 0}
-            self.script('M106 S0\nSET_FAN_SPEED FAN=chamber_fan SPEED=0')
+            self.script('M106 S0')
             self.fan_due = now
         if now < self.fan_due:
             return
-        if self.step < 22:
-            group, level = divmod(self.step, 11)
-            if self.step == 11:
-                self.script('M106 S0')
-                self.data['completed'].append('part')
-            if group == 0:
-                self.script('M106 S%d' % round(level * 25.5))
-            else:
-                self.script('SET_FAN_SPEED FAN=chamber_fan SPEED=%.1f' % (level / 10.))
-            self.data.update(stage=group + 1, percent=level * 10)
+        if self.step < 11:
+            self.script('M106 S%d' % round(self.step * 25.5))
+            self.data.update(stage=1, percent=self.step * 10)
             self.phase = 'fan_running'
             self.step += 1
             self.fan_due = self.reactor.monotonic() + 2.
-        elif self.step == 22:
-            self.script('SET_FAN_SPEED FAN=chamber_fan SPEED=0')
-            self.data['completed'].append('chamber')
+        elif self.step == 11:
+            self.script('M106 S0')
+            self.data['completed'].append('part')
             self.saved['heater'] = True
             self.script('SET_MULTI_PIN_MODE PIN=dual_hotend_heater MODE=0\nM104 S50')
             self.data.update(stage=3, temperature=self.status('extruder')['temperature'])
@@ -488,10 +481,9 @@ class Diagnostics:
         if saved.get('probe'):
             scripts.append('Probe_Stow')
         if saved.get('fan_test'):
-            scripts += ['M106 S0', 'SET_FAN_SPEED FAN=chamber_fan SPEED=0']
+            scripts.append('M106 S0')
         if 'fans' in saved:
-            a, b = saved['fans']
-            scripts += ['M106 S%d' % round(a*255), 'SET_FAN_SPEED FAN=chamber_fan SPEED=%.5f' % b]
+            scripts.append('M106 S%d' % round(saved['fans'][0]*255))
         for script in scripts:
             try:
                 self.script(script)

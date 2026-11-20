@@ -240,7 +240,7 @@ class Recovery(RecoveryExecution):
         except ImportError:
             from recovery_objects import capture
         names = ('print_stats', 'virtual_sdcard', 'toolhead', 'motion_report', 'gcode_move',
-                 'extruder', 'heater_bed', 'fan', 'fan_generic chamber_fan',
+                 'extruder', 'heater_bed', 'fan',
                  'filament_switch_sensor toolhead_sensor', 'fast_cancel', 'exclude_tool_guard',
                  'exclude_object', 'lugo_tool_temperature', 'screen_mesh',
                  'gcode_macro TOOL_STATE', 'gcode_macro CHANGE_TOOL_STATE',

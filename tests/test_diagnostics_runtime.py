@@ -181,12 +181,12 @@ class Tests(unittest.TestCase):
 
     def test_fan_ramps_and_heat(self):
         self.f.d.start('fan')
-        for _ in range(23):self.f.tick(2)
+        for _ in range(12):self.f.tick(2)
         self.assertIn('M104 S50', self.f.scripts[-1])
-        self.assertEqual(self.f.d.data['completed'], ['part', 'chamber'])
+        self.assertEqual(self.f.d.data['completed'], ['part'])
         for level in range(11):
             self.assertIn('M106 S%d' % round(level*25.5), self.f.scripts)
-            self.assertIn('SET_FAN_SPEED FAN=chamber_fan SPEED=%.1f' % (level/10), self.f.scripts)
+        self.assertFalse(any('chamber_fan' in script or 'chamber_led' in script for script in self.f.scripts))
         self.f.states['extruder']['temperature']=50
         self.f.tick(.2)
         self.f.tick(4.9)
@@ -194,11 +194,11 @@ class Tests(unittest.TestCase):
         self.f.tick(.2)
         self.assertFalse(self.f.d.active)
         self.assertIn('M104 S0', self.f.scripts)
-        self.assertEqual(self.f.scripts[-2:], ['M106 S0', 'SET_FAN_SPEED FAN=chamber_fan SPEED=0'])
+        self.assertEqual(self.f.scripts[-1:], ['M106 S0'])
 
     def test_fan_heat_timeout(self):
         self.f.d.start('fan')
-        for _ in range(23):self.f.tick(2)
+        for _ in range(12):self.f.tick(2)
         self.f.tick(91)
         self.assertFalse(self.f.d.active)
         self.assertEqual(self.f.d.result['outcome'], 'failed')

@@ -6,6 +6,7 @@ import os
 from pathlib import Path
 import re
 import shutil
+from home_lighting import printer_config, screen_config
 
 LEGACY = {'gcode_macro '+n for n in ('_HEATER_TEST_STATE','HEATER_TEST','HEATER_TEST_OFF','HEATER_TEST_POPUP_CLOSE')}
 LEGACY |= {'delayed_gcode '+n for n in ('heater_test_stage1','heater_test_start2','heater_test_stage2')}
@@ -43,9 +44,9 @@ def install(config,screen,klipper,backup,model):
     changes={screen/'panels/diagnostics.py':(assets/'diagnostics.py').read_text(encoding='utf-8'),
              klipper/'klippy/extras/lugo_diagnostics.py':(assets/'lugo_diagnostics.py').read_text(encoding='utf-8'),
              klipper/'klippy/extras/lugo_factory_qc.py':(assets/'lugo_factory_qc.py').read_text(encoding='utf-8')}
-    p=config/'printer_base.cfg';changes[p]=strip_legacy(p.read_text(encoding='utf-8'))
+    p=config/'printer_base.cfg';changes[p]=printer_config(strip_legacy(p.read_text(encoding='utf-8')))
     p=config/'printer.cfg';changes[p]=header(strip_legacy(p.read_text(encoding='utf-8')),model)
-    p=config/'KlipperScreen.conf';changes[p]=screen_menu(p.read_text(encoding='utf-8'))
+    p=config/'KlipperScreen.conf';changes[p]=screen_menu(screen_config(p.read_text(encoding='utf-8')))
     for lang,entries in json.loads((assets/'locales.json').read_text(encoding='utf-8')).items():
         p=screen/'ks_includes/lugoware_locales'/(lang+'.json')
         data=json.loads(p.read_text(encoding='utf-8')) if p.exists() else {}

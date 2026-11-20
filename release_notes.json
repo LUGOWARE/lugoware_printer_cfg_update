@@ -10,17 +10,20 @@
     }
   },
   "lugoware_system": {
-    "version": "1.2.24",
+    "version": "1.2.25",
     "date": "2026/11/20",
     "notes": {
       "ko": [
-        "출력 종료나 취소 후 Z 오프셋을 자동 저장할 때, 재연결에 실패해 수동 펌웨어 재시작이 필요하던 문제를 수정했습니다."
+        "메인 화면에서 온도 그래프를 없애고 메뉴와 온도 칸을 정리했습니다. LED 버튼으로 챔버 조명을 켜고 끌 수 있습니다.",
+        "출고 QC와 화면 점검에서 챔버 필터 팬 단계를 제거했습니다."
       ],
       "en": [
-        "Fixed a reconnection issue that could require a manual firmware restart after saving the Z offset at print completion or cancellation."
+        "Reorganized the home screen without the temperature graph and added a chamber light button.",
+        "Removed the chamber filter fan step from factory QC and touchscreen diagnostics."
       ],
       "zh_CN": [
-        "修复打印结束或取消后自动保存 Z 偏移时可能无法重新连接、需要手动重启固件的问题。"
+        "重新排列主屏幕菜单和温度区域，移除温度图表并添加腔体照明开关。",
+        "出厂质检及触屏诊断移除了腔体过滤风扇检测。"
       ]
     }
   }

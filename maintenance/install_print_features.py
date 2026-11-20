@@ -6,6 +6,7 @@ import shutil
 import subprocess
 import re
 from patch_print_controls import feature_macros
+from home_lighting import home_panel
 from october_features import job, notification, popup
 from final_print_ui import status_layout
 
@@ -80,6 +81,8 @@ def install(home, screen, klipper, backup):
                            ('screen_panel.py', 'ks_includes/screen_panel.py'), ('screen.py', 'screen.py')]:
         path = screen / relative
         changes[path] = patch_ui(path.read_text(encoding='utf-8'), name)
+    panel = screen / "panels/main_menu.py"
+    changes[panel] = home_panel(panel.read_text(encoding="utf-8"))
     handler = screen / 'ks_includes/notification_handler.py'
     changes[handler] = notification(handler.read_text(encoding='utf-8'))
     changes[klipper / 'klippy/extras/probe_auto_recovery.py'] = (assets / 'probe_auto_recovery.py').read_text(encoding='utf-8')

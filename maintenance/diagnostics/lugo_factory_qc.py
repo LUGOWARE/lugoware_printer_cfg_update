@@ -142,7 +142,7 @@ class FactoryQC:
             h.script('Probe_Stow')
             h.toolhead.manual_move([None,None,20.],min(40.,h.toolhead.get_kinematics().max_z_velocity))
             h.toolhead.wait_moves()
-            h.script('SET_MULTI_PIN_MODE PIN=dual_hotend_heater MODE=0\nM104 S250\nM140 S60\nM106 S255\nSET_FAN_SPEED FAN=chamber_fan SPEED=1')
+            h.script('SET_MULTI_PIN_MODE PIN=dual_hotend_heater MODE=0\nM104 S250\nM140 S60\nM106 S255')
             self.stage_start=h.reactor.monotonic();self.test_start=self.stage_start;self.phase='docking'
             h.data['home_seconds']=round(self.stage_start-h.started,3)
             if not self.calibration and len(self.profile)==3:
@@ -224,7 +224,7 @@ class FactoryQC:
     def cleanup(self):
         if not self.armed:return
         h=self.h
-        for command in ('TURN_OFF_HEATERS','M107','SET_FAN_SPEED FAN=chamber_fan SPEED=0','Probe_Stow',
+        for command in ('TURN_OFF_HEATERS','M107','Probe_Stow',
                         'SET_MULTI_PIN_MODE PIN=dual_hotend_heater MODE=0',
                         'SET_VELOCITY_LIMIT VELOCITY=%s ACCEL=%s'%self.saved_limits):
             try:h.script(command)
