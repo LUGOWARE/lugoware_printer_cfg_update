@@ -9,7 +9,10 @@ import stat
 
 VARIANTS = ('standard', 'toolhead')
 SENSOR = 'temperature_toolhead_sensor toolhead_sensor'
-AUX = ('toolhead_temperature_test', 'heater_generic Toolhead')
+AUX = ('toolhead_auxiliary', 'heater_generic Toolhead')
+LEGACY_AUX_SENSOR = 'toolhead_temperature_test'
+TOOLHEAD_MODULES = ('toolhead_auxiliary.py', 'toolhead_temperature_test.py',
+                    'temperature_toolhead_sensor.py', 'detachable_heater_sensor.py')
 NOZZLE_PID = dict(control='pid', pid_kp='13.953', pid_ki='0.511', pid_kd='95.230')
 TOOLHEAD_PID = dict(control='pid', pid_kp='37.681', pid_ki='9.191', pid_kd='38.623')
 TOOLHEAD_TUNING = ('prime_temperature_margin', 'prime_timeout', 'park_nozzle_preheat_offset')
@@ -32,6 +35,16 @@ def section(text, name):
 def remove_section(text, name):
     match = section(text, name)
     return text[:match.start()] + text[match.end():] if match else text
+
+
+def migrate_auxiliary_section(text):
+    legacy = section(text, LEGACY_AUX_SENSOR)
+    if not legacy:
+        return text
+    if section(text, AUX[0]):
+        return remove_section(text, LEGACY_AUX_SENSOR)
+    return (text[:legacy.start()] + legacy[0].replace(
+        '[' + LEGACY_AUX_SENSOR + ']', '[' + AUX[0] + ']', 1) + text[legacy.end():])
 
 
 def nozzle_sensor_profile(text, variant):
@@ -183,9 +196,9 @@ def dock_wait_profile(text, patches, variant):
         for _, updated in edits:
             # Normalize older auxiliary macros before applying or reverting the profile.
             if name.startswith('PARK_TOOL_'):
-                for offset in (5, 40):
-                    legacy = updated.replace('printer.toolhead_temperature_test.park_nozzle_preheat_offset',
-                                             str(offset))
+                for legacy_offset in ('5', '40', 'printer.' + LEGACY_AUX_SENSOR + '.park_nozzle_preheat_offset'):
+                    legacy = updated.replace('printer.toolhead_auxiliary.park_nozzle_preheat_offset',
+                                             legacy_offset)
                     if legacy != updated:
                         block = block.replace(legacy, updated)
             elif name.startswith('DOCK_TOOL_'):
@@ -221,7 +234,7 @@ def plan(home, variant, assets, base_override=None):
         raise ValueError('Invalid variant')
     config = home / 'printer_data/config'
     header_path = config / 'printer.cfg'
-    header = header_path.read_text(encoding='utf-8')
+    header = migrate_auxiliary_section(header_path.read_text(encoding='utf-8'))
     base_path = config / 'printer_base.cfg'
     base = base_override if base_override is not None else base_path.read_text(encoding='utf-8')
     marker = home / '.local/share/lugoware/variant.json'
@@ -245,7 +258,7 @@ def plan(home, variant, assets, base_override=None):
             content = (assets / 'toolhead_auxiliary.cfg').read_text(encoding='utf-8')
         # Upgrade existing auxiliary configs as well as fresh installations.
         defaults = (assets / 'toolhead_auxiliary.cfg').read_text(encoding='utf-8')
-        content = apply_release_tuning(content, defaults)
+        content = apply_release_tuning(migrate_auxiliary_section(content), defaults)
         for name in ('gcode_macro TOOLHEAD_IDLE_STATE', 'delayed_gcode turn_off_toolhead'):
             content = remove_section(content, name).rstrip() + '\n\n' + section(defaults, name)[0]
         changes[auxiliary] = pid_profile(content, 'heater_generic Toolhead', TOOLHEAD_PID).encode()
@@ -259,7 +272,8 @@ def plan(home, variant, assets, base_override=None):
         header = '[include toolhead_auxiliary.cfg]\n' + header
     changes[header_path] = nozzle_header_profile(header, variant).encode()
     dock_patches = json.loads((assets / 'dock_wait_patches.json').read_text(encoding='utf-8'))
-    if 'TOOLHEAD_WAIT_FOR_PRIME TARGET={slicer_temp}' in base:
+    if ('TOOLHEAD_WAIT_FOR_PRIME TARGET={slicer_temp}' in base
+            or '.park_nozzle_preheat_offset' in base):
         base = dock_wait_profile(base, dock_patches, 'standard')
     base = base_profile(base, variant)
     if variant == 'toolhead':
@@ -276,7 +290,7 @@ def plan(home, variant, assets, base_override=None):
         ast.parse(new)
         changes[path] = new.encode()
     if variant == 'toolhead':
-        for name in ('toolhead_temperature_test.py', 'temperature_toolhead_sensor.py', 'detachable_heater_sensor.py'):
+        for name in TOOLHEAD_MODULES:
             data = (assets / name).read_bytes()
             ast.parse(data)
             changes[home / 'klipper/klippy/extras' / name] = data
@@ -291,7 +305,7 @@ def plan(home, variant, assets, base_override=None):
     if variant == 'toolhead':
         if '</body>' not in text:
             raise ValueError('Unsupported Mainsail index')
-        text = text.replace('</body>', '<script defer src="./lugoware-toolhead-temperature.js?v=1.2.14"></script></body>')
+        text = text.replace('</body>', '<script defer src="./lugoware-toolhead-temperature.js?v=1.2.30"></script></body>')
         changes[home / 'mainsail/lugoware-toolhead-temperature.js'] = (assets / 'lugoware-toolhead-temperature.js').read_bytes()
     changes[index] = text.encode()
     # Unused module files/auxiliary cfg remain for rollback, but no config loads
@@ -359,7 +373,7 @@ def preflight(home, variant, assets, screen_upgrade_pending=None):
     """Check package integrity and non-replaced UI before system mutations."""
     patches = json.loads((assets / 'ui_patches.json').read_text(encoding='utf-8'))
     json.loads((assets / 'translations.json').read_text(encoding='utf-8'))
-    for name in ('toolhead_temperature_test.py', 'temperature_toolhead_sensor.py', 'detachable_heater_sensor.py'):
+    for name in TOOLHEAD_MODULES:
         ast.parse((assets / name).read_bytes())
     for name in ('toolhead_auxiliary.cfg', 'lugoware-toolhead-temperature.js'):
         if not (assets / name).read_bytes():
@@ -368,7 +382,7 @@ def preflight(home, variant, assets, screen_upgrade_pending=None):
     previous = json.loads(marker.read_text())['variant'] if marker.exists() else None
     if previous is not None and previous not in VARIANTS:
         raise ValueError('Invalid stored hardware profile; inspect variant.json')
-    header = (home / 'printer_data/config/printer.cfg').read_text(encoding='utf-8')
+    header = migrate_auxiliary_section((home / 'printer_data/config/printer.cfg').read_text(encoding='utf-8'))
     experimental = bool(section(header, AUX[0]) or '[include toolhead_auxiliary.cfg]' in header)
     if variant == 'standard' and previous != 'toolhead' and not experimental:
         return
@@ -401,7 +415,7 @@ def preflight(home, variant, assets, screen_upgrade_pending=None):
 def capture(home, backup):
     """Save machine-specific experimental PID before the common header refresh."""
     cfg = home / 'printer_data/config'
-    header = (cfg / 'printer.cfg').read_text(encoding='utf-8')
+    header = migrate_auxiliary_section((cfg / 'printer.cfg').read_text(encoding='utf-8'))
     blocks = [section(header, name) for name in AUX]
     changes = {}
     if all(blocks):

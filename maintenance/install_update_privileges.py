@@ -39,7 +39,7 @@ def install(user):
     assets.mkdir(exist_ok=True)
     os.chown(assets, 0, 0)
     assets.chmod(0o755)
-    for name in ('ui_patches.json', 'dock_wait_patches.json', 'translations.json', 'toolhead_auxiliary.cfg', 'lugoware-toolhead-temperature.js', 'toolhead_temperature_test.py', 'temperature_toolhead_sensor.py', 'detachable_heater_sensor.py'):
+    for name in ('ui_patches.json', 'dock_wait_patches.json', 'translations.json', 'toolhead_auxiliary.cfg', 'lugoware-toolhead-temperature.js', 'toolhead_auxiliary.py', 'toolhead_temperature_test.py', 'temperature_toolhead_sensor.py', 'detachable_heater_sensor.py'):
         target = assets / name
         if target.is_symlink():
             raise PermissionError('Unexpected variant file symlink')

@@ -52,11 +52,11 @@
       const abort = new AbortController();
       const timeout = setTimeout(() => abort.abort(), 3000);
       try {
-        const response = await fetch('/printer/objects/query?toolhead_temperature_test',
+        const response = await fetch('/printer/objects/query?toolhead_auxiliary',
           {cache: 'no-store', signal: abort.signal});
         if (!response.ok) throw new Error('Sensor unavailable');
         const data = await response.json();
-        const status = data.result?.status?.toolhead_temperature_test;
+        const status = data.result?.status?.toolhead_auxiliary;
         const cell = target.querySelector('td.current');
         const label = cell.querySelector('span') || cell;
         const text = valueText(status);

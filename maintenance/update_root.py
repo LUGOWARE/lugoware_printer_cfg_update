@@ -193,7 +193,7 @@ def execute(args, channel, cfg):
         source = active_source()
         for name in WORKER_FILES:
             write_fixed(RUNTIME / name, (source / name).read_bytes())
-        for name in ('ui_patches.json', 'dock_wait_patches.json', 'translations.json', 'toolhead_auxiliary.cfg', 'lugoware-toolhead-temperature.js', 'toolhead_temperature_test.py', 'temperature_toolhead_sensor.py', 'detachable_heater_sensor.py'):
+        for name in ('ui_patches.json', 'dock_wait_patches.json', 'translations.json', 'toolhead_auxiliary.cfg', 'lugoware-toolhead-temperature.js', 'toolhead_auxiliary.py', 'toolhead_temperature_test.py', 'temperature_toolhead_sensor.py', 'detachable_heater_sensor.py'):
             write_fixed(RUNTIME / "toolhead_variant" / name, (source / "toolhead_variant" / name).read_bytes())
         # Deliberately do not update this policy, sudoers, shim or service units.
 

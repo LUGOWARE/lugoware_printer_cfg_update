@@ -6,7 +6,7 @@ class TemperatureToolheadSensor:
     def __init__(self, config):
         self.printer = config.get_printer()
         self.reactor = self.printer.get_reactor()
-        self.sensor = self.printer.load_object(config, 'toolhead_temperature_test')
+        self.sensor = self.printer.load_object(config, 'toolhead_auxiliary')
         self.runout_helper = RunoutHelper(config)
         self.printer.add_object('filament_switch_sensor toolhead_sensor', self)
         self.ready_time = None

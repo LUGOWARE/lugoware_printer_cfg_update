@@ -10,17 +10,17 @@
     }
   },
   "lugoware_system": {
-    "version": "1.2.29",
+    "version": "1.2.30",
     "date": "2026/11/20",
     "notes": {
       "ko": [
-        "툴헤드 예열 보조 버전의 프라임 시작 온도, 최대 대기 시간, 파킹 중 노즐 예열을 한 설정 파일에서 조정할 수 있습니다. 업데이트하면 배포판 기준값이 적용됩니다."
+        "툴헤드 예열 보조 설정의 항목 이름을 [toolhead_auxiliary]로 변경했습니다. 기존 설정 파일은 업데이트 시 자동으로 변환됩니다."
       ],
       "en": [
-        "The auxiliary toolhead heating variant now uses one configuration file for the prime temperature margin, maximum wait, and nozzle preheat during parking. Updates apply the release defaults."
+        "The auxiliary toolhead heating settings now use the [toolhead_auxiliary] section. Existing configuration files are migrated during the update."
       ],
       "zh_CN": [
-        "辅助工具头预热版本现可在同一个配置文件中调整预挤出温差、最长等待时间和停靠时的喷嘴预热。更新时会应用发布版本的默认值。"
+        "辅助工具头预热设置已改用 [toolhead_auxiliary] 配置段。更新时会自动迁移现有配置。"
       ]
     }
   }

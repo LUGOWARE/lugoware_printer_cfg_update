@@ -138,7 +138,7 @@ class VariantTests(unittest.TestCase):
     def test_release_tuning_replaces_only_managed_options(self):
         defaults = (ROOT/'maintenance/toolhead_variant/toolhead_auxiliary.cfg').read_text()
         installed = (
-            '[toolhead_temperature_test]\nsensor_pin: PA2\npullup_resistor: 5000\n'
+            '[toolhead_auxiliary]\nsensor_pin: PA2\npullup_resistor: 5000\n'
             'prime_temperature_margin = 18\nprime_timeout: 72\n'
             'park_nozzle_preheat_offset: 2\n\n[heater_generic Toolhead]\nmax_temp: 295\n'
         )
@@ -161,13 +161,38 @@ class VariantTests(unittest.TestCase):
                            for name, edits in patches.items())
         auxiliary = variant.dock_wait_profile(standard, patches, 'toolhead')
         self.assertEqual(auxiliary.count('TOOLHEAD_WAIT_FOR_PRIME TARGET={slicer_temp}\n'), 4)
-        self.assertEqual(auxiliary.count('printer.toolhead_temperature_test.park_nozzle_preheat_offset'), 4)
+        offset_ref = 'printer.toolhead_auxiliary.park_nozzle_preheat_offset'
+        old_ref = 'printer.toolhead_temperature_test.park_nozzle_preheat_offset'
+        self.assertEqual(auxiliary.count(offset_ref), 4)
+        previous_release = auxiliary.replace(offset_ref, old_ref)
+        self.assertEqual(variant.dock_wait_profile(previous_release, patches, 'toolhead'), auxiliary)
+        self.assertEqual(variant.dock_wait_profile(previous_release, patches, 'standard'), standard)
         for offset in (5, 40):
             legacy = auxiliary.replace('TARGET={slicer_temp}\n', 'TARGET={slicer_temp} TIMEOUT=60\n')
-            legacy = legacy.replace('printer.toolhead_temperature_test.park_nozzle_preheat_offset', str(offset))
+            legacy = legacy.replace(offset_ref, str(offset))
             self.assertEqual(variant.dock_wait_profile(legacy, patches, 'toolhead'), auxiliary)
             self.assertEqual(variant.dock_wait_profile(legacy, patches, 'standard'), standard)
         self.assertEqual(variant.dock_wait_profile(auxiliary, patches, 'standard'), standard)
+
+    def test_legacy_section_migrates_and_keeps_sensor_settings(self):
+        legacy = '[toolhead_temperature_test]\nsensor_pin: PA2\npullup_resistor: 5000\n\n'
+        new = '[toolhead_auxiliary]\nsensor_pin: PA2\npullup_resistor: 5000\n\n'
+        self.assertEqual(variant.migrate_auxiliary_section(legacy), new)
+        self.assertEqual(variant.migrate_auxiliary_section(new + legacy), new)
+        self.assertEqual(variant.migrate_auxiliary_section(legacy + new), new)
+
+    def test_legacy_embedded_config_is_captured_before_header_refresh(self):
+        with tempfile.TemporaryDirectory() as d:
+            home = Path(d)
+            cfg = home/'printer_data/config'
+            cfg.mkdir(parents=True)
+            legacy = ('[toolhead_temperature_test]\nsensor_pin: PA2\n\n'
+                      '[heater_generic Toolhead]\nheater_pin: PB7\n')
+            (cfg/'printer.cfg').write_text(legacy)
+            variant.capture(home, home/'backup')
+            self.assertEqual((cfg/'toolhead_auxiliary.cfg').read_text(),
+                             legacy.replace('[toolhead_temperature_test]', '[toolhead_auxiliary]'))
+            self.assertEqual(variant.selected(home), 'toolhead')
 
     def test_missing_macro_blocks(self):
         with self.assertRaises(ValueError):
