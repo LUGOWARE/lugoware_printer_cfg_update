@@ -94,6 +94,7 @@ class DetachableHeaterSensor:
         if fast.stop_wait():
             fast.dock_abort = True
             return
+        fast.dock_recovery.begin_hold(fast.slot)
         fast.phase = 'dock_sensor_hold'
         fast.critical = True
         fast.message = 'Toolhead sensor check failed; paused without movement'

@@ -10,17 +10,17 @@
     }
   },
   "lugoware_system": {
-    "version": "1.2.35",
+    "version": "1.2.36",
     "date": "2026/11/21",
     "notes": {
       "ko": [
-        "툴헤드 예열 보조 버전에서 파킹 중 노즐 예열 목표를 다음 소재의 목표 온도보다 25°C 높게 설정합니다."
+        "툴헤드 예열 보조 버전에서 도킹 확인 오류가 나면, 화면에서 툴이 거치된 상태를 확인한 뒤 같은 출력을 재개할 수 있습니다."
       ],
       "en": [
-        "The auxiliary toolhead heating profile sets the nozzle preheat target during parking to 25°C above the next material's target."
+        "With auxiliary toolhead heating, you can recover a paused print after a docking check fails by confirming the tool is parked on the printer screen."
       ],
       "zh_CN": [
-        "辅助工具头预热版本在停放工具头时，将喷嘴预热目标设为下一种材料目标温度加 25°C。"
+        "辅助工具头预热版本在对接检查失败后，可在打印机屏幕上确认工具头已归位，再继续当前打印。"
       ]
     }
   }

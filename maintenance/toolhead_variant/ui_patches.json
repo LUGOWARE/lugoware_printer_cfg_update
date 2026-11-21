@@ -79,12 +79,46 @@
     [
       "        # Wait for the executing macro stack to unwind before recovery moves.\n        with self.gcode.get_mutex():\n            if not self.requested or self.printer.is_shutdown():\n                return\n            while self.sd.work_timer is not None:\n                if not self.requested or self.printer.is_shutdown():\n                    return\n                self.reactor.pause(self.reactor.monotonic() + .01)\n            self.cleaning = True\n",
       "        # VirtualSD's error cleanup can need the G-code mutex before it clears\n        # work_timer. Wait without holding that mutex, then serialize motion.\n        while self.sd.work_timer is not None:\n            if not self.requested or self.printer.is_shutdown():\n                return\n            self.reactor.pause(self.reactor.monotonic() + .01)\n        with self.gcode.get_mutex():\n            if not self.requested or self.printer.is_shutdown():\n                return\n            self.cleaning = True\n"
+    ],
+    [
+      "import copy\n\n\nclass MeshCancelled",
+      "import copy\nfrom .lugo_dock_recovery import DockRecovery\n\n\nclass MeshCancelled"
+    ],
+    [
+      "        self.dock_abort = False\n        self.printer.lookup_object",
+      "        self.dock_abort = False\n        self.dock_recovery = DockRecovery(self)\n        self.printer.lookup_object"
+    ],
+    [
+      "            for line in commands:\n",
+      "            lines = iter(commands)\n            for line in lines:\n"
+    ],
+    [
+      "                if getattr(self, 'dock_abort', False) and not recovery:\n                    break",
+      "                if getattr(self, 'dock_abort', False) and not recovery:\n                    self.dock_recovery.capture_tail(self.command_depth, line, lines)\n                    break"
+    ],
+    [
+      "                    break\n                yield line\n",
+      "                    break\n                if command:\n                    self.dock_recovery.before_line(line.split(';', 1)[0].strip(), command[0], self.command_depth)\n                yield line\n"
+    ],
+    [
+      "            if self.command_depth == 0:\n                self.dock_abort = False",
+      "            if self.command_depth == 0:\n                self.dock_recovery.end_frame()\n                self.dock_abort = False"
+    ],
+    [
+      "'tool': self.slot, 'message': self.message}",
+      "'tool': self.slot, 'message': self.message,\n                'dock_recovery_ready': self.dock_recovery.available(),\n                'dock_recovery_id': self.dock_recovery.sequence}"
     ]
   ],
   "klipper/klippy/extras/lugo_tool_temperature.py": [
     [
       "            if self.overrides[tool] is not None:\n                cmd = self.replaced(cmd, 'TEMP', self.overrides[tool])\n        starting = self.start_tool is not None and not self.changing\n",
       "            if self.overrides[tool] is not None:\n                cmd = self.replaced(cmd, 'SLICER_TEMP', self.base[tool])\n                cmd = self.replaced(cmd, 'TEMP', self.overrides[tool])\n        starting = self.start_tool is not None and not self.changing\n"
+    ]
+  ],
+  "KlipperScreen/panels/job_status.py": [
+    [
+      "    def resume(self, widget):\n        self._screen._send_action(widget, \"printer.print.resume\", {})\n        self._screen.show_all()\n",
+      "    def resume(self, widget):\n        cancel = self._printer.get_stat(\"fast_cancel\") or {}\n        if cancel.get(\"phase\") == \"dock_sensor_hold\":\n            if not cancel.get(\"dock_recovery_ready\"):\n                self._screen.show_popup_message(_(\"Dock recovery is unavailable. Inspect the tool and cancel the held print.\"))\n                return\n            slot = cancel.get(\"tool\", -1) + 1\n            label = Gtk.Label(hexpand=True, vexpand=True, wrap=True)\n            label.set_text(_(\"툴 T%d가 거치대에 완전히 들어가 있고 헤드는 비어 있습니까? X0까지의 이동 경로도 확인해 주세요.\") % slot)\n            buttons = [\n                {\"name\": _(\"예\"), \"response\": Gtk.ResponseType.YES, \"style\": \"dialog-info\"},\n                {\"name\": _(\"아니요\"), \"response\": Gtk.ResponseType.NO, \"style\": \"dialog-error\"},\n            ]\n            self._gtk.Dialog(_(\"툴 거치 확인\"), buttons, label, self.resume_dock_confirm, cancel[\"dock_recovery_id\"])\n            return\n        self._screen._send_action(widget, \"printer.print.resume\", {})\n        self._screen.show_all()\n\n    def resume_dock_confirm(self, dialog, response_id, recovery_id):\n        self._gtk.remove_dialog(dialog)\n        if response_id == Gtk.ResponseType.YES:\n            self._screen._send_action(None, \"printer.gcode.script\",\n                                      {\"script\": f\"RESUME DOCK_CONFIRMED={recovery_id:d}\"})\n"
     ]
   ]
 }

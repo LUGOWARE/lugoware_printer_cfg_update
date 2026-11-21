@@ -13,7 +13,8 @@ SENSOR = 'temperature_toolhead_sensor toolhead_sensor'
 AUX = ('toolhead_auxiliary', 'heater_generic Toolhead')
 LEGACY_AUX_SENSOR = 'toolhead_temperature_test'
 TOOLHEAD_MODULES = ('toolhead_auxiliary.py', 'toolhead_temperature_test.py',
-                    'temperature_toolhead_sensor.py', 'detachable_heater_sensor.py')
+                    'temperature_toolhead_sensor.py', 'detachable_heater_sensor.py',
+                    'lugo_dock_recovery.py')
 NOZZLE_PID = dict(control='pid', pid_kp='13.953', pid_ki='0.511', pid_kd='95.230')
 TOOLHEAD_PID = dict(control='pid', pid_kp='37.681', pid_ki='9.191', pid_kd='38.623')
 TOOLHEAD_TUNING = ('prime_temperature_margin', 'prime_timeout', 'park_nozzle_preheat_offset')
@@ -21,13 +22,22 @@ LEGACY_NOZZLE_OFFSETS = ('nozzle_temperature_offset', 'nozzle_offset_threshold',
 RESUME_DOCK_HOLD = "{% if printer.fast_cancel.phase == 'dock_sensor_hold' %}"
 RESUME_PAUSED = '{% if printer.pause_resume.is_paused %}'
 RESUME_DOCK_MESSAGE = '{action_raise_error("Inspect the tool at the dock and cancel the held print before moving.")}'
+RESUME_DOCK_CONFIRM = (
+    '{% if params.DOCK_CONFIRMED|default(0)|int > 0 %}',
+    '  TOOLHEAD_RESUME_DOCK CONFIRMED={params.DOCK_CONFIRMED|int}',
+    '{% else %}',
+    '  {action_respond_info("Use the printer screen to confirm the tool is parked before resuming.")}',
+    '{% endif %}',
+)
 
 
 def remove_dock_retry(text):
     for slot in range(1, 5):
         for action in ('PARK', 'DOCK'):
             text = remove_section(text, 'gcode_macro _T%d_RETRY_%s_XY' % (slot, action))
-    guard = r'(?m)^([ \t]*)' + re.escape(RESUME_DOCK_HOLD) + r'\n[ \t]+' + re.escape(RESUME_DOCK_MESSAGE)
+    alternate = '|'.join(r'\n'.join(r'[ \t]+' + re.escape(l.lstrip()) for l in body)
+                         for body in ((RESUME_DOCK_MESSAGE,), RESUME_DOCK_CONFIRM))
+    guard = r'(?m)^([ \t]*)' + re.escape(RESUME_DOCK_HOLD) + r'\n(?:' + alternate + ')'
     guard += r'\n[ \t]*' + re.escape(RESUME_PAUSED.replace(' if ', ' elif '))
     return re.sub(guard, lambda m: m[1] + RESUME_PAUSED, text)
 
@@ -254,6 +264,23 @@ def patch_ui(text, edits, variant):
     for label in ('"미부착"', "'미부착'"):
         old = label + ' if dev == "heater_generic Toolhead" and temp is None'
         text = text.replace(old, "_('Not attached')" + ' if dev == "heater_generic Toolhead" and temp is None')
+    # Remove the exact display hooks from the retired experimental nozzle offset.
+    text = text.replace(
+        '    def nozzle_display_temperature(self, device):\n'
+        '        if device != "extruder":\n'
+        '            return None\n'
+        '        target = self._printer.get_stat(device, "target")\n'
+        '        physical = self._printer.get_stat(device, "physical_target")\n'
+        '        corrected = self._printer.get_stat(device, "compensated_temperature")\n'
+        '        if all(isinstance(v, (float, int)) for v in (target, physical, corrected)) and physical > target > 0:\n'
+        '            return corrected\n'
+        '        return None\n\n', '')
+    text = text.replace('        corrected = self.nozzle_display_temperature(dev)\n'
+                        '        if corrected is not None:\n'
+                        '            temp = corrected\n', '')
+    text = text.replace('                corrected = self.nozzle_display_temperature(device)\n'
+                        '                value = f"{(temp if corrected is None else corrected):.0f}°" if valid else "-"\n',
+                        '                value = f"{temp:.0f}°" if valid else "-"\n')
     for index, edit in enumerate(edits if variant == 'toolhead' else reversed(edits), 1):
         before, after = edit
         source, target = (before, after) if variant == 'toolhead' else (after, before)
@@ -363,9 +390,10 @@ def toolchange_profile(base, variant, assets):
     if not resume:
         raise ValueError('Missing RESUME macro for auxiliary dock safety')
     pattern = r'(?m)^([ \t]*)' + re.escape(RESUME_PAUSED) + r'$'
-    guarded, count = re.subn(pattern, lambda m: m[1] + RESUME_DOCK_HOLD + '\n'
-                             + m[1] + '  ' + RESUME_DOCK_MESSAGE + '\n'
-                             + m[1] + RESUME_PAUSED.replace(' if ', ' elif '), resume[0])
+    guarded, count = re.subn(pattern, lambda m: '\n'.join(
+        m[1] + line for line in (RESUME_DOCK_HOLD,
+                                 *('  ' + line for line in RESUME_DOCK_CONFIRM),
+                                 RESUME_PAUSED.replace(' if ', ' elif '))), resume[0])
     if count != 1:
         raise ValueError('Unsupported RESUME macro for auxiliary dock safety')
     return add_dock_retry(base[:resume.start()] + guarded + base[resume.end():], assets)
