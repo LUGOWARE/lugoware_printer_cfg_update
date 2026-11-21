@@ -10,20 +10,17 @@
     }
   },
   "lugoware_system": {
-    "version": "1.2.34",
+    "version": "1.2.35",
     "date": "2026/11/21",
     "notes": {
       "ko": [
-        "툴헤드 예열 보조 버전은 도킹 후 목표 온도에 5°C 이내로 도달하면 프라임을 시작합니다.",
-        "도킹 후 가열 전에 센서를 확인하고, 조건을 충족하면 최대 두 번 다시 장착을 시도합니다."
+        "툴헤드 예열 보조 버전에서 파킹 중 노즐 예열 목표를 다음 소재의 목표 온도보다 25°C 높게 설정합니다."
       ],
       "en": [
-        "The auxiliary toolhead heating profile starts priming when the toolhead is within 5°C below its target after docking.",
-        "The printer checks the sensor before heating and retries docking up to twice when the required conditions are met."
+        "The auxiliary toolhead heating profile sets the nozzle preheat target during parking to 25°C above the next material's target."
       ],
       "zh_CN": [
-        "辅助工具头预热版本在对接后温度达到目标温度减 5°C 时开始预挤出。",
-        "加热前检查传感器，满足条件时最多重新对接两次。"
+        "辅助工具头预热版本在停放工具头时，将喷嘴预热目标设为下一种材料目标温度加 25°C。"
       ]
     }
   }

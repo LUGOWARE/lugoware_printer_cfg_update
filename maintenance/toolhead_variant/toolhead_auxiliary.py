@@ -16,7 +16,7 @@ class ToolheadAuxiliary:
             'prime_temperature_margin', 5., minval=0., maxval=20.)
         self.prime_timeout = config.getfloat('prime_timeout', 40., above=0., maxval=180.)
         self.park_nozzle_preheat_offset = config.getfloat(
-            'park_nozzle_preheat_offset', 5., minval=0., maxval=40.)
+            'park_nozzle_preheat_offset', 25., minval=0., maxval=40.)
         if not all(map(isfinite, (self.prime_temperature_margin, self.prime_timeout,
                                  self.park_nozzle_preheat_offset))):
             raise config.error('Toolhead tuning values must be finite')

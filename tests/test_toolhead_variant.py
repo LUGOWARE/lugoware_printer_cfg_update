@@ -148,7 +148,7 @@ class VariantTests(unittest.TestCase):
             updated = variant.apply_release_tuning(original, defaults)
             self.assertEqual(variant.apply_release_tuning(updated, defaults), updated)
             for line in ('prime_temperature_margin: 5', 'prime_timeout: 40',
-                         'park_nozzle_preheat_offset: 5'):
+                         'park_nozzle_preheat_offset: 25'):
                 self.assertEqual(updated.count(line), 1)
         updated = variant.apply_release_tuning(installed, defaults)
         self.assertIn('pullup_resistor: 5000  # 센서 풀업 저항(Ω) / Sensor pull-up resistance (ohms)\n', updated)
