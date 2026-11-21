@@ -10,17 +10,20 @@
     }
   },
   "lugoware_system": {
-    "version": "1.2.33",
-    "date": "2026/11/20",
+    "version": "1.2.34",
+    "date": "2026/11/21",
     "notes": {
       "ko": [
-        "툴헤드 예열 보조 버전에서 도킹 후 프라임을 기다리는 최대 시간을 40초로 줄였습니다."
+        "툴헤드 예열 보조 버전은 도킹 후 목표 온도에 5°C 이내로 도달하면 프라임을 시작합니다.",
+        "도킹 후 가열 전에 센서를 확인하고, 조건을 충족하면 최대 두 번 다시 장착을 시도합니다."
       ],
       "en": [
-        "The auxiliary toolhead heating variant now waits up to 40 seconds after docking before priming."
+        "The auxiliary toolhead heating profile starts priming when the toolhead is within 5°C below its target after docking.",
+        "The printer checks the sensor before heating and retries docking up to twice when the required conditions are met."
       ],
       "zh_CN": [
-        "辅助工具头预热版本将对接后预挤出的最长等待时间缩短至 40 秒。"
+        "辅助工具头预热版本在对接后温度达到目标温度减 5°C 时开始预挤出。",
+        "加热前检查传感器，满足条件时最多重新对接两次。"
       ]
     }
   }

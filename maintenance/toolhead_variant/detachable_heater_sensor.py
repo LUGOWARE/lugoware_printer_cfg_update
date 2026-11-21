@@ -14,6 +14,7 @@ class DetachableHeaterSensor:
         self.manual_targets = None
         self.manual_parked = False
         source.gcode.register_command("TOOLHEAD_DOCK_HEAT", self.dock_heat)
+        source.gcode.register_command("TOOLHEAD_CHECK_DOCK_READY", self.check_dock_before_heat)
         source.gcode.register_command("TOOLHEAD_WAIT_FOR_PRIME", self.wait_for_prime,
                                            desc="Wait for auxiliary toolhead temperature before prime")
         source.gcode.register_command("TOOLHEAD_PARK_OFF", self.park_off)
@@ -62,6 +63,91 @@ class DetachableHeaterSensor:
         heater.set_temp = guarded_set_temp
         heater.alter_target = guarded_alter_target
         heater.get_status = status
+
+    def check_dock_before_heat(self, gcmd):
+        fast = self.printer.lookup_object('fast_cancel')
+        if fast.phase != 'docking' or fast.slot not in range(4):
+            raise gcmd.error('Dock sensor check requires an active dock slot')
+        if self.heater.target_temp or self.heater.last_pwm_value:
+            self.fault('Auxiliary heater still active during preheat dock check')
+            raise gcmd.error('Unsafe heater state before dock check')
+        reactor = self.source.reactor
+        for attempt in range(3):
+            if self.failed or self.printer.is_shutdown():
+                raise gcmd.error('Toolhead safety stop during dock check')
+            if fast.stop_wait():
+                fast.dock_abort = True
+                return
+            status = self.source.get_status(reactor.monotonic())
+            temp = status['temperature']
+            if status['state'] == 'connected' and temp is not None and self.minimum <= temp <= self.maximum and self.valid_samples >= 9:
+                return
+            if not attempt:
+                self.printer.lookup_object('extruder').get_heater().set_temp(0.)
+            if attempt == 2:
+                break
+            if fast.slot in range(4) and status['state'] == 'connected' and temp is not None and temp < self.minimum:
+                if not self.retry_at_dock(fast, status):
+                    break
+            else:
+                reactor.pause(reactor.monotonic() + 1.)
+        if fast.stop_wait():
+            fast.dock_abort = True
+            return
+        fast.phase = 'dock_sensor_hold'
+        fast.critical = True
+        fast.message = 'Toolhead sensor check failed; paused without movement'
+        try:
+            self.printer.lookup_object('pause_resume').cmd_PAUSE(gcmd)
+        finally:
+            # Let BASE_PAUSE save its position before stopping the dock macro.
+            fast.dock_abort = True
+        self.source.gcode.respond_info(fast.message + '; inspect the tool and cancel before moving')
+
+    def retry_at_dock(self, fast, status):
+        temperature = status['temperature']
+        slot = fast.slot
+        if (slot not in range(4) or status['state'] != 'connected' or temperature is None
+                or temperature >= self.minimum):
+            return False
+        reactor = self.source.reactor
+        now = reactor.monotonic()
+        head = self.printer.lookup_object('toolhead').get_status(now)
+        move = self.printer.lookup_object('gcode_move').get_status(now)
+        stats = self.printer.lookup_object('print_stats').get_status(now)
+        xyz = move['gcode_position']
+        dock = self.printer.lookup_object('gcode_macro _T%d_RETRY_DOCK_XY' % (slot + 1),
+                                          None)
+        if dock is None:
+            return False
+        path = dock.get_status(now)
+        if (stats['state'] != 'printing' or set(head['homed_axes']) != set('xyz')
+                or not move['absolute_coordinates'] or abs(xyz[0] - path['retry_x']) > .1
+                or abs(xyz[1] - path['retry_y']) > .1
+                or any(abs(float(head['position'][i]) - xyz[i]) > .1 for i in (0, 1))):
+            return False
+        nozzle = self.printer.lookup_object('extruder').get_heater()
+
+        def safe_to_move_with_sensor(expected):
+            return (not fast.stop_wait() and not self.failed and not self.printer.is_shutdown()
+                    and not nozzle.target_temp and not self.heater.target_temp
+                    and not self.heater.last_pwm_value
+                    and self.source.get_status(reactor.monotonic())['state'] == expected)
+
+        if not safe_to_move_with_sensor('connected'):
+            return False
+        gcode = self.source.gcode
+        gcode.run_script_from_command(
+            'G1 X%.1f F700\nG1 X%.1f F700\nG1 X%.1f F1800\nM400' % path['retry_exit'])
+        if not safe_to_move_with_sensor('connected'):
+            return False
+        gcode.run_script_from_command('_T%d_RETRY_PARK_XY' % (slot + 1))
+        reactor.pause(reactor.monotonic() + 1.)
+        if not safe_to_move_with_sensor('disconnected'):
+            return False
+        gcode.run_script_from_command('_T%d_RETRY_DOCK_XY' % (slot + 1))
+        reactor.pause(reactor.monotonic() + 1.)
+        return True
 
     def dock_heat(self, gcmd):
         self.reconnect = None

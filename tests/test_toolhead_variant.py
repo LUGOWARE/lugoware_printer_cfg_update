@@ -141,18 +141,21 @@ class VariantTests(unittest.TestCase):
         installed = (
             '[toolhead_auxiliary]\nsensor_pin: PA2\npullup_resistor: 5000\n'
             'prime_temperature_margin = 18\nprime_timeout: 60\n'
+            'nozzle_temperature_offset: 30\nnozzle_offset_threshold: 150\nnozzle_offset_max_temp: 320\n'
             'park_nozzle_preheat_offset: 2\n\n[heater_generic Toolhead]\nmax_temp: 295\n'
         )
         for original in (installed, installed.split('prime_temperature_margin')[0], defaults):
             updated = variant.apply_release_tuning(original, defaults)
             self.assertEqual(variant.apply_release_tuning(updated, defaults), updated)
-            for line in ('prime_temperature_margin: 15', 'prime_timeout: 40',
+            for line in ('prime_temperature_margin: 5', 'prime_timeout: 40',
                          'park_nozzle_preheat_offset: 5'):
                 self.assertEqual(updated.count(line), 1)
         updated = variant.apply_release_tuning(installed, defaults)
         self.assertIn('pullup_resistor: 5000  # 센서 풀업 저항(Ω) / Sensor pull-up resistance (ohms)\n', updated)
         self.assertIn('max_temp: 295\n', updated)
         self.assertNotIn('prime_timeout: 60', updated)
+        for key in variant.LEGACY_NOZZLE_OFFSETS:
+            self.assertNotIn(key, updated)
         self.assertIn('sync_manual_preheat: False', updated)
 
         for saved, expected in (('True', True), ('on', True), ('False', False)):
@@ -183,7 +186,7 @@ class VariantTests(unittest.TestCase):
         previous_release = auxiliary.replace(offset_ref, old_ref)
         self.assertEqual(variant.dock_wait_profile(previous_release, patches, 'toolhead'), auxiliary)
         self.assertEqual(variant.dock_wait_profile(previous_release, patches, 'standard'), standard)
-        for offset in (5, 40):
+        for offset in (5, 25, 40):
             legacy = auxiliary.replace('TARGET={slicer_temp}\n', 'TARGET={slicer_temp} TIMEOUT=60\n')
             legacy = legacy.replace(offset_ref, str(offset))
             self.assertEqual(variant.dock_wait_profile(legacy, patches, 'toolhead'), auxiliary)

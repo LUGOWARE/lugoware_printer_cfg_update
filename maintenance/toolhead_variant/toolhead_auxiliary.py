@@ -13,7 +13,7 @@ class ToolheadAuxiliary:
         self.heater_adapter = None
         self.sync_manual_preheat = config.getboolean('sync_manual_preheat', False)
         self.prime_temperature_margin = config.getfloat(
-            'prime_temperature_margin', 15., minval=0., maxval=20.)
+            'prime_temperature_margin', 5., minval=0., maxval=20.)
         self.prime_timeout = config.getfloat('prime_timeout', 40., above=0., maxval=180.)
         self.park_nozzle_preheat_offset = config.getfloat(
             'park_nozzle_preheat_offset', 5., minval=0., maxval=40.)

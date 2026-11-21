@@ -1,6 +1,7 @@
 """M5P opt-in auxiliary heater profile. Pure planning before transactional writes."""
 import argparse
 import ast
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -16,6 +17,84 @@ TOOLHEAD_MODULES = ('toolhead_auxiliary.py', 'toolhead_temperature_test.py',
 NOZZLE_PID = dict(control='pid', pid_kp='13.953', pid_ki='0.511', pid_kd='95.230')
 TOOLHEAD_PID = dict(control='pid', pid_kp='37.681', pid_ki='9.191', pid_kd='38.623')
 TOOLHEAD_TUNING = ('prime_temperature_margin', 'prime_timeout', 'park_nozzle_preheat_offset')
+LEGACY_NOZZLE_OFFSETS = ('nozzle_temperature_offset', 'nozzle_offset_threshold', 'nozzle_offset_max_temp')
+RESUME_DOCK_HOLD = "{% if printer.fast_cancel.phase == 'dock_sensor_hold' %}"
+RESUME_PAUSED = '{% if printer.pause_resume.is_paused %}'
+RESUME_DOCK_MESSAGE = '{action_raise_error("Inspect the tool at the dock and cancel the held print before moving.")}'
+
+
+def remove_dock_retry(text):
+    for slot in range(1, 5):
+        for action in ('PARK', 'DOCK'):
+            text = remove_section(text, 'gcode_macro _T%d_RETRY_%s_XY' % (slot, action))
+    guard = r'(?m)^([ \t]*)' + re.escape(RESUME_DOCK_HOLD) + r'\n[ \t]+' + re.escape(RESUME_DOCK_MESSAGE)
+    guard += r'\n[ \t]*' + re.escape(RESUME_PAUSED.replace(' if ', ' elif '))
+    return re.sub(guard, lambda m: m[1] + RESUME_PAUSED, text)
+
+
+def add_dock_retry(text, assets):
+    release = json.loads((assets / 'dock_retry_paths.json').read_text(encoding='utf-8'))
+    moves = []
+    for slot in range(4):
+        for action in ('DOCK', 'PARK'):
+            block = section(text, 'gcode_macro %s_TOOL_%d' % (action, slot))[0]
+            moves.extend(' '.join(line.split()) for line in block.splitlines()
+                         if re.match(r'^\s*G[01]\s', line))
+    signature = hashlib.sha256('\n'.join(moves).encode()).hexdigest()
+    delta = release['geometries'].get(signature)
+    if delta is None:
+        # Keep the sensor check and stationary hold for unrecognized motion paths.
+        return text
+    blocks = []
+    for slot, path in enumerate(release['paths'], 1):
+        for action in ('park', 'dock'):
+            commands = [re.sub(r'\bX(-?\d+(?:\.\d+)?)', lambda m: 'X%g' % (float(m[1]) + delta), line)
+                        for line in path[action]]
+            block = '[gcode_macro _T%d_RETRY_%s_XY]\n' % (slot, action.upper())
+            if action == 'dock':
+                x = float(re.findall(r'\bX(-?[\d.]+)', '\n'.join(commands))[-1])
+                y = float(re.findall(r'\bY(-?[\d.]+)', '\n'.join(commands))[-1])
+                block += ('variable_retry_x: %s\nvariable_retry_y: %s\nvariable_retry_exit: %r\n'
+                          % (x, y, (366. + delta, 361. + delta, 334.5 + delta)))
+            blocks.append(block + 'gcode:\n    ' + '\n    '.join(commands + ['M400']) + '\n')
+    return text.rstrip() + '\n\n' + '\n'.join(blocks)
+
+
+def dock_temperature_actions(text, enable):
+    # Match only the three auxiliary temperature stages, keeping standard phases reversible.
+    gate = '    TOOLHEAD_CHECK_DOCK_READY\n'
+    wait = '    # FAST_CANCEL_WAIT P={(h_d * 1000)|int}\n'
+    for slot in range(4):
+        m = section(text, 'gcode_macro DOCK_TOOL_%d' % slot)
+        block = m[0].replace(gate, '')
+        if enable:
+            block = block.replace('    {% set preheat_temp = normal_temp + 20 %}\n', '', 1)
+            block = block.replace('    # M104 S{preheat_temp}\n    # TEMPERATURE_WAIT SENSOR=extruder',
+                                  '    # TEMPERATURE_WAIT SENSOR=extruder', 1).replace(wait, '', 1)
+            block = block.replace('    # M104 S{preheat_temp}\n    TOOLHEAD_DOCK_HEAT',
+                                  gate + '    M104 S{preheat_temp}\n    TOOLHEAD_DOCK_HEAT')
+            block = block.replace('    {% set preheat_temp = normal_temp %}\n    # M104',
+                                  '    {% set preheat_temp = normal_temp %}\n    M104')
+            if block.count(gate) != 1:
+                raise ValueError('Missing safe preheat gate for DOCK_TOOL_%d' % slot)
+        else:
+            block = block.replace('    M104 S{preheat_temp}\n    TOOLHEAD_DOCK_HEAT TEMP={slicer_temp}',
+                                  '    # M104 S{preheat_temp}\n    TOOLHEAD_DOCK_HEAT TEMP={slicer_temp}')
+            block = block.replace('    {% set preheat_temp = normal_temp %}\n    M104',
+                                  '    {% set preheat_temp = normal_temp %}\n    # M104')
+            block = re.sub(r'(?m)^(    TOOLHEAD_DOCK_HEAT TEMP=\{slicer_temp\}\n)(?=    TOOLHEAD_WAIT_FOR_PRIME)',
+                           lambda match: match[1] + wait, block)
+            block = re.sub(r'(?m)^(    TOOLHEAD_DOCK_HEAT TEMP=\{slicer_temp\}\n)'
+                           r'    FAST_CANCEL_WAIT P=\{\(h_d \* 1000\)\|int\}\n'
+                           r'    #\s*TOOLHEAD_WAIT_FOR_PRIME TARGET=\{slicer_temp\}\n',
+                           lambda match: match[1] + wait + '    TOOLHEAD_WAIT_FOR_PRIME TARGET={slicer_temp}\n', block)
+            first = '    {% set slicer_temp = params.SLICER_TEMP|default(normal_temp)|int %}\n'
+            if first in block and '    {% set preheat_temp = normal_temp + 20 %}\n' not in block:
+                block = block.replace(first, first + '    {% set preheat_temp = normal_temp + 20 %}\n', 1)
+                block = re.sub(r'(?m)(^    \{% set is_175[^\n]*\n)\n*(    # TEMPERATURE_WAIT SENSOR=extruder)',
+                               r'\1\n    # M104 S{preheat_temp}\n\2', block, count=1)
+        text = text[:m.start()] + block + text[m.end():]
+    return text
 
 
 def selected(home):
@@ -196,7 +275,7 @@ def dock_wait_profile(text, patches, variant):
         for _, updated in edits:
             # Normalize older auxiliary macros before applying or reverting the profile.
             if name.startswith('PARK_TOOL_'):
-                for legacy_offset in ('5', '40', 'printer.' + LEGACY_AUX_SENSOR + '.park_nozzle_preheat_offset'):
+                for legacy_offset in ('5', '25', '40', 'printer.' + LEGACY_AUX_SENSOR + '.park_nozzle_preheat_offset'):
                     legacy = updated.replace('printer.toolhead_auxiliary.park_nozzle_preheat_offset',
                                              legacy_offset)
                     if legacy != updated:
@@ -220,6 +299,7 @@ def apply_release_tuning(content, defaults):
     if not installed or not release:
         raise ValueError('Missing toolhead sensor section')
     block = installed[0]
+    block = re.sub(r'(?mi)^[ \t]*(?:' + '|'.join(LEGACY_NOZZLE_OFFSETS) + r')[ \t]*[:=][^\n]*(?:\n|$)', '', block)
     options = []
     for option in ('sensor_pin', 'pullup_resistor', 'sync_manual_preheat', *TOOLHEAD_TUNING):
         pattern = re.compile(r'(?mi)^[ \t]*' + option +
@@ -269,6 +349,28 @@ def organize_printer_header(text):
     return header + eol * 2 + body[end:].lstrip('\r\n') + separator + saved
 
 
+def toolchange_profile(base, variant, assets):
+    dock_patches = json.loads((assets / 'dock_wait_patches.json').read_text(encoding='utf-8'))
+    if ('TOOLHEAD_WAIT_FOR_PRIME TARGET={slicer_temp}' in base
+            or '.park_nozzle_preheat_offset' in base):
+        base = dock_temperature_actions(remove_dock_retry(base), False)
+        base = dock_wait_profile(base, dock_patches, 'standard')
+    base = base_profile(base, variant)
+    if variant == 'standard':
+        return base
+    base = dock_temperature_actions(dock_wait_profile(base, dock_patches, 'toolhead'), True)
+    resume = section(base, 'gcode_macro RESUME')
+    if not resume:
+        raise ValueError('Missing RESUME macro for auxiliary dock safety')
+    pattern = r'(?m)^([ \t]*)' + re.escape(RESUME_PAUSED) + r'$'
+    guarded, count = re.subn(pattern, lambda m: m[1] + RESUME_DOCK_HOLD + '\n'
+                             + m[1] + '  ' + RESUME_DOCK_MESSAGE + '\n'
+                             + m[1] + RESUME_PAUSED.replace(' if ', ' elif '), resume[0])
+    if count != 1:
+        raise ValueError('Unsupported RESUME macro for auxiliary dock safety')
+    return add_dock_retry(base[:resume.start()] + guarded + base[resume.end():], assets)
+
+
 def plan(home, variant, assets, base_override=None):
     if variant not in VARIANTS:
         raise ValueError('Invalid variant')
@@ -314,14 +416,7 @@ def plan(home, variant, assets, base_override=None):
     if variant == 'toolhead':
         header = '[include toolhead_auxiliary.cfg]\n' + header
     changes[header_path] = organize_printer_header(nozzle_header_profile(header, variant)).encode()
-    dock_patches = json.loads((assets / 'dock_wait_patches.json').read_text(encoding='utf-8'))
-    if ('TOOLHEAD_WAIT_FOR_PRIME TARGET={slicer_temp}' in base
-            or '.park_nozzle_preheat_offset' in base):
-        base = dock_wait_profile(base, dock_patches, 'standard')
-    base = base_profile(base, variant)
-    if variant == 'toolhead':
-        base = dock_wait_profile(base, dock_patches, 'toolhead')
-    changes[base_path] = base.encode()
+    changes[base_path] = toolchange_profile(base, variant, assets).encode()
     patches = json.loads((assets / 'ui_patches.json').read_text(encoding='utf-8'))
     for rel, edits in patches.items():
         path = home / rel
@@ -416,6 +511,7 @@ def preflight(home, variant, assets, screen_upgrade_pending=None):
     """Check package integrity and non-replaced UI before system mutations."""
     patches = json.loads((assets / 'ui_patches.json').read_text(encoding='utf-8'))
     json.loads((assets / 'translations.json').read_text(encoding='utf-8'))
+    json.loads((assets / 'dock_retry_paths.json').read_text(encoding='utf-8'))
     for name in TOOLHEAD_MODULES:
         ast.parse((assets / name).read_bytes())
     for name in ('toolhead_auxiliary.cfg', 'lugoware-toolhead-temperature.js'):
