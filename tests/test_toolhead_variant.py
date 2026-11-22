@@ -28,6 +28,17 @@ def profile():
 
 
 class VariantTests(unittest.TestCase):
+    def test_prepare_extrusion_upgrade_changes_one_stock_move(self):
+        old = 'G1 E{10.0 * factor} F{8.0 * 60 / (3.141592653589793 * (dia / 2) ** 2)}'
+        cfg = ('[gcode_macro PREPARE_ACTION]\ngcode:\n    ' + old
+               + '\n[gcode_macro OTHER]\ngcode:\n    ' + old + '\n')
+        updated = variant.prepare_extrusion_distance(cfg)
+        self.assertEqual(updated.count('G1 E{20.0 * factor}'), 1)
+        self.assertTrue(updated.endswith('    ' + old + '\n'))
+        self.assertEqual(variant.prepare_extrusion_distance(updated), updated)
+        custom = cfg.replace('10.0 * factor', '17.5 * factor')
+        self.assertEqual(variant.prepare_extrusion_distance(custom), custom)
+
     def test_paused_tool_menu_remains_above_saved_screen_settings(self):
         menu = '[menu __print paused_tool_service]'
         marker = '#~# --- Do not edit below this line. This section is auto generated --- #~#'

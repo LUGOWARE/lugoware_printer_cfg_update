@@ -8,6 +8,8 @@ from pathlib import Path
 import re
 import stat
 import paused_tool_service_hooks as paused_tools
+from install_panels import TOOL_CARD_RUNTIME, runtime_payload
+from patch_print_controls import prepare_extrusion_distance
 
 VARIANTS = ('standard', 'toolhead')
 SENSOR = 'temperature_toolhead_sensor toolhead_sensor'
@@ -426,6 +428,9 @@ def plan_paused_tools(home, assets, base, variant, screen_override, changes):
         return base
     if available:
         base = paused_tools.configure(base, variant == 'toolhead')
+        runtime = assets.parent.parent / 'panels' / 'runtime'
+        for rel in TOOL_CARD_RUNTIME:
+            changes[home / 'KlipperScreen' / rel] = runtime_payload(runtime / rel)
         for rel, name in paused_tools.FILES.items():
             data = (assets.parent / 'paused_tool_service' / name).read_bytes()
             ast.parse(data)
@@ -461,7 +466,7 @@ def plan(home, variant, assets, base_override=None, screen_override=None):
         if organized != original_header:
             changes[header_path] = organized.encode()
         changes[marker] = json.dumps({'variant': variant}).encode()
-        new = add_dock_retry(paused_tools.strip_config(base), assets)
+        new = add_dock_retry(paused_tools.strip_config(prepare_extrusion_distance(base)), assets)
         new = plan_paused_tools(home, assets, new, variant, screen_override, changes)
         if new != base:
             changes[base_path] = new.encode()
@@ -491,11 +496,13 @@ def plan(home, variant, assets, base_override=None, screen_override=None):
     if variant == 'toolhead':
         header = '[include toolhead_auxiliary.cfg]\n' + header
     changes[header_path] = organize_printer_header(nozzle_header_profile(header, variant)).encode()
-    base = toolchange_profile(paused_tools.strip_config(base), variant, assets)
+    base = toolchange_profile(paused_tools.strip_config(prepare_extrusion_distance(base)), variant, assets)
     patches = json.loads((assets / 'ui_patches.json').read_text(encoding='utf-8'))
     for rel, edits in patches.items():
         path = home / rel
         old = path.read_text(encoding='utf-8')
+        if rel == 'KlipperScreen/panels/tool_prepare.py' and 'from ks_includes.lugo_tool_cards import ' in old:
+            continue  # Shared panel already queries current state before preparation motions.
         try:
             new = patch_ui(old, edits, variant)
         except ValueError as exc:

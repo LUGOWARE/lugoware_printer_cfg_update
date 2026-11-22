@@ -113,6 +113,19 @@ def feature_macros(text):
     return cancel_return_wait(end_print_autosave(config(_feature_macros(text))))
 
 
+def prepare_extrusion_distance(text):
+    section = re.search(r'(?ms)^\[gcode_macro PREPARE_ACTION\][^\n]*\n.*?(?=^\[|\Z)', text)
+    if not section:
+        return text
+    old = 'G1 E{10.0 * factor} F{8.0 * 60 / (3.141592653589793 * (dia / 2) ** 2)}'
+    move = re.compile(r'^([ \t]+)' + re.escape(old) + r'([ \t]*)$', re.M)
+    if len(move.findall(section[0])) != 1:
+        return text
+    new = old.replace('10.0 * factor', '20.0 * factor')
+    block = move.sub(lambda line: line[1] + new + line[2], section[0])
+    return text[:section.start()] + block + text[section.end():]
+
+
 def cancel_return_wait(text):
     section = re.search(r'(?ms)^\[gcode_macro _FAST_CANCEL_MOTION\][^\n]*\n.*?(?=^\[|\Z)', text)
     if section is None or 'FAST_CANCEL_WAIT_DETACH' in section[0]:

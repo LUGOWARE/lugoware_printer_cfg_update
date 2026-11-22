@@ -10,17 +10,20 @@
     }
   },
   "lugoware_system": {
-    "version": "1.2.43",
+    "version": "1.2.44",
     "date": "2026/11/22",
     "notes": {
       "ko": [
-        "일시정지 중 설정에서 T1~T4 툴을 가져와 필라멘트를 교체하거나 정비한 뒤 다시 거치할 수 있습니다. FLEX4 M·L·W 표준 및 툴헤드 보조 버전에 적용됩니다."
+        "준비 화면과 일시정지 중 툴 가져오기에 FLEX4 툴 그림과 장착 온도 표시를 추가했습니다. 준비 화면의 도킹·파킹·프라임은 툴 카드를 누르면 열립니다.",
+        "준비 화면의 빠른 압출과 느린 압출은 기존 속도로 한 번에 두 배 거리를 밀어냅니다."
       ],
       "en": [
-        "While paused, use Settings to fetch T1–T4 for a filament change or maintenance, then park it again. Available on FLEX4 M, L and W in both Standard and Auxiliary Toolhead versions."
+        "Added FLEX4 tool cards and mounted-tool temperatures to Prepare and paused tool servicing. Tap a tool in Prepare for Dock, Park and Prime.",
+        "Fast and slow extrusion in Prepare feed twice the previous distance in one continuous move at the same speed."
       ],
       "zh_CN": [
-        "打印暂停时，可在设置中取出 T1 至 T4 工具，更换耗材或维护后再放回。适用于 FLEX4 M、L、W 的标准版和工具头辅助加热版。"
+        "准备界面和暂停取工具界面新增 FLEX4 工具卡片及已安装工具的温度显示。在准备界面点击工具可进行对接、归位和引料。",
+        "准备界面的快速与慢速挤出保持原有速度，单次连续进料距离增加至原来的两倍。"
       ]
     }
   }

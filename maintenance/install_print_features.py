@@ -86,8 +86,25 @@ def patch_ui(source, name):
         source = variant_ui(source, dock_edits, 'toolhead')
     if had_paused_tools:
         source = add_subscription(source)
+    if name == "screen.py":
+        source = preparation_popup(source)
     compile(source, name, 'exec')
     return source
+
+
+def preparation_popup(source):
+    anchor = '    def show_popup_message(self, message, level=3, from_ws=False):\n'
+    marker = '            logging.info("Preparation status: %s", message)\n'
+    if marker in source:
+        return source
+    code = (
+        '        import re\n'
+        '        if (level == 1 and self._cur_panels and self._cur_panels[-1] == "tool_prepare"\n'
+        '                and re.fullmatch(r"(?:echo:\\s*|//\\s*)?(?:DOCKING|PARKING) T[1-4]\\.",'
+        ' str(message).strip())):\n'
+        + marker + '            return\n'
+    )
+    return once(source, anchor, anchor + code)
 
 
 def restart_mesh(source):

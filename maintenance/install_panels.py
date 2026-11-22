@@ -4,7 +4,17 @@ from pathlib import Path
 import shutil
 
 FILES = ('extrude.py', 'nozzle_temperature.py', 'tool_prepare.py', 'tool_temperature.py', 'fan.py', 'fine_tune.py', 'settings.py', 'network.py', 'console.py', 'system.py', 'move.py', 'move_advanced.py')
-RUNTIME = ('ks_includes/sdbus_nm.py', 'ks_includes/widgets/scroll.py')
+TOOL_CARD_RUNTIME = ('ks_includes/lugo_toolhead.png', 'ks_includes/lugo_tool_cards.py')
+RUNTIME = ('ks_includes/sdbus_nm.py', 'ks_includes/widgets/scroll.py', *TOOL_CARD_RUNTIME)
+
+
+def runtime_payload(source):
+    content = source.read_bytes()
+    if source.suffix == '.py':
+        compile(content, str(source), 'exec')
+    elif not content.startswith(b'\x89PNG\r\n\x1a\n'):
+        raise ValueError(f'Invalid PNG asset: {source}')
+    return content
 
 
 def install(source, target, backup, check=False):
@@ -21,7 +31,7 @@ def install(source, target, backup, check=False):
               for name in RUNTIME]
     # Validate runtime and panels together before touching the installed screen.
     for src, dest, saved in pairs:
-        compile(src.read_bytes(), str(src), 'exec')
+        runtime_payload(src)
         if dest.exists() and not dest.is_file():
             raise ValueError(f'Not a file: {dest}')
     if check:

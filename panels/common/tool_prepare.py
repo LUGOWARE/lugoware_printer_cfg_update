@@ -8,15 +8,14 @@ import unicodedata
 import gi
 
 gi.require_version("Gtk", "3.0")
-from gi.repository import GLib, Gtk
+from gi.repository import GLib, Gtk, Pango
 
 from ks_includes.screen_panel import ScreenPanel
 from ks_includes.lugo_layout import wrap_label
+from ks_includes.lugo_tool_cards import ToolCard, install_style, neutral
 
 
 class Panel(ScreenPanel):
-    _tool_provider = None
-
     def __init__(self, screen, title):
         super().__init__(screen, title or _('Prepare'))
         self.selected_tool = None
@@ -27,79 +26,56 @@ class Panel(ScreenPanel):
         self._requested_at = 0
         self._socket = None
         self.tool_buttons = {}
-        self.buttons = {}
         self._status = {}
         self._status_time = 0
         self._action_pending = False
+        self._action_query = None
         self._sent_action = None
         self._display_pending_tool = None
         self._reported_error = False
         self._confirm_dialog = None
-        self.content.get_style_context().add_class("lugo-prepare-panel")
-        if Panel._tool_provider is None:
-            provider = Gtk.CssProvider()
-            provider.load_from_data(b'.lugo-prepare-panel button:active { background-image: none; background-color: #424242; border-color: #424242; } \n                button.lugo-prepare-tool { border: 2px solid #505050; background-color: #252525;\n                    border-radius: .25em; background-image: none; box-shadow: none; }\n                button.lugo-prepare-tool:active, button.lugo-prepare-tool.lugo-selected {\n                    background-color: #424242; border-color: #424242; }\n                button.lugo-prepare-tool.lugo-selected label {\n                    color: #e2e2e2; font-weight: bold; }\n            ')
-            Gtk.StyleContext.add_provider_for_screen(
-                self.content.get_screen(), provider, Gtk.STYLE_PROVIDER_PRIORITY_USER + 1)
-            Panel._tool_provider = provider
+        self._popup_slot = None
+        install_style(self.content)
 
         layout = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
         layout.set_border_width(4)
-        row = Gtk.Grid(column_homogeneous=True, column_spacing=0, vexpand=False)
+        row = Gtk.Grid(column_homogeneous=True, column_spacing=5, vexpand=False)
+        image_height = max(54, min(192, round(self._gtk.height * .24), round(self._gtk.width * .4)))
         for tool in range(4):
-            button = self._gtk.Button()
-            label = Gtk.Label()
-            label.set_markup(f'<span size="x-large">T{tool + 1}</span>')
-            button.add(label)
-            button.set_vexpand(False)
-            button.get_style_context().add_class("horizontal_togglebuttons")
-            button.get_style_context().add_class("lugo-prepare-tool")
-            row.attach(self._readonly(button), tool, 0, 1, 1)
+            button = ToolCard(tool, image_height, show_status=False)
+            button.connect("clicked", self._show_tool_actions, tool)
+            row.attach(button, tool, 0, 1, 1)
             self.tool_buttons[tool] = button
         layout.pack_start(row, False, False, 0)
+        hint = Gtk.Label(label=_('Tap a tool to choose an action.'))
+        wrap_label(hint, 38)
+        hint.get_style_context().add_class("printing-status-label")
+        layout.pack_start(hint, False, False, 3)
 
         # Retained internally for diagnostics, omitted from the requested layout.
         for name in ("selected", "mount", "temperature"):
             label = Gtk.Label(xalign=0)
             wrap_label(label, 32)
             self.labels[name] = label
-        actions = Gtk.Grid(column_homogeneous=True, row_homogeneous=False,
-                           column_spacing=0, row_spacing=0, vexpand=True)
-        tool_actions = Gtk.Grid(column_homogeneous=True, row_homogeneous=True,
-                               column_spacing=0, row_spacing=0, vexpand=True)
-        for tool in range(4):
-            for line, (key, text, style, diameter) in enumerate((
-                ("dock", _('Dock'), "color1", None),
-                ("park", _('Park'), "color2", None),
-                ("prime", _('Prime'), "color3", None),
-            )):
-                button = self._gtk.Button(style=style)
-                label = Gtk.Label()
-                wrap_label(label, 7)
-                label.set_justify(Gtk.Justification.CENTER)
-                size = "x-large"
-                label.set_markup(f'<span size="{size}">{text}</span>')
-                button.add(label)
-                button.connect("clicked", self._action_clicked, key, tool, diameter)
-                self.buttons[(key, tool)] = button
-                tool_actions.attach(button, tool, line, 1, 1)
-        actions.attach(tool_actions, 0, 0, 4, 3)
-        self.nozzle_button = self._gtk.Button("extruder", "— / — ℃", "color1", scale=0.8)
-        actions.attach(self._readonly(self.nozzle_button), 0, 3, 2, 1)
-        temperature_button = self._gtk.Button("heat-up", _('Temperature'), "color2", scale=0.8)
+        actions = Gtk.Grid(column_homogeneous=True, row_homogeneous=True,
+                           column_spacing=5, row_spacing=5, vexpand=True)
+        self.nozzle_button = neutral(self._gtk.Button("extruder", "— / — ℃", scale=0.8))
+        actions.attach(self._readonly(self.nozzle_button), 0, 0, 2, 1)
+        temperature_button = neutral(self._gtk.Button("heat-up", _('Temperature'), scale=0.8))
         temperature_button.connect("clicked", self._open_nozzle_temperature)
-        actions.attach(temperature_button, 2, 3, 2, 1)
-        for col, diameter in ((0, 1.75), (2, 2.85)):
-            button = self._gtk.Button(label=_('{v0}mm Extrude').format(v0=diameter), style="color4")
-            # Same touch height for both filament diameters, independent of text length.
-            button.set_size_request(-1, max(64, round(self._gtk.font_size * 4)))
+        actions.attach(temperature_button, 2, 0, 2, 1)
+        korean = self._config.get_main_config().get('language', '').split('_', 1)[0] == 'ko'
+        fast = '빠른 압출' if korean else _('Fast Extrude')
+        slow = '느린 압출' if korean else _('Slow Extrude')
+        for col, diameter, label in ((0, 1.75, fast), (2, 2.85, slow)):
+            button = neutral(self._gtk.Button(label=label))
+            button.set_size_request(-1, max(42, round(self._gtk.font_size * 2.5)))
             button.connect("clicked", self._extrude_current, diameter)
-            actions.attach(button, col, 4, 2, 1)
-        motor = self._gtk.Button("motor-off", _('Motors Off'), "color2", scale=0.8,
-                                 position=Gtk.PositionType.TOP)
+            actions.attach(button, col, 1, 2, 1)
+        motor = neutral(self._gtk.Button("motor-off", _('Motors Off'), scale=0.8,
+                                         position=Gtk.PositionType.TOP))
         motor.connect("clicked", self._action_clicked, "motor_off", None, None)
-        self.buttons["motor_off"] = motor
-        actions.attach(motor, 0, 5, 4, 1)
+        actions.attach(motor, 0, 2, 4, 1)
         layout.pack_start(actions, True, True, 0)
         # Do not let the panel's natural height push the shared action bar
         # below the screen. Large fonts can scroll within the content area.
@@ -108,12 +84,80 @@ class Panel(ScreenPanel):
         viewport.set_hexpand(True)
         viewport.set_vexpand(True)
         viewport.add(layout)
-        self.content.add(viewport)
+        overlay = Gtk.Overlay()
+        overlay.add(viewport)
+        self._tool_popup = Gtk.EventBox()
+        self._tool_popup.set_no_show_all(True)
+        self._tool_popup.get_style_context().add_class("lugo-tool-scrim")
+        frame = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8,
+                        halign=Gtk.Align.CENTER, valign=Gtk.Align.CENTER)
+        frame.get_style_context().add_class("lugo-tool-popup")
+        frame.set_size_request(round(self._gtk.width * .84), -1)
+        header = Gtk.Box(spacing=8)
+        self._popup_title = Gtk.Label(xalign=0, hexpand=True)
+        header.pack_start(self._popup_title, True, True, 0)
+        self._close_tool = neutral(self._gtk.Button(label="×"))
+        self._close_tool.set_size_request(44, 42)
+        self._close_tool.set_hexpand(False)
+        self._close_tool.set_tooltip_text(_('Close'))
+        self._close_tool.connect("clicked", self._hide_tool_actions)
+        header.pack_end(self._close_tool, False, False, 0)
+        frame.pack_start(header, False, False, 0)
+        self._popup_status = Gtk.Label(xalign=.5, justify=Gtk.Justification.CENTER)
+        self._popup_status.set_size_request(-1, 52)
+        self._popup_status.set_line_wrap(True)
+        self._popup_status.set_line_wrap_mode(Pango.WrapMode.WORD_CHAR)
+        self._popup_status.set_max_width_chars(20)
+        frame.pack_start(self._popup_status, False, False, 0)
+        commands = Gtk.Grid(column_homogeneous=True, column_spacing=6)
+        for index, (action, label) in enumerate((("dock", _('Dock')), ("park", _('Park')), ("prime", _('Prime')))):
+            button = neutral(self._gtk.Button(label=label))
+            button.set_size_request(-1, 52)
+            button.connect("clicked", self._popup_action, action)
+            commands.attach(button, index, 0, 1, 1)
+        frame.pack_start(commands, False, False, 0)
+        self._tool_popup.add(frame)
+        frame.show_all()
+        overlay.add_overlay(self._tool_popup)
+        self.content.add(overlay)
         self._indicate_tool(None)
         self._unknown(_('Waiting for status'))
 
     def _open_nozzle_temperature(self, widget):
         self.menu_item_clicked(widget, {"panel": "nozzle_temperature"})
+
+    def _show_tool_actions(self, _widget, tool):
+        self._popup_slot = tool
+        self._popup_title.set_text(f"T{tool + 1}")
+        self._refresh_tool_cards()
+        self._tool_popup.show()
+        self._close_tool.grab_focus()
+
+    def _hide_tool_actions(self, *_args):
+        self._tool_popup.hide()
+        self._popup_slot = None
+
+    def _popup_action(self, widget, action):
+        tool = self._popup_slot
+        self._hide_tool_actions()
+        if tool is not None:
+            self._action_clicked(widget, action, tool, None)
+
+    def _refresh_tool_cards(self):
+        state = self._status.get("gcode_macro TOOL_STATE", {})
+        sensor = self._status.get("filament_switch_sensor toolhead_sensor", {}).get("filament_detected")
+        heater_name = "heater_generic Toolhead" if self._printer.get_config_section("heater_generic Toolhead") else "extruder"
+        heater = self._status.get(heater_name, {})
+        for slot, card in self.tool_buttons.items():
+            mounted = sensor is True and state.get("active_tool") == slot
+            moving = self._display_pending_tool == slot
+            text = _('Changing tools') if moving else _('Docked') if mounted else _('Parked') if sensor is not None else _('Unknown')
+            temperature = "—"
+            if mounted and heater.get("temperature") is not None:
+                temperature = f"{self._temperature(heater['temperature'], 0)} / {self._temperature(heater.get('target'), 0)} ℃"
+            card.update(text, mounted, temperature)
+            if slot == self._popup_slot:
+                self._popup_status.set_text(text if temperature == "—" else f"{text} · {temperature}")
 
     @staticmethod
     def _compact_message(message, columns=28):
@@ -158,14 +202,7 @@ class Panel(ScreenPanel):
 
     def _indicate_tool(self, tool):
         self.selected_tool = tool
-        for index, button in self.tool_buttons.items():
-            context = button.get_style_context()
-            if index == tool:
-                context.add_class("horizontal_togglebuttons_active")
-                context.add_class("lugo-selected")
-            else:
-                context.remove_class("horizontal_togglebuttons_active")
-                context.remove_class("lugo-selected")
+        self._refresh_tool_cards()
         self.labels["selected"].set_text(_('Active tool: T{v0}').format(v0=tool + 1) if tool is not None else _('Active tool: —'))
 
     def _update_indicator(self):
@@ -216,9 +253,65 @@ class Panel(ScreenPanel):
             return
         self._status = status
         self._status_time = time.monotonic()
-        self._action_clicked(None, action, tool, diameter, confirmed_from=source)
+        self._execute_action(None, action, tool, diameter, confirmed_from=source)
 
     def _action_clicked(self, widget, action, tool, diameter, confirmed_from=None):
+        # Never decide a motion using the previous periodic sensor sample.
+        if action == "motor_off":
+            return self._execute_action(widget, action, tool, diameter, confirmed_from)
+        if self._action_pending or self._action_query is not None:
+            self._notify(_('Action in progress.\nPlease wait.'))
+            return
+        socket = getattr(self._screen, "_ws", None)
+        if not self._active or not socket or not getattr(socket, "connected", False):
+            self._notify(_('Status unavailable.\nCheck the connection.'))
+            return
+        token = object()
+        self._action_query = token
+        try:
+            sent = socket.send_method("printer.objects.query", {"objects": {
+                "webhooks": ["state"], "print_stats": ["state"],
+                "idle_timeout": ["state"], "gcode_macro TOOL_STATE": None,
+                "gcode_macro PREPARE_STATE": None,
+                "filament_switch_sensor toolhead_sensor": None}},
+                self._action_status_received, token, self._generation, socket,
+                action, tool, diameter, confirmed_from)
+            if sent is False:
+                raise RuntimeError("Status query was not sent")
+            GLib.timeout_add_seconds(8, self._action_query_expired, token)
+        except Exception:
+            self._action_query = None
+            logging.exception("Preparation pre-action status query failed")
+            self._notify(_('Status query failed'))
+
+    def _action_query_expired(self, token):
+        if self._action_query is token:
+            self._action_query = None
+            if self._active:
+                self._notify(_('Response delayed; status unavailable'))
+        return False
+
+    def _action_status_received(self, response, method, params, token, generation,
+                                socket, action, tool, diameter, confirmed_from):
+        if self._action_query is not token:
+            return False
+        self._action_query = None
+        if (not self._active or generation != self._generation
+                or socket is not getattr(self._screen, "_ws", None)):
+            return False
+        status = response.get("result", {}).get("status", {})
+        if "error" in response or not status:
+            self._notify(_('Status query failed'))
+            return False
+        # Preserve server tool identity; a sensor disconnect is not a park.
+        self._status = status
+        self._status_time = time.monotonic()
+        self._update_indicator()
+        self._render_mount()
+        self._execute_action(None, action, tool, diameter, confirmed_from)
+        return False
+
+    def _execute_action(self, widget, action, tool, diameter, confirmed_from=None):
         if self._action_pending and action != "motor_off":
             self._notify(_('Action in progress.\nPlease wait.'))
             return
@@ -281,7 +374,7 @@ class Panel(ScreenPanel):
         if diameter not in (1.75, 2.85):
             raise ValueError("Unsupported filament diameter")
         ratio = (1.75 / diameter) ** 2
-        return 10 * ratio, 8 / (math.pi * (diameter / 2) ** 2)
+        return 20 * ratio, 8 / (math.pi * (diameter / 2) ** 2)
 
     @staticmethod
     def action_warning(status, action, tool, allow_cross=False):
@@ -335,10 +428,12 @@ class Panel(ScreenPanel):
         self._timer = GLib.timeout_add_seconds(2, self._poll)
 
     def deactivate(self):
+        self._hide_tool_actions()
         if self._confirm_dialog is not None:
             self._gtk.remove_dialog(self._confirm_dialog)
             self._confirm_dialog = None
         self._active = False
+        self._action_query = None
         self._generation += 1
         self._pending = False
         if self._timer is not None:
@@ -382,8 +477,13 @@ class Panel(ScreenPanel):
             ("gcode_macro TOOL_STATE", ["active_tool", "changing", "is_parked", "parked_tool"]),
             ("filament_switch_sensor toolhead_sensor", ["filament_detected", "enabled"]),
             ("extruder", ["temperature", "target"]),
+            ("heater_generic Toolhead", ["temperature", "target"]),
         ):
-            if name in ("print_stats", "idle_timeout") or self._printer.get_config_section(name):
+            temperature_presence = (
+                name == "filament_switch_sensor toolhead_sensor"
+                and self._printer.get_config_section("temperature_toolhead_sensor toolhead_sensor")
+            )
+            if name in ("print_stats", "idle_timeout") or self._printer.get_config_section(name) or temperature_presence:
                 objects[name] = fields
         self._pending = True
         self._requested_at = time.monotonic()
@@ -426,7 +526,7 @@ class Panel(ScreenPanel):
         return False
 
     @staticmethod
-    def _temperature(value):
+    def _temperature(value, digits=1):
         if isinstance(value, (int, float)) and not isinstance(value, bool) and math.isfinite(value):
-            return f"{value:.1f}"
+            return f"{value:.{digits}f}"
         return "—"
