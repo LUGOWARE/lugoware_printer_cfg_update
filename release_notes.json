@@ -10,20 +10,20 @@
     }
   },
   "lugoware_system": {
-    "version": "1.2.38",
+    "version": "1.2.39",
     "date": "2026/11/22",
     "notes": {
       "ko": [
-        "툴헤드 예열 보조 버전에서 도킹 후 예열 대기 시간을 최대 60초로 늘렸습니다.",
-        "출력 중 툴헤드 온도와 센서 이상을 감시합니다. 이동할 수 있는 상태라면 툴을 거치하고 X0 Y125에서 일시정지합니다."
+        "도킹 복구가 설치된 기기에서 출력 화면 업데이트가 멈추는 문제를 수정했습니다.",
+        "일시정지 중 툴 가져오기 기능은 이미 설치된 기기에서 업데이트 후에도 유지됩니다."
       ],
       "en": [
-        "The auxiliary toolhead preheat timeout after docking is now 60 seconds.",
-        "The printer monitors toolhead temperature and sensor faults during printing, then parks and waits at X0 Y125 when safe."
+        "Fixed print-screen updates on printers with dock recovery installed.",
+        "Updates now preserve the paused tool service on printers where it is already installed."
       ],
       "zh_CN": [
-        "辅助工具头对接后的最长预热等待时间延长至 60 秒。",
-        "打印时监测工具头温度和传感器异常，在确认可安全移动时归位并停在 X0 Y125。"
+        "修复已安装对接恢复功能的打印机在更新打印界面时卡住的问题。",
+        "更新后保留已安装的暂停取工具功能。"
       ]
     }
   }

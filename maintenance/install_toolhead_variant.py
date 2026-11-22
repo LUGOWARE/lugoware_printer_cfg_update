@@ -7,6 +7,7 @@ import os
 from pathlib import Path
 import re
 import stat
+import paused_tool_service_hooks as paused_tools
 
 VARIANTS = ('standard', 'toolhead')
 SENSOR = 'temperature_toolhead_sensor toolhead_sensor'
@@ -408,7 +409,7 @@ def toolchange_profile(base, variant, assets):
     return add_dock_retry(base[:resume.start()] + guarded + base[resume.end():], assets)
 
 
-def plan(home, variant, assets, base_override=None):
+def plan(home, variant, assets, base_override=None, screen_override=None):
     if variant not in VARIANTS:
         raise ValueError('Invalid variant')
     config = home / 'printer_data/config'
@@ -453,13 +454,20 @@ def plan(home, variant, assets, base_override=None):
     if variant == 'toolhead':
         header = '[include toolhead_auxiliary.cfg]\n' + header
     changes[header_path] = organize_printer_header(nozzle_header_profile(header, variant)).encode()
-    changes[base_path] = toolchange_profile(base, variant, assets).encode()
+    base = toolchange_profile(paused_tools.strip_config(base), variant, assets)
+    service_installed = paused_tools.installed(home)
+    service_active = service_installed and variant == 'toolhead' and base.count('variable_retry_x: 367.5\n') == 4
+    changes[base_path] = (paused_tools.configure(base) if service_active else base).encode()
+    if service_installed:
+        screen_path = config / 'KlipperScreen.conf'
+        screen = screen_override if screen_override is not None else screen_path.read_text(encoding='utf-8')
+        changes[screen_path] = paused_tools.menu(screen, service_active).encode()
     patches = json.loads((assets / 'ui_patches.json').read_text(encoding='utf-8'))
     for rel, edits in patches.items():
         path = home / rel
         old = path.read_text(encoding='utf-8')
         try:
-            new = patch_ui(old, edits, variant)
+            new = paused_tools.hooks(patch_ui(old, edits, variant), rel, service_active)
         except ValueError as exc:
             raise ValueError('%s: %s' % (rel, exc)) from exc
         ast.parse(new)

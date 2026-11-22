@@ -63,7 +63,8 @@ def apply_config(repo, home, backup):
         screen = screen_menu(screen_config(screen))
     validate_config(base, screen, home)
     changes = {'printer_base.cfg': base.encode(), 'KlipperScreen.conf': screen.encode()}
-    variant_changes = variant_plan(home, selected_variant(home), Path(__file__).with_name('toolhead_variant'), base_override=base)
+    variant_changes = variant_plan(home, selected_variant(home), Path(__file__).with_name('toolhead_variant'),
+                                   base_override=base, screen_override=screen)
     previous = {name: (target / name).read_bytes() for name in changes}
     for name, content in previous.items():
         (backup / name).write_bytes(content)

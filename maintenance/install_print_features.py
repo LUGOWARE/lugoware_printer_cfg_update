@@ -9,9 +9,21 @@ from patch_print_controls import feature_macros
 from home_lighting import home_panel
 from october_features import job, notification, popup
 from final_print_ui import once, status_layout
+from paused_tool_service_hooks import SUBSCRIPTION, add_subscription
 
 
 def patch_ui(source, name):
+    dock_edits = []
+    if name == 'job_status.py':
+        from install_toolhead_variant import patch_ui as variant_ui
+        path = Path(__file__).with_name('toolhead_variant') / 'ui_patches.json'
+        edits = json.loads(path.read_text(encoding='utf-8'))['KlipperScreen/panels/job_status.py']
+        dock_edits = [(old, new) for old, new in edits if new in source]
+        if dock_edits:
+            source = variant_ui(source, dock_edits, 'standard')
+    had_paused_tools = name == 'screen.py' and SUBSCRIPTION in source
+    if had_paused_tools:
+        source = source.replace(SUBSCRIPTION, '')
     if name == "job_status.py":
         source = status_layout(source, reverse=True)
     # Temporarily remove the additive subscription for legacy block matching.
@@ -70,6 +82,10 @@ def patch_ui(source, name):
     if name == "job_status.py":
         source = status_layout(source)
         source = restart_mesh(source)
+    if dock_edits:
+        source = variant_ui(source, dock_edits, 'toolhead')
+    if had_paused_tools:
+        source = add_subscription(source)
     compile(source, name, 'exec')
     return source
 
