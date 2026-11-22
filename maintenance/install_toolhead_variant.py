@@ -1,6 +1,7 @@
 """M5P opt-in auxiliary heater profile. Pure planning before transactional writes."""
 import argparse
 import ast
+import configparser
 import hashlib
 import json
 import os
@@ -450,29 +451,24 @@ def plan_paused_tools(home, assets, base, variant, screen_override, changes):
 
 
 def merge_auxiliary_release(content, defaults):
-    # The published file supplies macros and tuning. Hardware and local preference
-    # settings on an already-configured device are carried forward.
-    for name, options in (
-        (AUX[0], ('sensor_pin', 'pullup_resistor', 'sync_manual_preheat')),
-        ('heater_generic Toolhead', ('heater_pin', 'sensor_type', 'min_temp', 'max_temp',
-                                    'min_extrude_temp', 'max_power')),
-    ):
-        installed, release = section(content, name), section(defaults, name)
-        if not release:
-            raise ValueError('Missing section in released auxiliary config: ' + name)
-        if not installed:
-            continue
-        block = release[0]
-        for option in options:
-            pattern = re.compile(r'(?mi)^[ \t]*' + option + r'[ \t]*[:=][^\n]*\n')
-            old = pattern.search(installed[0])
-            if old:
-                block, count = pattern.subn(lambda match: old[0], block, count=1)
-                if not count:
-                    split = block.index('\n') + 1
-                    block = block[:split] + old[0] + block[split:]
-        defaults = defaults[:release.start()] + block + defaults[release.end():]
-    return defaults
+    # Start with the installed file so device-specific options and sections survive.
+    defaults = migrate_auxiliary_section(defaults.rstrip() + '\n')
+    content = migrate_auxiliary_section(content) if content is not None else defaults
+    content = apply_release_tuning(content, defaults)
+    heater = section(defaults, AUX[1])
+    if not heater or not section(content, AUX[1]):
+        raise ValueError('Missing auxiliary heater section')
+    config = configparser.RawConfigParser(inline_comment_prefixes=('#', ';'))
+    config.read_string(heater[0])
+    pid = {name: config.get(AUX[1], name) for name in TOOLHEAD_PID}
+    if pid['control'] != 'pid':
+        raise ValueError('Released auxiliary heater must use PID control')
+    for name in ('gcode_macro TOOLHEAD_IDLE_STATE', 'delayed_gcode turn_off_toolhead'):
+        macro = section(defaults, name)
+        if not macro:
+            raise ValueError('Missing auxiliary heater macro: ' + name)
+        content = remove_section(content, name).rstrip() + '\n\n' + macro[0]
+    return pid_profile(content, AUX[1], pid)
 
 
 def plan(home, variant, assets, base_override=None, screen_override=None, auxiliary_override=None):
@@ -501,26 +497,17 @@ def plan(home, variant, assets, base_override=None, screen_override=None, auxili
         return changes
     auxiliary = config / 'toolhead_auxiliary.cfg'
     if variant == 'toolhead':
-        # Retain wiring/limits, but apply the explicitly requested release PID.
-        blocks = [section(header, n) for n in AUX]
+        blocks = [section(header, name) for name in AUX]
         if all(blocks):
-            content = ''.join(m[0] for m in blocks)
+            content = ''.join(match[0] for match in blocks)
         elif auxiliary.exists():
-            content = auxiliary.read_text(encoding='utf-8')
+            content = auxiliary.read_text(encoding='utf-8-sig')
         else:
-            content = (assets / 'toolhead_auxiliary.cfg').read_text(encoding='utf-8')
-        content = migrate_auxiliary_section(content)
-        if auxiliary_override is not None:
-            defaults = migrate_auxiliary_section(auxiliary_override.rstrip() + '\n')
-            content = merge_auxiliary_release(content if all(blocks) or auxiliary.exists() else '', defaults)
-            content = apply_release_tuning(content, content)
-        else:
+            content = None
+        defaults = auxiliary_override
+        if defaults is None:
             defaults = (assets / 'toolhead_auxiliary.cfg').read_text(encoding='utf-8')
-            content = apply_release_tuning(content, defaults)
-            for name in ('gcode_macro TOOLHEAD_IDLE_STATE', 'delayed_gcode turn_off_toolhead'):
-                content = remove_section(content, name).rstrip() + '\n\n' + section(defaults, name)[0]
-            content = pid_profile(content, 'heater_generic Toolhead', TOOLHEAD_PID)
-        changes[auxiliary] = content.encode()
+        changes[auxiliary] = merge_auxiliary_release(content, defaults).encode()
     for name in AUX:
         header = remove_section(header, name)
     if variant == 'standard':

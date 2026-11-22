@@ -31,12 +31,19 @@ class VariantTests(unittest.TestCase):
     def test_auxiliary_release_uses_published_tuning_and_preserves_device_settings(self):
         defaults = (Path(variant.__file__).parent / 'toolhead_variant/toolhead_auxiliary.cfg').read_text(encoding='utf-8')
         installed = defaults.replace('sync_manual_preheat: False', 'sync_manual_preheat: True')
-        installed = installed.replace('max_temp: 300', 'max_temp: 285')
+        installed = installed.replace('max_temp: 300', 'max_temp: 285\npwm_cycle_time: 0.015')
+        installed += '\n[gcode_macro LOCAL_AUX_SERVICE]\ngcode: M400\n'
         released = defaults.replace('prime_timeout: 60', 'prime_timeout: 55')
         released = released.replace('pid_kp: 37.681', 'pid_kp: 37.690')
         result = variant.merge_auxiliary_release(installed, released)
         self.assertIn('sync_manual_preheat: True', result)
         self.assertIn('max_temp: 285', result)
+        self.assertIn('pwm_cycle_time: 0.015', result)
+        self.assertIn('[gcode_macro LOCAL_AUX_SERVICE]', result)
+        self.assertEqual(variant.merge_auxiliary_release(result, released), result)
+        fresh = variant.merge_auxiliary_release(None, released)
+        self.assertIn('prime_timeout: 55', fresh)
+        self.assertIn('max_temp: 300', fresh)
         self.assertIn('prime_timeout: 55', result)
         self.assertIn('pid_kp: 37.690', result)
 

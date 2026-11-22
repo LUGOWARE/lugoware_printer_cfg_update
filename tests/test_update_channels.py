@@ -85,6 +85,55 @@ class ChannelTests(unittest.TestCase):
                                  'published auxiliary config' if uses_auxiliary else None)
                 self.assertEqual('Auxiliary screen' in (target / 'KlipperScreen.conf').read_text(), uses_auxiliary)
 
+    def test_published_configs_preserve_motor_sensor_calibration_and_screen_settings(self):
+        for profile, version in (('standard', '2.4.20'), ('toolhead', '3.1.2')):
+            with self.subTest(profile=profile), tempfile.TemporaryDirectory() as d:
+                home, repo, backup, target = self.fixture(Path(d))
+                local_header = ('[include printer_base.cfg]\n[include printer_custom.cfg]\n'
+                                '[mcu]\nserial: /dev/serial/local-mcu\n'
+                                '#*# <---------------------- SAVE_CONFIG ---------------------->\n'
+                                '#*# [probe]\n#*# z_offset = 0.543\n'
+                                '#*# [bed_mesh default]\n#*# points = 0.1, 0.2\n')
+                original_base = ('[extruder]\nsensor_pin: PA1\n'
+                                 '[tmc5160 stepper_x]\nrun_current: 2.75\nhold_current: 1.20\n'
+                                 '[tmc2209 stepper_z]\nrun_current: 1.25\n')
+                incoming = ('[extruder]\nsensor_pin: PB5\n'
+                            '[tmc5160 stepper_x]\nrun_current: 1.1\n'
+                            '[tmc2209 stepper_z]\nrun_current: 0.8\nhold_current: 0.4\n')
+                custom = '# user macros\n[gcode_macro LOCAL_CUSTOM]\ngcode: M400\n'
+                saved_screen = '#~# --- Do not edit below this line. This section is auto generated --- #~#\n#~# [main]\n#~# font_size = large\n'
+                local_screen = ('[main]\nlanguage: ko\n[printer FLEX4]\nmoonraker_host: 127.0.0.1\n'
+                                '[menu __print macros]\nname: Local Macros\nenable: True\n' + saved_screen)
+                for name, content in (('printer.cfg', local_header), ('printer_custom.cfg', custom),
+                                      ('printer_base.cfg', original_base), ('KlipperScreen.conf', local_screen)):
+                    (target / name).write_bytes(content.encode())
+                base_name = 'printer_base_toolhead.cfg' if profile == 'toolhead' else 'printer_base.cfg'
+                screen_name = 'KlipperScreen_toolhead.conf' if profile == 'toolhead' else 'KlipperScreen.conf'
+                (repo / base_name).write_bytes(('# FLEX4_W_V' + version + '\n' + incoming).encode())
+                (repo / screen_name).write_bytes(
+                    b'[main]\nlanguage: en\n[menu __print macros]\nname: Default Macros\nenable: False\n'
+                    b'[menu __main changed]\nname: Release menu\n')
+                with patch.object(worker, 'selected_variant', return_value=profile), \
+                        patch.object(worker, 'variant_plan', return_value={}), \
+                        patch.object(worker, 'validate_config'), patch.object(worker, 'check_idle'), \
+                        patch.object(worker, 'activate_config'):
+                    worker.apply_config(repo, home, backup)
+                base = (target / 'printer_base.cfg').read_text()
+                screen = (target / 'KlipperScreen.conf').read_text()
+                self.assertTrue(base.startswith('# FLEX4_W_V' + version))
+                self.assertIn('sensor_pin: PA1', base)
+                self.assertIn('run_current: 2.75', base)
+                self.assertIn('hold_current: 1.20', base)
+                self.assertIn('run_current: 1.25', base)
+                self.assertNotIn('hold_current: 0.4', base)
+                self.assertEqual((target / 'printer.cfg').read_bytes(), local_header.encode())
+                self.assertEqual((target / 'printer_custom.cfg').read_bytes(), custom.encode())
+                self.assertIn('language: ko', screen)
+                self.assertIn('moonraker_host: 127.0.0.1', screen)
+                self.assertIn('name: Local Macros\nenable: True', screen)
+                self.assertIn('name: Release menu', screen)
+                self.assertTrue(screen.endswith(saved_screen))
+
     def test_validation_failure_does_not_touch_files(self):
         with tempfile.TemporaryDirectory() as d:
             home, repo, backup, target = self.fixture(Path(d))

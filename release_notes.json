@@ -10,20 +10,17 @@
     }
   },
   "lugoware_system": {
-    "version": "1.2.47",
+    "version": "1.2.48",
     "date": "2026/11/22",
     "notes": {
       "ko": [
-        "표준과 툴헤드 보조 버전에서 각자의 화면 설정을 불러옵니다.",
-        "툴헤드 보조 설정을 프린터 설정과 함께 업데이트할 수 있습니다."
+        "CFG 배포 도구로 업데이트할 때도 기존 기기의 보조 히터 설정을 유지합니다."
       ],
       "en": [
-        "Standard and auxiliary toolhead editions can load separate screen settings.",
-        "Auxiliary toolhead settings can be updated together with the printer configuration."
+        "Updates published with the CFG tool now retain existing device-specific auxiliary heater settings."
       ],
       "zh_CN": [
-        "标准版和工具头辅助加热版可分别加载各自的屏幕设置。",
-        "工具头辅助设置可随打印机配置一起更新。"
+        "通过 CFG 工具发布的更新会保留设备原有的辅助加热设置。"
       ]
     }
   }
