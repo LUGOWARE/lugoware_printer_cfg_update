@@ -367,37 +367,77 @@ def apply_release_tuning(content, defaults):
     return content[:installed.start()] + block.rstrip() + '\n' + ''.join(options) + '\n' + content[installed.end():]
 
 
-def header_block(text, name):
-    match = section(text, name)
-    if not match:
-        return None
-    lines = match[0].splitlines(keepends=True)
-    # Keep comments between sections in place, including the top-level heading.
-    while len(lines) > 1 and (not lines[-1].strip() or lines[-1].lstrip().startswith(('#', ';'))):
-        lines.pop()
-    return match.start(), ''.join(lines)
+HEADER_GROUP = (
+    'include mainsail.cfg', 'include timelapse.cfg', 'include printer_base.cfg',
+    'include printer_custom.cfg', 'lugo_tool_temperature', 'fast_cancel', 'print_sensor',
+    'exclude_tool_guard', 'include toolhead_auxiliary.cfg', 'lugo_recovery', 'lugo_preanalysis',
+)
+HEADER_ORDER = HEADER_GROUP + ('probe_auto_recovery', 'mcu CB2', 'mcu', 'virtual_sdcard',
+                               'screen_mesh', 'lugo_diagnostics')
+HEADER_SECTION = re.compile(r'(?m)^\[([^\]\r\n]+)\][^\r\n]*(?:\r?\n|$)')
+AUXILIARY_INCLUDE = 'include toolhead_auxiliary.cfg'
 
 
-def organize_printer_header(text):
+def header_layout(base, variant, template):
+    match = re.search(r'(?m)^#\s*FLEX4_([MLW])_V\d', base[:8192])
+    model = match[1] if match else None
+    if template is None:
+        return HEADER_ORDER, model
+    expected = tuple(name for name in HEADER_ORDER if variant == 'toolhead' or name != AUXILIARY_INCLUDE)
+    actual = tuple(m[1] for m in HEADER_SECTION.finditer(template))
+    diagnostics = section(template, 'lugo_diagnostics')
+    selected_model = re.search(r'(?m)^model:\s*([MLW])\s*$', diagnostics[0]) if diagnostics else None
+    if (len(actual) != len(expected) or set(actual) != set(expected)
+            or tuple(name for name in actual if name in HEADER_GROUP) != tuple(name for name in expected if name in HEADER_GROUP)
+            or model is not None and (selected_model is None or selected_model[1] != model)):
+        raise ValueError('Released printer.cfg layout does not match the selected model and variant')
+    return actual, model
+
+
+def organize_printer_header(text, order=HEADER_ORDER, model=None):
     marker = '#*# <---------------------- SAVE_CONFIG ---------------------->'
     body, separator, saved = text.partition(marker)
-    anchor = 'exclude_tool_guard'
-    if not section(body, anchor):
+    matches = list(HEADER_SECTION.finditer(body))
+    names = [match[1] for match in matches]
+    # Leave custom includes in their original precedence and do not merge repeated sections.
+    if any(name.startswith('include ') and name not in HEADER_GROUP for name in names):
+        return text
+    managed = [name for name in names if name in order]
+    if not managed or len(managed) != len(set(managed)):
         return text
     eol = '\r\n' if '\r\n' in body else '\n'
-    grouped = []
-    for name in ('include toolhead_auxiliary.cfg', 'lugo_recovery', 'lugo_preanalysis'):
-        found = header_block(body, name)
-        if found:
-            start, block = found
-            grouped.append(block.rstrip('\r\n'))
-            body = body[:start] + body[start + len(block):].lstrip('\r\n')
-    if not grouped:
-        return text
-    start, block = header_block(body, anchor)
-    end = start + len(block)
-    header = body[:end].rstrip('\r\n') + eol + eol.join(grouped)
-    return header + eol * 2 + body[end:].lstrip('\r\n') + separator + saved
+    blocks = {}
+    remaining = []
+    cursor = 0
+    for index, match in enumerate(matches):
+        name = match[1]
+        if name not in order:
+            continue
+        end = matches[index + 1].start() if index + 1 < len(matches) else len(body)
+        lines = body[match.start():end].splitlines(keepends=True)
+        while len(lines) > 1 and (not lines[-1].strip() or lines[-1].lstrip().startswith(('#', ';'))):
+            lines.pop()
+        block = ''.join(lines).rstrip('\r\n')
+        if name == 'lugo_diagnostics' and model is not None:
+            block, count = re.subn(r'(?m)^([ \t]*model[ \t]*[:=][ \t]*)[^\r\n]*',
+                                   lambda found: found[1] + model, block, count=1)
+            if not count:
+                block += eol + 'model: ' + model
+        blocks[name] = block
+        remaining.append(body[cursor:match.start()])
+        cursor = match.start() + sum(map(len, lines))
+    remaining.append(body[cursor:])
+    rest = ''.join(remaining)
+    first = HEADER_SECTION.search(rest)
+    intro, extra = (rest[:first.start()], rest[first.start():]) if first else (rest, '')
+    parts = [intro.strip('\r\n')] if intro.strip() else []
+    group = [blocks[name] for name in order if name in HEADER_GROUP and name in blocks]
+    if group:
+        parts.append(eol.join(group))
+    parts.extend(blocks[name] for name in order if name not in HEADER_GROUP and name in blocks)
+    if extra.strip():
+        parts.append(extra.rstrip('\r\n'))
+    return (eol * 2).join(parts) + (eol * 2 if separator else eol) + separator + saved
 
 
 def toolchange_profile(base, variant, assets):
@@ -471,7 +511,8 @@ def merge_auxiliary_release(content, defaults):
     return pid_profile(content, AUX[1], pid)
 
 
-def plan(home, variant, assets, base_override=None, screen_override=None, auxiliary_override=None):
+def plan(home, variant, assets, base_override=None, screen_override=None, auxiliary_override=None,
+         header_template=None):
     if variant not in VARIANTS:
         raise ValueError('Invalid variant')
     config = home / 'printer_data/config'
@@ -480,13 +521,14 @@ def plan(home, variant, assets, base_override=None, screen_override=None, auxili
     header = migrate_auxiliary_section(original_header)
     base_path = config / 'printer_base.cfg'
     base = base_override if base_override is not None else base_path.read_text(encoding='utf-8')
+    order, model = header_layout(base, variant, header_template)
     marker = home / '.local/share/lugoware/variant.json'
     previous = json.loads(marker.read_text())['variant'] if marker.exists() else None
     experimental = bool(section(header, AUX[0]) or section(base, SENSOR)
                         or '[include toolhead_auxiliary.cfg]' in header)
     changes = {}
     if variant == 'standard' and previous != 'toolhead' and not experimental:
-        organized = organize_printer_header(header)
+        organized = organize_printer_header(header, order, model)
         if organized != original_header:
             changes[header_path] = organized.encode()
         changes[marker] = json.dumps({'variant': variant}).encode()
@@ -516,7 +558,7 @@ def plan(home, variant, assets, base_override=None, screen_override=None, auxili
     header = re.sub(r'(?m)^\[include toolhead_auxiliary.cfg\]\s*\n', '', header)
     if variant == 'toolhead':
         header = '[include toolhead_auxiliary.cfg]\n' + header
-    changes[header_path] = organize_printer_header(nozzle_header_profile(header, variant)).encode()
+    changes[header_path] = organize_printer_header(nozzle_header_profile(header, variant), order, model).encode()
     base = toolchange_profile(paused_tools.strip_config(prepare_extrusion_distance(base)), variant, assets)
     patches = json.loads((assets / 'ui_patches.json').read_text(encoding='utf-8'))
     for rel, edits in patches.items():
@@ -611,7 +653,10 @@ def apply(home, variant, backup, base_override=None):
     auxiliary = None
     if variant == 'toolhead' and auxiliary_path.is_file():
         auxiliary = auxiliary_path.read_text(encoding='utf-8-sig')
-    changes = plan(home, variant, assets, base_override, auxiliary_override=auxiliary)
+    template_name = 'printer_header_toolhead.cfg' if variant == 'toolhead' else 'printer_header.cfg'
+    template_path = home / 'lugoware_config' / template_name
+    template = template_path.read_text(encoding='utf-8-sig') if template_path.is_file() else None
+    changes = plan(home, variant, assets, base_override, auxiliary_override=auxiliary, header_template=template)
     commit(changes, backup)
 
 

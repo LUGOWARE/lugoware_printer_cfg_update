@@ -67,7 +67,9 @@ class ChannelTests(unittest.TestCase):
             with self.subTest(variant=variant, available=available), tempfile.TemporaryDirectory() as d:
                 home, repo, backup, target = self.fixture(Path(d))
                 (repo / 'printer_base.cfg').write_text('# standard\n[printer]\nkinematics: cartesian\n')
+                (repo / 'printer_header.cfg').write_text('standard header')
                 if available:
+                    (repo / 'printer_header_toolhead.cfg').write_text('auxiliary header')
                     (repo / 'printer_base_toolhead.cfg').write_text('# auxiliary\n[printer]\nkinematics: cartesian\n')
                 if available:
                     (repo / 'KlipperScreen_toolhead.conf').write_text(
@@ -84,6 +86,9 @@ class ChannelTests(unittest.TestCase):
                 self.assertEqual(plan.call_args.kwargs['auxiliary_override'],
                                  'published auxiliary config' if uses_auxiliary else None)
                 self.assertEqual('Auxiliary screen' in (target / 'KlipperScreen.conf').read_text(), uses_auxiliary)
+                selected_header = ('standard header' if variant == 'standard' else
+                                   'auxiliary header' if available else None)
+                self.assertEqual(plan.call_args.kwargs['header_template'], selected_header)
 
     def test_published_configs_preserve_motor_sensor_calibration_and_screen_settings(self):
         for profile, version in (('standard', '2.4.20'), ('toolhead', '3.1.2')):

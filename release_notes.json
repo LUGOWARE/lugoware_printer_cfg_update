@@ -10,17 +10,17 @@
     }
   },
   "lugoware_system": {
-    "version": "1.2.48",
+    "version": "1.2.49",
     "date": "2026/11/22",
     "notes": {
       "ko": [
-        "CFG 배포 도구로 업데이트할 때도 기존 기기의 보조 히터 설정을 유지합니다."
+        "FLEX4 M·L·W의 printer.cfg를 모델과 버전에 맞춰 정리하고 기기별 설정을 유지합니다."
       ],
       "en": [
-        "Updates published with the CFG tool now retain existing device-specific auxiliary heater settings."
+        "Organized printer.cfg for each FLEX4 M, L and W edition while keeping device settings."
       ],
       "zh_CN": [
-        "通过 CFG 工具发布的更新会保留设备原有的辅助加热设置。"
+        "按 FLEX4 M、L、W 型号及版本整理 printer.cfg，并保留每台设备的设置。"
       ]
     }
   }

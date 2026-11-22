@@ -78,8 +78,12 @@ def apply_config(repo, home, backup):
         screen = screen_menu(screen_config(screen))
     validate_config(base, screen, home)
     changes = {'printer_base.cfg': base.encode(), 'KlipperScreen.conf': screen.encode()}
+    header_name = 'printer_header_toolhead.cfg' if variant == 'toolhead' else 'printer_header.cfg'
+    header_path = repo / header_name
+    header_template = header_path.read_text(encoding='utf-8-sig') if header_path.is_file() else None
     variant_changes = variant_plan(home, variant, Path(__file__).with_name('toolhead_variant'),
-                                   base_override=base, screen_override=screen, auxiliary_override=auxiliary_config)
+                                   base_override=base, screen_override=screen, auxiliary_override=auxiliary_config,
+                                   header_template=header_template)
     previous = {name: (target / name).read_bytes() for name in changes}
     for name, content in previous.items():
         (backup / name).write_bytes(content)
@@ -140,6 +144,9 @@ def sync_latest_config(home, branch, backup):
         for name in names:
             if name in available:
                 (snapshot / name).write_bytes(subprocess.check_output(git + ['show', commit + ':' + name]))
+    header_name = 'printer_header_toolhead.cfg' if selected_variant(home) == 'toolhead' else 'printer_header.cfg'
+    if (repo / header_name).is_file():
+        (snapshot / header_name).write_bytes(subprocess.check_output(git + ['show', commit + ':' + header_name]))
     print('Applying latest model config: ' + branch + ' ' + commit, flush=True)
     apply_config(snapshot, home, backup)
     print('System and model config applied: ' + commit, flush=True)

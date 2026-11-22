@@ -262,6 +262,37 @@ class VariantTests(unittest.TestCase):
         standard = head.replace('[include toolhead_auxiliary.cfg]\n', '')
         self.assertNotIn('toolhead_auxiliary.cfg', variant.organize_printer_header(standard))
 
+    def test_header_layout_orders_model_and_keeps_device_blocks(self):
+        saved = '#*# <---------------------- SAVE_CONFIG ---------------------->\r\n#*# z_offset = 0.123\r\n'
+        names = [name for name in variant.HEADER_ORDER if name != variant.AUXILIARY_INCLUDE]
+        for profile in ('standard', 'toolhead'):
+            order = variant.HEADER_ORDER if profile == 'toolhead' else names
+            for model in 'MLW':
+                with self.subTest(profile=profile, model=model):
+                    template = '\n'.join(f'[{name}]' for name in order) + f'\nmodel: {model}\n'
+                    preferred, model_code = variant.header_layout(f'# FLEX4_{model}_V3.5.1\n', profile, template)
+                    config = {
+                        'mcu': 'canbus_uuid: aabbcc\nrestart_method: command',
+                        'virtual_sdcard': 'path: /custom/gcodes',
+                        'screen_mesh': 'path: /custom/mesh.json',
+                        'probe_auto_recovery': 'attempts: 3',
+                        'lugo_diagnostics': 'model: X\nxy_speed: 123\nz_speed: 4',
+                    }
+                    body = '\n\n'.join(f'[{name}]\n{config.get(name, "")}' for name in reversed(order))
+                    organized = variant.organize_printer_header(body + '\n\n' + saved, preferred, model_code)
+                    resolved = [name[1] for name in variant.HEADER_SECTION.finditer(organized)]
+                    self.assertEqual(resolved, list(order))
+                    self.assertIn(f'model: {model}\nxy_speed: 123\nz_speed: 4', organized)
+                    self.assertIn('canbus_uuid: aabbcc\nrestart_method: command', organized)
+                    self.assertIn('attempts: 3', organized)
+                    self.assertIn('path: /custom/gcodes', organized)
+                    self.assertIn('path: /custom/mesh.json', organized)
+                    self.assertTrue(organized.endswith(saved))
+                    self.assertEqual(variant.organize_printer_header(organized, preferred, model_code), organized)
+                    other_model = next(code for code in 'MLW' if code != model)
+                    with self.assertRaisesRegex(ValueError, 'selected model'):
+                        variant.header_layout(f'# FLEX4_{other_model}_V3.5.1\n', profile, template)
+
     def test_legacy_embedded_config_is_captured_before_header_refresh(self):
         with tempfile.TemporaryDirectory() as d:
             home = Path(d)
