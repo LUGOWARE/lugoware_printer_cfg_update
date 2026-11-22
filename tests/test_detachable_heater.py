@@ -58,7 +58,7 @@ class Tests(unittest.TestCase):
  def test_print_finished(self):
   self.print_state='printing';self.detach();self.print_state='complete';self.reconnect();self.assertEqual(self.h.target_temp,0)
  def test_pause_no_resume(self):
-  self.print_state='printing';self.detach();self.callbacks[0](self.now);self.assertEqual(self.commands,['PAUSE']);self.print_state='paused';self.reconnect();self.assertEqual(self.h.target_temp,200);self.assertEqual(self.commands,['PAUSE'])
+  self.print_state='printing';self.detach();self.callbacks[0](self.now);self.assertEqual(self.commands,['TOOLHEAD_FAULT_PAUSE']);self.print_state='paused';self.reconnect();self.assertEqual(self.h.target_temp,0);self.assertEqual(self.commands,['TOOLHEAD_FAULT_PAUSE'])
  def test_short(self):
   self.a.sample(self.now,'short_circuit',None);self.assertTrue(self.shutdown);self.assertEqual(self.h.target_temp,0)
  def test_hot_idle(self):

@@ -10,20 +10,20 @@
     }
   },
   "lugoware_system": {
-    "version": "1.2.37",
+    "version": "1.2.38",
     "date": "2026/11/22",
     "notes": {
       "ko": [
-        "툴헤드 예열 보조 버전은 툴체인지 중 센서 연결이 잠깐 끊겨도 다시 연결되면 최대 두 번 재도킹을 시도합니다.",
-        "재시도가 실패하거나 프라임이 중간에 끊기면 출력을 일시정지하고, 툴 상태가 확인되면 거치합니다."
+        "툴헤드 예열 보조 버전에서 도킹 후 예열 대기 시간을 최대 60초로 늘렸습니다.",
+        "출력 중 툴헤드 온도와 센서 이상을 감시합니다. 이동할 수 있는 상태라면 툴을 거치하고 X0 Y125에서 일시정지합니다."
       ],
       "en": [
-        "Auxiliary toolhead heating can retry docking up to twice if the sensor reconnects during a tool change.",
-        "The printer pauses after a failed recovery or incomplete prime and parks the tool when its state can be verified."
+        "The auxiliary toolhead preheat timeout after docking is now 60 seconds.",
+        "The printer monitors toolhead temperature and sensor faults during printing, then parks and waits at X0 Y125 when safe."
       ],
       "zh_CN": [
-        "辅助工具头预热版本在换头期间检测到传感器恢复连接后，最多重新对接两次。",
-        "恢复失败或预挤出未完成时，打印将暂停；确认工具头状态后可将其归位。"
+        "辅助工具头对接后的最长预热等待时间延长至 60 秒。",
+        "打印时监测工具头温度和传感器异常，在确认可安全移动时归位并停在 X0 Y125。"
       ]
     }
   }

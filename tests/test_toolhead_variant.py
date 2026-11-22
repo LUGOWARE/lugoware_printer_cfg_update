@@ -140,20 +140,20 @@ class VariantTests(unittest.TestCase):
         defaults = (ROOT/'maintenance/toolhead_variant/toolhead_auxiliary.cfg').read_text(encoding='utf-8')
         installed = (
             '[toolhead_auxiliary]\nsensor_pin: PA2\npullup_resistor: 5000\n'
-            'prime_temperature_margin = 18\nprime_timeout: 60\n'
+            'prime_temperature_margin = 18\nprime_timeout: 40\n'
             'nozzle_temperature_offset: 30\nnozzle_offset_threshold: 150\nnozzle_offset_max_temp: 320\n'
             'park_nozzle_preheat_offset: 2\n\n[heater_generic Toolhead]\nmax_temp: 295\n'
         )
         for original in (installed, installed.split('prime_temperature_margin')[0], defaults):
             updated = variant.apply_release_tuning(original, defaults)
             self.assertEqual(variant.apply_release_tuning(updated, defaults), updated)
-            for line in ('prime_temperature_margin: 5', 'prime_timeout: 40',
+            for line in ('prime_temperature_margin: 5', 'prime_timeout: 60',
                          'park_nozzle_preheat_offset: 25'):
                 self.assertEqual(updated.count(line), 1)
         updated = variant.apply_release_tuning(installed, defaults)
         self.assertIn('pullup_resistor: 5000  # 센서 풀업 저항(Ω) / Sensor pull-up resistance (ohms)\n', updated)
         self.assertIn('max_temp: 295\n', updated)
-        self.assertNotIn('prime_timeout: 60', updated)
+        self.assertNotIn('prime_timeout: 40', updated)
         for key in variant.LEGACY_NOZZLE_OFFSETS:
             self.assertNotIn(key, updated)
         self.assertIn('sync_manual_preheat: False', updated)
@@ -169,7 +169,7 @@ class VariantTests(unittest.TestCase):
             self.assertIs(sensor.getboolean('sync_manual_preheat'), expected)
             self.assertEqual(sensor['sensor_pin'], 'PA6')
             self.assertEqual(sensor.getint('pullup_resistor'), 5000)
-            self.assertEqual(sensor.getint('prime_timeout'), 40)
+            self.assertEqual(sensor.getint('prime_timeout'), 60)
             self.assertIn(f'sync_manual_preheat: {saved}  # 대기 중', updated)
 
     def test_legacy_and_cfg_toolchange_macros_round_trip(self):

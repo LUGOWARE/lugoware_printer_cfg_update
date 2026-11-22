@@ -27,6 +27,7 @@ class DockLinkRecoveryTests(unittest.TestCase):
         a.wait_dock_link = Mock(return_value=True)
         a.park_recovery_tool = Mock(return_value=True)
         a.hold_dock = Mock()
+        a.fault_wait_position = Mock()
 
     def pause(self, deadline):
         self.time = deadline
@@ -44,6 +45,7 @@ class DockLinkRecoveryTests(unittest.TestCase):
         self.assertEqual(self.trace, ['_T2_RETRY_DOCK_XY\nM400'] * 2)
         self.assertEqual(self.time, 12.)
         self.assertEqual(self.adapter.park_recovery_tool.call_count, 3)
+        self.adapter.fault_wait_position.assert_called_once_with(self.fast)
         self.adapter.hold_dock.assert_called_once()
 
     def test_no_link_means_no_move(self):
@@ -51,6 +53,7 @@ class DockLinkRecoveryTests(unittest.TestCase):
         self.assertFalse(self.recover())
         self.adapter.wait_dock_link.assert_called_once_with(self.fast, 'connected', 15.)
         self.adapter.park_recovery_tool.assert_not_called()
+        self.adapter.fault_wait_position.assert_not_called()
         self.assertEqual(self.trace, [])
 
     def test_incomplete_prime_can_park_without_replaying(self):
