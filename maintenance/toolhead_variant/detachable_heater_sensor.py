@@ -157,7 +157,7 @@ class DetachableHeaterSensor:
         move = self.printer.lookup_object('gcode_move').get_status(now)
         stats = self.printer.lookup_object('print_stats').get_status(now)
         xyz = move['gcode_position']
-        dock = self.printer.lookup_object('gcode_macro _T%d_RETRY_DOCK_XY' % (slot + 1),
+        dock = self.printer.lookup_object('gcode_macro _TOOL_RETRY_DOCK_XY_T%d' % (slot + 1),
                                           None)
         if dock is None:
             return False
@@ -182,11 +182,11 @@ class DetachableHeaterSensor:
             'G1 X%.1f F700\nG1 X%.1f F700\nG1 X%.1f F1800\nM400' % path['retry_exit'])
         if not safe_to_move_with_sensor('connected'):
             return False
-        gcode.run_script_from_command('_T%d_RETRY_PARK_XY' % (slot + 1))
+        gcode.run_script_from_command('_TOOL_RETRY_PARK_XY_T%d' % (slot + 1))
         reactor.pause(reactor.monotonic() + 1.)
         if not safe_to_move_with_sensor('disconnected'):
             return False
-        gcode.run_script_from_command('_T%d_RETRY_DOCK_XY' % (slot + 1))
+        gcode.run_script_from_command('_TOOL_RETRY_DOCK_XY_T%d' % (slot + 1))
         reactor.pause(reactor.monotonic() + 1.)
         return True
 
@@ -275,7 +275,7 @@ class DetachableHeaterSensor:
         slot = fast.slot
         if slot not in range(4):
             return False
-        dock = self.printer.lookup_object('gcode_macro _T%d_RETRY_DOCK_XY' % (slot + 1), None)
+        dock = self.printer.lookup_object('gcode_macro _TOOL_RETRY_DOCK_XY_T%d' % (slot + 1), None)
         if dock is None:
             return False
         reactor = self.source.reactor
@@ -303,7 +303,7 @@ class DetachableHeaterSensor:
         run = self.source.gcode.run_script_from_command
         retreat = () if at_exit else ('G1 X%g F700' % exit_x, 'G1 X%g F700' % release_x,
                                       'G1 X%g F1800' % clear_x)
-        for command in (*retreat, '_T%d_RETRY_PARK_XY' % (slot + 1)):
+        for command in (*retreat, '_TOOL_RETRY_PARK_XY_T%d' % (slot + 1)):
             if not self.wait_dock_link(fast, 'connected', reactor.monotonic()):
                 return False
             run(command + '\nM400')
@@ -370,7 +370,7 @@ class DetachableHeaterSensor:
             if self.wait_dock_link(fast, 'disconnected', reactor.monotonic()):
                 self.dock_retries += 1
                 self.source.gcode.respond_info('Toolhead redock attempt %d/2' % self.dock_retries)
-                self.source.gcode.run_script_from_command('_T%d_RETRY_DOCK_XY\nM400' % (fast.slot + 1))
+                self.source.gcode.run_script_from_command('_TOOL_RETRY_DOCK_XY_T%d\nM400' % (fast.slot + 1))
                 if self.wait_dock_link(fast, 'connected', reactor.monotonic() + 5.):
                     self.dock_stage = 'preheat'
                     self.dock_restored_nozzle = nozzle_target

@@ -78,7 +78,7 @@ def menu(text, enabled):
         return body + separator + saved
     menu_text = (
         '[menu __print paused_tool_service]\n'
-        'name: 툴 가져오기\n'
+        "name: {{ _('Get Tool') }}\n"
         'icon: extruder\n'
         'panel: paused_tool_service\n'
         "enable: {{ printer.pause_resume.is_paused and 'paused_tool_service' in printer.config_sections }}\n\n"

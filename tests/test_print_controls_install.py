@@ -76,13 +76,19 @@ class Tests(unittest.TestCase):
         self.assertTrue(result.endswith('#*# z_offset = 1\n'))
 
     def test_screen_popup_filter_selective(self):
-        source = 'class Screen:\n    def state_paused(self):\n        self.state_printing()\n        self.open_extrude()\n    def state_ready(self, wait=True):\n        pass\n    def show_popup_message(self, message, level=3, from_ws=False):\n        pass\n'
+        source = 'class Screen:\n    def state_paused(self):\n        self.state_printing()\n        if self._config.get_main_config().getboolean("auto_open_extrude", fallback=True):\n            self.show_panel("extrude")\n    def state_ready(self, wait=True):\n        pass\n    def show_popup_message(self, message, level=3, from_ws=False):\n        pass\n'
         source += '    def state_shutdown(self):\n        msg = self.printer.get_stat("webhooks", "state_message")\n        self.result = "shutdown: " + msg\n'
         result = screen_patch(source)
         compile(result,'screen.py','exec')
         namespace = {}
         exec(result, namespace)
         from types import SimpleNamespace
+        obj = namespace['Screen']()
+        panels = []
+        obj.state_printing = lambda: panels.append('job_status')
+        obj.show_panel = lambda panel: panels.append(panel)
+        obj.state_paused()
+        self.assertEqual(panels, ['job_status'])
         for payload in ('Timer too close', {'message':'Timer too close'}, {'reason':'fault'}, None):
             obj = namespace['Screen']()
             obj.printer = SimpleNamespace(get_stat=lambda *args: payload)

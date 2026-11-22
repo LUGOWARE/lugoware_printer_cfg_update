@@ -20,6 +20,19 @@ def patch_config(text):
     return insert(text,anchor,anchor+'        from ks_includes.lugo_i18n import with_translations\n        self.lang = with_translations(self.lang, lang)\n')
 
 
+def patch_print_menu_order(text):
+    anchor = ('        items = [i[len(index) :] for i in self.config.sections() if i.startswith(index)]\n'
+              '        menu_items = []\n')
+    new = (
+        '        items = [i[len(index) :] for i in self.config.sections() if i.startswith(index)]\n'
+        '        if index == "menu __print " and "temperature" in items and "paused_tool_service" in items:\n'
+        '            items.remove("paused_tool_service")\n'
+        '            items.insert(items.index("temperature") + 1, "paused_tool_service")\n'
+        '        menu_items = []\n'
+    )
+    return insert(text, anchor, new)
+
+
 def patch_screen(text):
     if '        message = translate_text(message)\n' in text:
         return text
@@ -87,7 +100,7 @@ def patch_languages(text):
 
 def install(screen, backup, check=False):
     root=Path(__file__).resolve().parents[1]
-    pairs={'ks_includes/config.py':patch_config,'screen.py':patch_screen,
+    pairs={'ks_includes/config.py':lambda text: patch_print_menu_order(patch_config(text)),'screen.py':patch_screen,
            'ks_includes/widgets/prompts.py':patch_prompts,'panels/temperature.py':patch_temperature,
            'ks_includes/KlippyGtk.py':patch_gtk,'panels/base_panel.py':patch_title,
            'panels/network.py':patch_network,'panels/settings.py':patch_languages}
@@ -95,8 +108,11 @@ def install(screen, backup, check=False):
     changes[screen/'ks_includes/lugo_i18n.py']=Path(__file__).with_name('lugo_i18n.py').read_text(encoding='utf-8')
     changes[screen/'ks_includes/lugo_layout.py']=Path(__file__).with_name('lugo_layout.py').read_text(encoding='utf-8')
     changes[screen/'ks_includes/lugo_interface_selector.py']=Path(__file__).with_name('lugo_interface_selector.py').read_text(encoding='utf-8')
-    for name in ('printer_messages.py', 'message_rules.json', 'lugo_language_names.py'):
-        changes[screen/'ks_includes'/name]=Path(__file__).with_name(name).read_text(encoding='utf-8')
+    for name in ('printer_messages.py', 'message_rules.json', 'lugo_language_names.py', 'tool_service_locales.json'):
+        text=Path(__file__).with_name(name).read_text(encoding='utf-8')
+        if name.endswith('.json'):
+            json.loads(text)
+        changes[screen/'ks_includes'/name]=text
     for path in Path(__file__).with_name('printer_locales').glob('*.json'):
         text=path.read_text(encoding='utf-8'); json.loads(text)
         changes[screen/'ks_includes/printer_locales'/path.name]=text

@@ -37,7 +37,7 @@ class DockRecovery:
         position = tuple(self.printer.lookup_object('toolhead').get_status(now)['position'][:3])
         move = self.printer.lookup_object('gcode_move').get_status(now)
         recovery_z = (move['position'][2], move['gcode_position'][2])
-        route = self.printer.lookup_object('gcode_macro _T%d_RETRY_DOCK_XY' % (slot + 1), None)
+        route = self.printer.lookup_object('gcode_macro _TOOL_RETRY_DOCK_XY_T%d' % (slot + 1), None)
         settings = route.get_status(now) if route is not None else {}
         loaded = self.printer.lookup_object('configfile').get_status(now)['settings']
         if (not {'retry_x', 'retry_y', 'retry_exit'} <= settings.keys()

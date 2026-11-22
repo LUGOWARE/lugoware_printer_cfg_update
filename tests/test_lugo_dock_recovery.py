@@ -52,7 +52,7 @@ class DockRecoveryTest(unittest.TestCase):
             'toolhead_auxiliary': NS(get_status=lambda t: {'state': self.sensor}),
             'pause_resume': self.pause,
             'configfile': NS(get_status=lambda t: {'settings': self.settings}),
-            'gcode_macro _T2_RETRY_DOCK_XY': NS(get_status=lambda t: self.route),
+            'gcode_macro _TOOL_RETRY_DOCK_XY_T2': NS(get_status=lambda t: self.route),
             'lugo_tool_temperature': self.temps,
             'heater_generic Toolhead': self.heater,
             'extruder': NS(get_heater=lambda: self.heater),

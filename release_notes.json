@@ -10,20 +10,23 @@
     }
   },
   "lugoware_system": {
-    "version": "1.2.44",
+    "version": "1.2.45",
     "date": "2026/11/22",
     "notes": {
       "ko": [
-        "준비 화면과 일시정지 중 툴 가져오기에 FLEX4 툴 그림과 장착 온도 표시를 추가했습니다. 준비 화면의 도킹·파킹·프라임은 툴 카드를 누르면 열립니다.",
-        "준비 화면의 빠른 압출과 느린 압출은 기존 속도로 한 번에 두 배 거리를 밀어냅니다."
+        "일시정지 중 툴을 가져올 때 명령을 인식하지 못해 재개가 막히던 문제를 수정했습니다.",
+        "툴 가져오기를 툴별 온도 제어 옆으로 옮기고, 준비와 툴 가져오기 화면의 문구를 화면 언어에 맞게 표시합니다.",
+        "출력을 일시정지하면 출력 화면에 그대로 머뭅니다."
       ],
       "en": [
-        "Added FLEX4 tool cards and mounted-tool temperatures to Prepare and paused tool servicing. Tap a tool in Prepare for Dock, Park and Prime.",
-        "Fast and slow extrusion in Prepare feed twice the previous distance in one continuous move at the same speed."
+        "Fixed an unrecognized command that blocked tool servicing and prevented resuming a paused print.",
+        "Moved Get Tool next to Tool Temperature Control and translated the Prepare and Get Tool screens.",
+        "Pausing a print keeps the print status screen open."
       ],
       "zh_CN": [
-        "准备界面和暂停取工具界面新增 FLEX4 工具卡片及已安装工具的温度显示。在准备界面点击工具可进行对接、归位和引料。",
-        "准备界面的快速与慢速挤出保持原有速度，单次连续进料距离增加至原来的两倍。"
+        "修复打印暂停时取工具命令无法识别、导致无法恢复打印的问题。",
+        "将取工具移到工具温度控制旁，并使准备和取工具界面跟随屏幕语言。",
+        "暂停打印后仍停留在打印状态界面。"
       ]
     }
   }

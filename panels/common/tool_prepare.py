@@ -64,9 +64,8 @@ class Panel(ScreenPanel):
         temperature_button = neutral(self._gtk.Button("heat-up", _('Temperature'), scale=0.8))
         temperature_button.connect("clicked", self._open_nozzle_temperature)
         actions.attach(temperature_button, 2, 0, 2, 1)
-        korean = self._config.get_main_config().get('language', '').split('_', 1)[0] == 'ko'
-        fast = '빠른 압출' if korean else _('Fast Extrude')
-        slow = '느린 압출' if korean else _('Slow Extrude')
+        fast = _('Fast Extrude')
+        slow = _('Slow Extrude')
         for col, diameter, label in ((0, 1.75, fast), (2, 2.85, slow)):
             button = neutral(self._gtk.Button(label=label))
             button.set_size_request(-1, max(42, round(self._gtk.font_size * 2.5)))

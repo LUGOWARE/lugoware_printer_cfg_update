@@ -9,12 +9,37 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'maintenance'))
-from lugo_i18n import Translations, translate_prompt, preheat_label
+from lugo_i18n import Translations, translate_prompt, preheat_label, tool_service_strings, translate_text
 from install_screen_config import merge, SAVED
-from install_i18n import patch_config, patch_screen, patch_prompts, patch_temperature, patch_gtk, patch_title, patch_network
+from install_i18n import patch_config, patch_screen, patch_prompts, patch_temperature, patch_gtk, patch_title, patch_network, patch_print_menu_order
 
 
 class I18nTests(unittest.TestCase):
+    def test_tool_service_translations_follow_the_selected_language(self):
+        payload = tool_service_strings()
+        self.assertEqual(set(payload['ui']), {p.stem for p in (ROOT/'translations').glob('*.json')})
+        for lang, labels in payload['ui'].items():
+            tr = Translations(gettext.NullTranslations(), lang, ROOT/'translations')
+            self.assertEqual([tr.gettext(key) for key in payload['keys']], labels)
+        before = getattr(builtins, '_', None)
+        try:
+            for lang, index in (('en', 0), ('ko', 1), ('zh_CN', 2), ('zh_TW', 3), ('jp', 4), ('de', 0)):
+                Translations(gettext.NullTranslations(), lang, ROOT/'translations').install()
+                for row in payload['errors']:
+                    self.assertEqual(translate_text('!! ' + row[1]), row[index])
+        finally:
+            if before is None:
+                del builtins._
+            else:
+                builtins._ = before
+
+    def test_tool_service_menu_order_patch_is_repeatable(self):
+        source = ('        items = [i[len(index) :] for i in self.config.sections() if i.startswith(index)]\n'
+                  '        menu_items = []\n')
+        updated = patch_print_menu_order(source)
+        self.assertIn('items.insert(items.index("temperature") + 1, "paused_tool_service")', updated)
+        self.assertEqual(patch_print_menu_order(updated), updated)
+
     def test_catalog_coverage_and_placeholders(self):
         base = json.loads((ROOT/'translations/en.json').read_text(encoding='utf-8'))
         locales = 'ar bg cs da de de_formal en es et fa fr he hr hu it jp ko lt nl pl pt pt_BR rs ru sk sl sv tr uk vi zh_CN zh_TW'.split()

@@ -50,6 +50,15 @@ def screen_patch(text):
     text = replace_once(text, old, new)
     text = replace_once(text, '    def state_paused(self):\n        self.state_printing()\n',
                         '    def state_paused(self):\n        self.state_printing()\n        if getattr(self, "_lugo_cancel_pending", False):\n            return\n')
+    # Keep the job status panel open when Klipper enters the paused state.
+    paused_start = text.index('    def state_paused(self):\n')
+    paused_end = text.find('\n    def ', paused_start + 1) + 1
+    if paused_end == 0:
+        paused_end = len(text)
+    auto_extrude = ('        if self._config.get_main_config().getboolean("auto_open_extrude", fallback=True):\n'
+                    '            self.show_panel("extrude")\n')
+    paused = text[paused_start:paused_end].replace(auto_extrude, '')
+    text = text[:paused_start] + paused + text[paused_end:]
     text = replace_once(text, '    def state_ready(self, wait=True):\n',
                         '    def state_ready(self, wait=True):\n        self._lugo_cancel_pending = False\n')
     marker = '        # LUGO: suppress only MCU clock mismatch popups.'

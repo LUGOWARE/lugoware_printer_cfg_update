@@ -1,9 +1,16 @@
 """Offline translations for LUGOWARE UI, layered over KlipperScreen gettext."""
 import builtins
+from functools import lru_cache
 import gettext
 import json
 from pathlib import Path
 import re
+
+
+@lru_cache(maxsize=1)
+def tool_service_strings():
+    path = Path(__file__).with_name('tool_service_locales.json')
+    return json.loads(path.read_text(encoding='utf-8')) if path.is_file() else {}
 
 
 class Translations(gettext.NullTranslations):
@@ -23,6 +30,12 @@ class Translations(gettext.NullTranslations):
         extra = Path(__file__).with_name('printer_locales') / (language + '.json')
         if re.fullmatch(r'[A-Za-z_]+', language or '') and extra.is_file():
             self.catalog.update(json.loads(extra.read_text(encoding='utf-8')))
+        tool_service = tool_service_strings()
+        labels = tool_service.get('ui', {}).get(language, ())
+        self.catalog.update(zip(tool_service.get('keys', ()), labels))
+        error_language = {'ko': 1, 'zh_CN': 2, 'zh_TW': 3, 'jp': 4}.get(language, 0)
+        for error in tool_service.get('errors', ()):
+            self.catalog[error[0]] = error[error_language]
 
         # Fill gaps in upstream UI translations without replacing official entries.
         extra = Path(__file__).with_name('screen_locales') / (language + '.json')
@@ -54,6 +67,10 @@ def translate_text(text):
     aliases = {'히터 테스트 완료': 'Heater test complete', '확인': 'Confirm',
                '정상 작동': 'Normal operation', '가열 불량': 'Heating failure'}
     stripped = text.strip()
+    raw = re.sub(r'^(?://|!!|echo:)\s*', '', stripped)
+    for key, korean, *_ in tool_service_strings().get('errors', ()):
+        if raw in (key, korean):
+            return tr(key)
     if stripped in aliases:
         return tr(aliases[stripped])
     match = re.fullmatch(r'히터 (\d+) \(([^)]+)\): (정상 작동|가열 불량)', stripped)

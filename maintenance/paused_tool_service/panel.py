@@ -68,17 +68,17 @@ class Panel(ScreenPanel):
         for b in (self.heat, self.extrude, self.park):
             b.set_sensitive(bool(available and phase == 'attached'))
         if phase == 'fault' or hold:
-            label = '툴 상태를 확인해 주세요. 출력은 일시정지 상태입니다.'
+            label = _('Check the tool. The print remains paused.')
             hint = ''
         elif phase == 'attached' and tool is not None:
             label = 'T%d · %s' % (tool + 1, _('Docked'))
             hint = _('Paused')
         elif self.busy or phase in ('docking', 'parking'):
-            label = '툴 이동 중…'
+            label = _('Changing tools')
             hint = ''
         else:
-            label = '정비할 툴을 선택하세요.'
-            hint = '툴을 누르면 바로 가져옵니다.' if available else ''
+            label = _('Choose a tool')
+            hint = _('Tap a tool to dock it.') if available else ''
         self.status.set_label(label)
         self.hint.set_label(hint)
 

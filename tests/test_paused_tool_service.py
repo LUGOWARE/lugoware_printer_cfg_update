@@ -25,7 +25,8 @@ class ServiceTest(unittest.TestCase):
         self.switch_enabled = True
         self.reactor = Obj(monotonic=lambda: self.time, pause=self.advance)
         objects = {
-            'gcode': Obj(register_command=self.commands.__setitem__, run_script_from_command=self.run_script),
+            'gcode': Obj(register_command=self.commands.__setitem__, run_script_from_command=self.run_script,
+                         gcode_handlers={'_TOOL_RETRY_DOCK_XY_T2': None, '_TOOL_RETRY_PARK_XY_T2': None}),
             'fast_cancel': self.fast, 'pause_resume': self.pause, 'virtual_sdcard': self.sd,
             'print_stats': Obj(get_status=lambda _: {'state': 'paused'}),
             'extruder': Obj(get_heater=lambda: self.nozzle), 'heater_generic Toolhead': self.aux,
@@ -34,8 +35,8 @@ class ServiceTest(unittest.TestCase):
             'gcode_move': Obj(saved_states=self.saved, position_with_transform=lambda: self.position,
                               get_status=lambda _: {
                 'gcode_position': self.position, 'position': self.position}),
-            'gcode_macro _T2_RETRY_DOCK_XY': Obj(get_status=lambda _: self.route),
-            'gcode_macro _T2_RETRY_PARK_XY': Obj(),
+            'gcode_macro _TOOL_RETRY_DOCK_XY_T2': Obj(get_status=lambda _: self.route),
+            'gcode_macro _TOOL_RETRY_PARK_XY_T2': Obj(),
             'filament_switch_sensor toolhead_sensor': Obj(get_status=lambda _: {
                 'filament_detected': self.sensor_state == 'connected', 'enabled': self.switch_enabled}),
             'toolhead_auxiliary': Obj(get_status=lambda _: {'state': self.sensor_state, 'temperature': 25.},
@@ -60,11 +61,11 @@ class ServiceTest(unittest.TestCase):
     def run_script(self, script):
         for line in script.splitlines():
             self.trace.append(line)
-            if line.startswith('_T2_RETRY_DOCK'):
+            if line.startswith('_TOOL_RETRY_DOCK_XY_T2'):
                 self.position[:2] = [self.route['retry_x'], self.route['retry_y']]
                 if self.dock_detects:
                     self.sensor_state = 'connected'
-            elif line.startswith('_T2_RETRY_PARK'):
+            elif line.startswith('_TOOL_RETRY_PARK_XY_T2'):
                 self.position[:2] = [334., 168.]
                 self.sensor_state = 'disconnected'
             elif line.startswith('G1 X'):
@@ -92,10 +93,17 @@ class ServiceTest(unittest.TestCase):
         self.assertTrue(self.pause.is_paused)
 
     def test_unknown_route_never_moves(self):
-        self.objects.pop('gcode_macro _T2_RETRY_PARK_XY')
-        with self.assertRaisesRegex(ValueError, '이동 경로'):
+        self.objects.pop('gcode_macro _TOOL_RETRY_PARK_XY_T2')
+        with self.assertRaisesRegex(ValueError, '거치대 매크로'):
             self.service.dock(self.gcmd)
         self.assertEqual(self.trace, [])
+
+    def test_unregistered_macro_does_not_enter_motion_hold(self):
+        self.objects['gcode'].gcode_handlers.pop('_TOOL_RETRY_DOCK_XY_T2')
+        with self.assertRaisesRegex(ValueError, '거치대 매크로'):
+            self.service.dock(self.gcmd)
+        self.assertEqual(self.trace, [])
+        self.assertFalse(self.service.get_status(0)['blocks_resume'])
 
     def test_dock_heat_park_preserves_paused_job(self):
         self.service.dock(self.gcmd)
@@ -109,7 +117,7 @@ class ServiceTest(unittest.TestCase):
         self.assertEqual((self.nozzle.target_temp, self.aux.target_temp), (0., 0.))
         self.assertEqual(self.saved['PAUSE_STATE']['last_position'], [7., 8., 20., 13.])
         self.assertFalse(self.service.get_status(0)['blocks_resume'])
-        self.assertLess(self.trace.index('TOOLHEAD_PARK_OFF'), self.trace.index('_T2_RETRY_PARK_XY'))
+        self.assertLess(self.trace.index('TOOLHEAD_PARK_OFF'), self.trace.index('_TOOL_RETRY_PARK_XY_T2'))
 
     def test_no_start_when_unpaused_unhomed_or_heating(self):
         self.pause.is_paused = False

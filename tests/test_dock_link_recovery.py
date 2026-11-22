@@ -42,7 +42,7 @@ class DockLinkRecoveryTests(unittest.TestCase):
             self.assertTrue(self.recover())
         self.adapter.dock_open_until = self.time + 5.
         self.assertFalse(self.recover())
-        self.assertEqual(self.trace, ['_T2_RETRY_DOCK_XY\nM400'] * 2)
+        self.assertEqual(self.trace, ['_TOOL_RETRY_DOCK_XY_T2\nM400'] * 2)
         self.assertEqual(self.time, 12.)
         self.assertEqual(self.adapter.park_recovery_tool.call_count, 3)
         self.adapter.fault_wait_position.assert_called_once_with(self.fast)
@@ -68,6 +68,6 @@ class DockLinkRecoveryTests(unittest.TestCase):
     def test_unconfirmed_redock_stops_before_another_move(self):
         self.adapter.wait_dock_link.side_effect = [True, True, False]
         self.assertFalse(self.recover())
-        self.assertEqual(self.trace, ['_T2_RETRY_DOCK_XY\nM400'])
+        self.assertEqual(self.trace, ['_TOOL_RETRY_DOCK_XY_T2\nM400'])
         self.adapter.heater.set_temp.assert_not_called()
         self.adapter.hold_dock.assert_called_once()

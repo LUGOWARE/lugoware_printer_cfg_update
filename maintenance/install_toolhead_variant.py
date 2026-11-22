@@ -38,6 +38,7 @@ def strip_dock_routes(text):
     for slot in range(1, 5):
         for action in ('PARK', 'DOCK'):
             text = remove_section(text, 'gcode_macro _T%d_RETRY_%s_XY' % (slot, action))
+            text = remove_section(text, 'gcode_macro _TOOL_RETRY_%s_XY_T%d' % (action, slot))
     return text
 
 
@@ -72,7 +73,8 @@ def add_dock_retry(text, assets):
         for action in ('park', 'dock'):
             commands = [re.sub(r'\bX(-?\d+(?:\.\d+)?)', lambda m: 'X%g' % (float(m[1]) + delta), line)
                         for line in path[action]]
-            block = '[gcode_macro _T%d_RETRY_%s_XY]\n' % (slot, action.upper())
+            # Klipper ends the command token at the first digit followed by letters.
+            block = '[gcode_macro _TOOL_RETRY_%s_XY_T%d]\n' % (action.upper(), slot)
             if action == 'dock':
                 x = float(re.findall(r'\bX(-?[\d.]+)', '\n'.join(commands))[-1])
                 y = float(re.findall(r'\bY(-?[\d.]+)', '\n'.join(commands))[-1])
@@ -422,7 +424,7 @@ def toolchange_profile(base, variant, assets):
 
 def plan_paused_tools(home, assets, base, variant, screen_override, changes):
     config = home / 'printer_data/config'
-    available = all(section(base, 'gcode_macro _T%d_RETRY_%s_XY' % (slot, action))
+    available = all(section(base, 'gcode_macro _TOOL_RETRY_%s_XY_T%d' % (action, slot))
                     for slot in range(1, 5) for action in ('DOCK', 'PARK'))
     if not available and not paused_tools.installed(home):
         return base

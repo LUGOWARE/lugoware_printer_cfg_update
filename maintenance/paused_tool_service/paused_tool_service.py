@@ -170,11 +170,14 @@ class PausedToolService:
 
     def route(self, gcmd, slot):
         now = self.reactor.monotonic()
-        dock = self.printer.lookup_object('gcode_macro _T%d_RETRY_DOCK_XY' % (slot + 1), None)
-        park = self.printer.lookup_object('gcode_macro _T%d_RETRY_PARK_XY' % (slot + 1), None)
+        dock_name = '_TOOL_RETRY_DOCK_XY_T%d' % (slot + 1)
+        park_name = '_TOOL_RETRY_PARK_XY_T%d' % (slot + 1)
+        dock = self.printer.lookup_object('gcode_macro ' + dock_name, None)
+        park = self.printer.lookup_object('gcode_macro ' + park_name, None)
         route = dock.get_status(now) if dock is not None else {}
-        if park is None or not {'retry_x', 'retry_y', 'retry_exit'} <= route.keys():
-            raise gcmd.error('이 모델의 툴 거치대 이동 경로를 확인할 수 없습니다.')
+        if (park is None or not {'retry_x', 'retry_y', 'retry_exit'} <= route.keys()
+                or dock_name not in self.gcode.gcode_handlers or park_name not in self.gcode.gcode_handlers):
+            raise gcmd.error('정비용 툴 거치대 매크로를 확인할 수 없습니다.')
         return route
 
     def return_to_service(self, gcmd, state):
@@ -220,7 +223,7 @@ class PausedToolService:
                 if self.restore_switch:
                     run('SET_FILAMENT_SENSOR SENSOR=toolhead_sensor ENABLE=0')
             run('SAVE_GCODE_STATE NAME=LUGO_PAUSED_TOOL\nG90')
-            self.run_motion(gcmd, '_T%d_RETRY_DOCK_XY' % (slot + 1))
+            self.run_motion(gcmd, '_TOOL_RETRY_DOCK_XY_T%d' % (slot + 1))
             self.wait_sensor(gcmd, 'connected')
             x, y, _ = self.pose(gcmd)
             if abs(x - route['retry_x']) > .12 or abs(y - route['retry_y']) > .12:
@@ -239,6 +242,7 @@ class PausedToolService:
         self.assert_paused(gcmd)
         if not self.service_attached():
             raise gcmd.error('파킹할 정비용 툴이 없습니다.')
+        self.route(gcmd, self.slot)
         self.require_position(gcmd)
         self.wait_sensor(gcmd, 'connected')
         self.phase = 'parking'
@@ -246,7 +250,7 @@ class PausedToolService:
         try:
             self.ensure_off(gcmd, True)
             run('SAVE_GCODE_STATE NAME=LUGO_PAUSED_TOOL\nG90')
-            self.run_motion(gcmd, '_T%d_RETRY_PARK_XY' % (self.slot + 1))
+            self.run_motion(gcmd, '_TOOL_RETRY_PARK_XY_T%d' % (self.slot + 1))
             self.return_to_service(gcmd, 'disconnected')
             run('RESTORE_GCODE_STATE NAME=LUGO_PAUSED_TOOL MOVE=0')
             if self.restore_switch:
