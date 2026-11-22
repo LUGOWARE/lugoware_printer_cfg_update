@@ -52,6 +52,44 @@ def remove_dock_retry(text):
     return re.sub(guard, lambda m: m[1] + RESUME_PAUSED, text)
 
 
+def xy_feed_moves(lines):
+    moves = []
+    for line in lines:
+        code = line.split(';', 1)[0].strip()
+        if not re.match(r'^G1[ \t]+[XY]', code):
+            continue
+        feed = re.search(r'\bF(\d+)$', code)
+        if not feed:
+            return []
+        coordinates = tuple((axis, float(value)) for axis, value in
+                            re.findall(r'\b([XY])(-?\d+(?:\.\d+)?)\b', code))
+        moves.append((coordinates, int(feed[1])))
+    return moves
+
+
+def preparation_feeds(text, action, slot, commands):
+    # Use preparation feeds only where its normal route matches the verified service path.
+    source = section(text, 'gcode_macro %s_%d' % (action.upper(), slot - 1))
+    if not source:
+        return {}, None
+    prepared = xy_feed_moves(source[0].splitlines())
+    service = xy_feed_moves(commands)
+    if action == 'dock':
+        shared = prepared[:-2]
+        if (not shared or len(prepared[-2][0]) != 1 or prepared[-2][0][0][0] != 'X'
+                or [move[0] for move in shared] != [move[0] for move in service[:len(shared)]]):
+            return {}, None
+        return {index: move[1] for index, move in enumerate(shared) if index}, prepared[-2][1]
+    normal = prepared[-8:-1]
+    indices = (0, 3, 4, 6, 7, 8)
+    if (len(normal) != 7 or len(service) != 9
+            or [normal[index][0] for index in (0, 2, 3, 4, 5, 6)] != [service[index][0] for index in indices]):
+        return {}, None
+    # Service approaches the second park waypoint in two moves and repeats the seat waypoint.
+    return {index: normal[match][1]
+            for index, match in enumerate((0, 1, 1, 2, 3, 3, 4, 5, 6)) if index}, None
+
+
 def add_dock_retry(text, assets):
     text = strip_dock_routes(text)
     release = json.loads((assets / 'dock_retry_paths.json').read_text(encoding='utf-8'))
@@ -76,7 +114,14 @@ def add_dock_retry(text, assets):
                         for line in path[action]]
             # Klipper ends the command token at the first digit followed by letters.
             block = '[gcode_macro _TOOL_RETRY_%s_XY_T%d]\n' % (action.upper(), slot)
+            feeds, exit_feed = preparation_feeds(text, action, slot, commands)
+            for index, feed in feeds.items():
+                commands[index] = re.sub(
+                    r'F(\d+)$', lambda match: f'F{{{feed} if params.SERVICE|default(0)|int else {match[1]}}}',
+                    commands[index])
             if action == 'dock':
+                if exit_feed is not None:
+                    block += f'variable_service_exit_feed: {exit_feed}\n'
                 x = float(re.findall(r'\bX(-?[\d.]+)', '\n'.join(commands))[-1])
                 y = float(re.findall(r'\bY(-?[\d.]+)', '\n'.join(commands))[-1])
                 block += ('variable_retry_x: %s\nvariable_retry_y: %s\nvariable_retry_exit: %r\n'

@@ -106,6 +106,7 @@ class ServiceTest(unittest.TestCase):
         self.assertFalse(self.service.get_status(0)['blocks_resume'])
 
     def test_dock_heat_park_preserves_paused_job(self):
+        self.route['service_exit_feed'] = 5000
         self.service.dock(self.gcmd)
         self.assertEqual(self.position[:3], [0., 125., 25.])
         self.assertTrue(self.service.motion_locked())
@@ -117,12 +118,12 @@ class ServiceTest(unittest.TestCase):
         self.assertEqual((self.nozzle.target_temp, self.aux.target_temp), (0., 0.))
         self.assertEqual(self.saved['PAUSE_STATE']['last_position'], [7., 8., 20., 13.])
         self.assertFalse(self.service.get_status(0)['blocks_resume'])
-        self.assertIn('_TOOL_RETRY_DOCK_XY_T2 APPROACH_F=20000', self.trace)
-        park = '_TOOL_RETRY_PARK_XY_T2 APPROACH_F=20000'
+        self.assertIn('_TOOL_RETRY_DOCK_XY_T2 APPROACH_F=20000 SERVICE=1', self.trace)
+        park = '_TOOL_RETRY_PARK_XY_T2 APPROACH_F=20000 SERVICE=1'
         self.assertLess(self.trace.index('TOOLHEAD_PARK_OFF'), self.trace.index(park))
         self.assertEqual(self.trace.count('G1 X0 F20000'), 2)
         self.assertEqual(self.trace.count('G1 Y125 F20000'), 2)
-        self.assertIn('G1 X366 F700', self.trace)
+        self.assertIn('G1 X366 F5000', self.trace)
 
     def test_no_start_when_unpaused_unhomed_or_heating(self):
         self.pause.is_paused = False

@@ -224,12 +224,14 @@ class PausedToolService:
                 if self.restore_switch:
                     run('SET_FILAMENT_SENSOR SENSOR=toolhead_sensor ENABLE=0')
             run('SAVE_GCODE_STATE NAME=LUGO_PAUSED_TOOL\nG90')
-            self.run_motion(gcmd, f'_TOOL_RETRY_DOCK_XY_T{slot + 1} APPROACH_F={SERVICE_TRAVEL_FEED}')
+            self.run_motion(gcmd, f'_TOOL_RETRY_DOCK_XY_T{slot + 1} APPROACH_F={SERVICE_TRAVEL_FEED} SERVICE=1')
             self.wait_sensor(gcmd, 'connected')
             x, y, _ = self.pose(gcmd)
             if abs(x - route['retry_x']) > .12 or abs(y - route['retry_y']) > .12:
                 raise gcmd.error('툴 거치대 위치를 확인할 수 없습니다.')
-            for x, feed in zip(route['retry_exit'], (700, 700, 1800)):
+            exit_feed = route.get('service_exit_feed')
+            feeds = (exit_feed,) * len(route['retry_exit']) if exit_feed is not None else (700, 700, 1800)
+            for x, feed in zip(route['retry_exit'], feeds):
                 self.wait_sensor(gcmd, 'connected')
                 self.run_motion(gcmd, 'G1 X%g F%d' % (x, feed))
             self.return_to_service(gcmd, 'connected')
@@ -251,7 +253,7 @@ class PausedToolService:
         try:
             self.ensure_off(gcmd, True)
             run('SAVE_GCODE_STATE NAME=LUGO_PAUSED_TOOL\nG90')
-            self.run_motion(gcmd, f'_TOOL_RETRY_PARK_XY_T{self.slot + 1} APPROACH_F={SERVICE_TRAVEL_FEED}')
+            self.run_motion(gcmd, f'_TOOL_RETRY_PARK_XY_T{self.slot + 1} APPROACH_F={SERVICE_TRAVEL_FEED} SERVICE=1')
             self.return_to_service(gcmd, 'disconnected')
             run('RESTORE_GCODE_STATE NAME=LUGO_PAUSED_TOOL MOVE=0')
             if self.restore_switch:

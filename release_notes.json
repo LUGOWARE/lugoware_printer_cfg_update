@@ -10,17 +10,17 @@
     }
   },
   "lugoware_system": {
-    "version": "1.2.50",
+    "version": "1.2.51",
     "date": "2026/11/22",
     "notes": {
       "ko": [
-        "일시정지 중 툴 가져오기와 파킹에서 거치대 접근과 대기 위치 복귀를 빠르게 했습니다."
+        "일시정지 중 툴 체결·분리 속도를 준비 화면의 도킹·파킹 속도에 맞췄습니다."
       ],
       "en": [
-        "Sped up travel to the dock and back to the service position when getting or parking a tool during a pause."
+        "Paused tool servicing now uses the preparation docking and parking speeds at the rack."
       ],
       "zh_CN": [
-        "加快了暂停期间取放工具时前往工具座和返回维护位置的移动速度。"
+        "暂停期间工具接合与脱离工具座的速度现与准备界面的取放速度一致。"
       ]
     }
   }
