@@ -28,6 +28,19 @@ def profile():
 
 
 class VariantTests(unittest.TestCase):
+    def test_paused_tool_menu_remains_above_saved_screen_settings(self):
+        menu = '[menu __print paused_tool_service]'
+        marker = '#~# --- Do not edit below this line. This section is auto generated --- #~#'
+        saved = marker + '\n#~# [main]\n#~# language = en\n'
+        existing = '[menu __print temperature]\nname: Temperature\n\n' + saved
+        legacy = existing + '\n' + menu + '\nname: Load tool\n'
+        updated = variant.paused_tools.menu(legacy, True)
+        self.assertLess(updated.index(menu), updated.index(marker))
+        self.assertEqual(updated.count(menu), 1)
+        self.assertTrue(updated[updated.index(marker):].startswith(saved))
+        self.assertEqual(variant.paused_tools.menu(updated, True), updated)
+        self.assertNotIn(menu, variant.paused_tools.menu(updated, False))
+
     @unittest.skipUnless(os.name == 'posix', 'Linux permissions required')
     def test_common_web_helpers_repair_permissions(self):
         for helper, filename in [('reconnect','lugoware-reconnect.js'),('mesh','lugoware-mesh.js')]:

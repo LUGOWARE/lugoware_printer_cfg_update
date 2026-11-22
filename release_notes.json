@@ -10,20 +10,17 @@
     }
   },
   "lugoware_system": {
-    "version": "1.2.39",
+    "version": "1.2.40",
     "date": "2026/11/22",
     "notes": {
       "ko": [
-        "도킹 복구가 설치된 기기에서 출력 화면 업데이트가 멈추는 문제를 수정했습니다.",
-        "일시정지 중 툴 가져오기 기능은 이미 설치된 기기에서 업데이트 후에도 유지됩니다."
+        "업데이트 후 일시정지 중 툴 가져오기 메뉴가 다시 열리도록 화면 설정 저장 방식을 보완했습니다."
       ],
       "en": [
-        "Fixed print-screen updates on printers with dock recovery installed.",
-        "Updates now preserve the paused tool service on printers where it is already installed."
+        "Fixed preservation of the paused tool service menu after KlipperScreen restarts."
       ],
       "zh_CN": [
-        "修复已安装对接恢复功能的打印机在更新打印界面时卡住的问题。",
-        "更新后保留已安装的暂停取工具功能。"
+        "修复 KlipperScreen 重启后暂停取工具菜单消失的问题。"
       ]
     }
   }

@@ -55,10 +55,14 @@ def configure(text):
 
 def menu(text, enabled):
     section = 'menu __print paused_tool_service'
-    text = re.sub(r'(?ms)^\[' + section + r'\][^\n]*\n.*?(?=^\[|\Z)', '', text)
+    # KlipperScreen replaces its generated trailer when saving settings.
+    marker = '#~# --- Do not edit below this line. This section is auto generated --- #~#'
+    body, separator, saved = text.partition(marker)
+    pattern = r'(?ms)^\[' + section + r'\][^\n]*\n.*?(?=^\[|^#~#|\Z)'
+    body = re.sub(pattern, '', body)
+    saved = re.sub(pattern, '', saved)  # Migrate releases that appended the menu below the marker.
     if not enabled:
-        return text
-    # Place the menu beside the other print temperature controls.
+        return body + separator + saved
     menu_text = (
         '[menu __print paused_tool_service]\n'
         'name: 툴 가져오기\n'
@@ -66,7 +70,12 @@ def menu(text, enabled):
         'panel: paused_tool_service\n'
         "enable: {{ printer.pause_resume.is_paused and 'paused_tool_service' in printer.config_sections }}\n\n"
     )
-    return text.rstrip() + '\n\n' + menu_text
+    anchor = '[menu __print temperature]\n'
+    if anchor in body:
+        body = body.replace(anchor, menu_text + anchor, 1)
+    else:
+        body = body.rstrip() + '\n\n' + menu_text
+    return body + separator + saved
 
 
 def hooks(text, path, enabled):
