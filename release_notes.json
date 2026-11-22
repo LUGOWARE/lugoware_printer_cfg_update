@@ -10,17 +10,17 @@
     }
   },
   "lugoware_system": {
-    "version": "1.2.51",
+    "version": "1.2.52",
     "date": "2026/11/22",
     "notes": {
       "ko": [
-        "일시정지 중 툴 체결·분리 속도를 준비 화면의 도킹·파킹 속도에 맞췄습니다."
+        "툴헤드 보조 버전에서 툴체인지 복구 대기 중 X축 원점을 잡은 뒤에도, 툴 거치 확인 후 출력을 재개할 수 있습니다."
       ],
       "en": [
-        "Paused tool servicing now uses the preparation docking and parking speeds at the rack."
+        "The auxiliary toolhead edition can resume a held tool change after X homing once the parked tool is confirmed."
       ],
       "zh_CN": [
-        "暂停期间工具接合与脱离工具座的速度现与准备界面的取放速度一致。"
+        "在工具头辅助加热版本中，换工具恢复等待期间执行 X 轴归零后，确认工具归位即可继续打印。"
       ]
     }
   }

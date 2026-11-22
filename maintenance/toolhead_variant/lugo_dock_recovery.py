@@ -159,11 +159,19 @@ class DockRecovery:
                             head['homed_axes'], head['position'][:3], move['gcode_position'][:3],
                             actual_z, expected_z, expected_gcode_z)
             raise gcmd.error('Homing or position changed. Dock recovery stopped.')
-        if at_dock:
-            x, y = record['route']['retry_x'], record['route']['retry_y']
-            if (abs(head['position'][0] - x) > .1 or abs(head['position'][1] - y) > .1
-                    or any(abs(a - b) > .1 for a, b in zip(head['position'], record['position']))):
-                raise gcmd.error('Carriage is outside the verified dock exit. Cancel the held print.')
+        if not at_dock:
+            return False
+        x, y = record['route']['retry_x'], record['route']['retry_y']
+        saved_x, saved_y, _ = record['position']
+        if abs(saved_x - x) > .1 or abs(saved_y - y) > .1:
+            raise gcmd.error('The saved tool position is outside the verified dock exit.')
+        current_x, current_y = head['position'][:2]
+        if abs(current_x) <= .1 and abs(current_y - saved_y) <= .1:
+            # The empty carriage is already clear of the rack, e.g. after G28 X.
+            return True
+        if any(abs(a - b) > .1 for a, b in zip(head['position'], record['position'])):
+            raise gcmd.error('Carriage position changed outside the verified dock or its X0 exit. Print remains paused.')
+        return False
 
     def resume(self, gcmd):
         if not self.available() or gcmd.get_int('CONFIRMED', 0) != self.record['id']:
@@ -171,7 +179,7 @@ class DockRecovery:
         record = self.record
         if record.get('kind') == 'print':
             return self.resume_print(gcmd, record)
-        self.require_safe(gcmd, record, at_dock=True)
+        already_clear = self.require_safe(gcmd, record, at_dock=True)
         fast = self.fast
         run = self.gcode.run_script_from_command
         temps = self.printer.lookup_object('lugo_tool_temperature')
@@ -181,8 +189,9 @@ class DockRecovery:
         try:
             run('SAVE_GCODE_STATE NAME=LUGO_DOCK_RECOVERY')
             _, release_x, clear_x = record['route']['retry_exit']
-            for command in ('G1 X%g F700' % release_x, 'G1 X%g F1800' % clear_x,
-                            'G1 X0 F3600', 'G28 X Y'):
+            retreat = () if already_clear else ('G1 X%g F700' % release_x, 'G1 X%g F1800' % clear_x,
+                                               'G1 X0 F3600')
+            for command in (*retreat, 'G28 X Y'):
                 self.require_safe(gcmd, record, at_dock=False)
                 run(command + '\nM400')
             self.require_safe(gcmd, record, at_dock=False)

@@ -128,6 +128,35 @@ class DockRecoveryTest(unittest.TestCase):
         self.assertNotIn('G1 X361 F700', self.trace)
         self.assertIn('BASE_RESUME', self.trace)
 
+    def test_confirms_parked_tool_and_replays_at_x0_after_x_home(self):
+        self.hold()
+        self.pose[0] = 0.
+        self.mesh_z = .32
+        self.rec.resume(self.command)
+        self.assertEqual([line for line in self.trace if line.startswith('G1 X')], [])
+        self.assertLess(self.trace.index('G28 X Y'), self.trace.index('HEAT'))
+        self.assertLess(self.trace.index('PRIME'), self.trace.index('ENABLE_SENSOR'))
+        self.assertLess(self.trace.index('ENABLE_SENSOR'), self.trace.index('BASE_RESUME'))
+        self.assertFalse(self.rec.available())
+
+    def test_x0_does_not_bypass_saved_position_or_sensor_checks(self):
+        self.hold()
+        self.pose[0] = 0.
+        original_pose = self.pose.copy()
+        for axis, value in ((1, 125.), (2, 5.)):
+            self.pose[axis] = value
+            with self.assertRaises(ValueError):
+                self.rec.resume(self.command)
+            self.pose[:] = original_pose
+        self.sensor = 'connected'
+        with self.assertRaises(ValueError):
+            self.rec.resume(self.command)
+        self.sensor = 'disconnected'
+        self.rec.record['position'] = (100., 178.5, 4.)
+        with self.assertRaisesRegex(ValueError, 'saved tool position'):
+            self.rec.resume(self.command)
+        self.assertEqual(self.trace, [])
+
     def test_mesh_compensation_during_xy_travel_is_allowed(self):
         self.hold()
         self.mesh_z = .32
