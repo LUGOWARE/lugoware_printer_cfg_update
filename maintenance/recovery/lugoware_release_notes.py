@@ -53,8 +53,18 @@ def read_notes(home, channel, revision, language):
         if channel == 'lugoware_config':
             if entry:
                 entry['version'] = ''
-            config = subprocess.run(git + ['show', revision + ':printer_base.cfg'],
-                                    capture_output=True, timeout=4)
+            config = None
+            try:
+                variant_path = Path(home) / '.local/share/lugoware/variant.json'
+                variant = json.loads(variant_path.read_text(encoding='utf-8')).get('variant')
+            except (OSError, ValueError, AttributeError):
+                variant = None
+            if variant == 'toolhead':
+                config = subprocess.run(git + ['show', revision + ':printer_base_toolhead.cfg'],
+                                        capture_output=True, timeout=4)
+            if config is None or config.returncode:
+                config = subprocess.run(git + ['show', revision + ':printer_base.cfg'],
+                                        capture_output=True, timeout=4)
             if config.returncode == 0:
                 match = re.search(r'(?im)^\s*#\s*FLEX4[_ -][MLW][_ -]V(\d+(?:\.\d+)+)\b',
                                   config.stdout.decode('utf-8-sig', errors='replace'))

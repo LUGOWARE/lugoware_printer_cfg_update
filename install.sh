@@ -156,8 +156,12 @@ fi
 
 # Capture sensor wiring before the existing header/includes are replaced.
 if (( ! SYSTEM_ONLY )); then
+BASE_CONFIG="$REPO_DIR/printer_base.cfg"
+if [[ "$LUGOWARE_VARIANT" == toolhead && -f "$REPO_DIR/printer_base_toolhead.cfg" ]]; then
+    BASE_CONFIG="$REPO_DIR/printer_base_toolhead.cfg"
+fi
 python3 "$COMMON_REPO/maintenance/preserve_sensor_pins.py" \
-    "$REPO_DIR/printer_base.cfg" "$CONFIG_DIR/printer.cfg" "$BACKUP_DIR/printer-base-prepared.cfg"
+    "$BASE_CONFIG" "$CONFIG_DIR/printer.cfg" "$BACKUP_DIR/printer-base-prepared.cfg"
 fi
 
 python3 "$COMMON_REPO/maintenance/install_toolhead_variant.py" --capture --backup "$BACKUP_DIR/variant-capture"

@@ -60,6 +60,23 @@ class ChannelTests(unittest.TestCase):
             self.assertIn('language: ko', (target / 'KlipperScreen.conf').read_text())
             self.assertEqual((backup / 'printer_base.cfg').read_bytes(), b'old')
 
+    def test_installed_profile_selects_its_own_base_and_supports_older_releases(self):
+        for variant, available, expected in (('standard', True, 'standard'),
+                                             ('toolhead', True, 'auxiliary'),
+                                             ('toolhead', False, 'standard')):
+            with self.subTest(variant=variant, available=available), tempfile.TemporaryDirectory() as d:
+                home, repo, backup, target = self.fixture(Path(d))
+                (repo / 'printer_base.cfg').write_text('# standard\n[printer]\nkinematics: cartesian\n')
+                if available:
+                    (repo / 'printer_base_toolhead.cfg').write_text('# auxiliary\n[printer]\nkinematics: cartesian\n')
+                with patch.object(worker, 'selected_variant', return_value=variant), \
+                        patch.object(worker, 'variant_plan', return_value={}) as plan, \
+                        patch.object(worker, 'validate_config'), patch.object(worker, 'check_idle'), \
+                        patch.object(worker, 'activate_config'):
+                    worker.apply_config(repo, home, backup)
+                self.assertTrue((target / 'printer_base.cfg').read_text().startswith('# ' + expected))
+                self.assertEqual(plan.call_args.args[1], variant)
+
     def test_validation_failure_does_not_touch_files(self):
         with tempfile.TemporaryDirectory() as d:
             home, repo, backup, target = self.fixture(Path(d))

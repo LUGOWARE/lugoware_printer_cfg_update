@@ -44,7 +44,12 @@ def validate_config(text, screen, home):
 
 def apply_config(repo, home, backup):
     target = home / 'printer_data/config'
-    base = (repo / 'printer_base.cfg').read_text(encoding='utf-8-sig')
+    variant = selected_variant(home)
+    source = repo / 'printer_base.cfg'
+    auxiliary = repo / 'printer_base_toolhead.cfg'
+    if variant == 'toolhead' and auxiliary.is_file():
+        source = auxiliary
+    base = source.read_text(encoding='utf-8-sig')
     base = preserve(base, target / 'printer.cfg')
     if (home / 'klipper/klippy/extras/print_sensor.py').is_file():
         base = feature_macros(base)
@@ -64,7 +69,7 @@ def apply_config(repo, home, backup):
         screen = screen_menu(screen_config(screen))
     validate_config(base, screen, home)
     changes = {'printer_base.cfg': base.encode(), 'KlipperScreen.conf': screen.encode()}
-    variant_changes = variant_plan(home, selected_variant(home), Path(__file__).with_name('toolhead_variant'),
+    variant_changes = variant_plan(home, variant, Path(__file__).with_name('toolhead_variant'),
                                    base_override=base, screen_override=screen)
     previous = {name: (target / name).read_bytes() for name in changes}
     for name, content in previous.items():
@@ -120,6 +125,10 @@ def sync_latest_config(home, branch, backup):
     for name in ('printer_base.cfg', 'KlipperScreen.conf'):
         data = subprocess.check_output(git + ['show', commit + ':' + name])
         (snapshot / name).write_bytes(data)
+    if selected_variant(home) == 'toolhead':
+        name = 'printer_base_toolhead.cfg'
+        if output('ls-tree', '--name-only', commit, '--', name) == name:
+            (snapshot / name).write_bytes(subprocess.check_output(git + ['show', commit + ':' + name]))
     print('Applying latest model config: ' + branch + ' ' + commit, flush=True)
     apply_config(snapshot, home, backup)
     print('System and model config applied: ' + commit, flush=True)

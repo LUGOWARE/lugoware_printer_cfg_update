@@ -51,5 +51,15 @@ class NotesTests(unittest.TestCase):
             git('add','.');git('commit','-m','second');new=git('rev-parse','HEAD')
             self.assertEqual(read_notes(directory,'lugoware_config',old,'ko')['version'],'2.4.16')
             self.assertEqual(read_notes(directory,'lugoware_config',new,'ko')['version'],'2.5.0')
+            (repo / 'printer_base_toolhead.cfg').write_text('# FLEX4_W_V3.1.1\n', encoding='utf8')
+            git('add', '.')
+            git('commit', '-m', 'auxiliary config')
+            both = git('rev-parse', 'HEAD')
+            self.assertEqual(read_notes(directory, 'lugoware_config', both, 'ko')['version'], '2.5.0')
+            marker = Path(directory) / '.local/share/lugoware/variant.json'
+            marker.parent.mkdir(parents=True)
+            marker.write_text('{"variant": "toolhead"}', encoding='utf8')
+            self.assertEqual(read_notes(directory, 'lugoware_config', both, 'ko')['version'], '3.1.1')
+            self.assertEqual(read_notes(directory, 'lugoware_config', new, 'ko')['version'], '2.5.0')
 
 if __name__=='__main__':unittest.main()

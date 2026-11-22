@@ -10,23 +10,20 @@
     }
   },
   "lugoware_system": {
-    "version": "1.2.45",
+    "version": "1.2.46",
     "date": "2026/11/22",
     "notes": {
       "ko": [
-        "일시정지 중 툴을 가져올 때 명령을 인식하지 못해 재개가 막히던 문제를 수정했습니다.",
-        "툴 가져오기를 툴별 온도 제어 옆으로 옮기고, 준비와 툴 가져오기 화면의 문구를 화면 언어에 맞게 표시합니다.",
-        "출력을 일시정지하면 출력 화면에 그대로 머뭅니다."
+        "표준과 툴헤드 보조 버전의 프린터 설정을 따로 업데이트합니다.",
+        "툴헤드 보조 버전의 화면 설정 버전은 V3.1.1부터 시작합니다."
       ],
       "en": [
-        "Fixed an unrecognized command that blocked tool servicing and prevented resuming a paused print.",
-        "Moved Get Tool next to Tool Temperature Control and translated the Prepare and Get Tool screens.",
-        "Pausing a print keeps the print status screen open."
+        "Standard and auxiliary toolhead editions now update their printer configurations separately.",
+        "The auxiliary edition starts its displayed configuration version at V3.1.1."
       ],
       "zh_CN": [
-        "修复打印暂停时取工具命令无法识别、导致无法恢复打印的问题。",
-        "将取工具移到工具温度控制旁，并使准备和取工具界面跟随屏幕语言。",
-        "暂停打印后仍停留在打印状态界面。"
+        "标准版和工具头辅助加热版现可分别更新打印机配置。",
+        "工具头辅助加热版的屏幕配置版本从 V3.1.1 开始。"
       ]
     }
   }
