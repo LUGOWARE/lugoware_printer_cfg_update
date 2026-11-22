@@ -13,11 +13,16 @@ class DetachableHeaterSensor:
         self.reconnect = None
         self.manual_targets = None
         self.manual_parked = False
+        self.dock_stage = None
+        self.dock_open_until = None
+        self.dock_retries = 0
+        self.prime_incomplete = False
         source.gcode.register_command("TOOLHEAD_DOCK_HEAT", self.dock_heat)
         source.gcode.register_command("TOOLHEAD_CHECK_DOCK_READY", self.check_dock_before_heat)
         source.gcode.register_command("TOOLHEAD_WAIT_FOR_PRIME", self.wait_for_prime,
                                            desc="Wait for auxiliary toolhead temperature before prime")
         source.gcode.register_command("TOOLHEAD_PARK_OFF", self.park_off)
+        source.gcode.register_command("TOOLHEAD_PRIME_COMPLETE", self.prime_complete)
         self.minimum = 0.
         self.maximum = 60.
         source.heater_adapter = self
@@ -94,10 +99,21 @@ class DetachableHeaterSensor:
         if fast.stop_wait():
             fast.dock_abort = True
             return
-        fast.dock_recovery.begin_hold(fast.slot)
+        self.hold_dock(gcmd, fast, 'Toolhead sensor check failed; paused without movement', True)
+
+    def hold_dock(self, gcmd, fast, message, replay=False):
+        self.dock_stage = None
+        self.dock_pending = False
+        self.reconnect = None
+        self.heater.set_temp(0.)
+        self.printer.lookup_object('extruder').get_heater().set_temp(0.)
+        if replay:
+            fast.dock_recovery.begin_hold(fast.slot)
+        else:
+            fast.dock_recovery.record = None
         fast.phase = 'dock_sensor_hold'
         fast.critical = True
-        fast.message = 'Toolhead sensor check failed; paused without movement'
+        fast.message = message
         try:
             self.printer.lookup_object('pause_resume').cmd_PAUSE(gcmd)
         finally:
@@ -155,6 +171,13 @@ class DetachableHeaterSensor:
         target = gcmd.get_float('TEMP', minval=0., maxval=self.maximum)
         if self.failed:
             raise self.printer.command_error('Toolhead heater safety stop is active')
+        fast = self.printer.lookup_object('fast_cancel', None)
+        self.dock_stage = 'preheat' if fast and fast.phase == 'docking' and self.context(
+            self.source.reactor.monotonic())[1] == 'printing' else None
+        self.dock_open_until = None
+        self.dock_retries = 0
+        self.prime_incomplete = False
+        self.dock_restored_nozzle = 0.
         self.dock_target = target
         self.dock_deadline = self.source.reactor.monotonic() + 5.
         self.dock_pending = bool(target)
@@ -172,7 +195,15 @@ class DetachableHeaterSensor:
                 raise gcmd.error('Toolhead heater safety stop before prime')
             if fast_cancel and fast_cancel.stop_wait():
                 # FAST_CANCEL_PRIME will skip extrusion and run the safe dock exit.
+                self.dock_stage = None
                 return
+            if getattr(self, 'dock_open_until', None) is not None:
+                if not self.recover_dock(gcmd, fast_cancel, target, after_prime=False):
+                    return
+                now = reactor.monotonic()
+                deadline = now + self.source.prime_timeout
+                connected = False
+                continue
             sensor = self.source.get_status(now)
             state = sensor['state']
             if (state in ('short_circuit', 'invalid', 'stale')
@@ -181,15 +212,143 @@ class DetachableHeaterSensor:
                 raise gcmd.error('Toolhead sensor unavailable before prime: ' + state)
             if state == 'connected' and self.valid_samples >= 9:
                 connected = True
-                if self.heater.target_temp == target and sensor['temperature'] >= threshold:
+                nozzle = getattr(self, 'dock_restored_nozzle', 0.)
+                nozzle_ready = not nozzle or self.printer.lookup_object(
+                    'extruder').get_heater().get_temp(now)[0] >= nozzle - 5.
+                if self.heater.target_temp == target and sensor['temperature'] >= threshold and nozzle_ready:
+                    if getattr(self, 'dock_stage', None) == 'preheat':
+                        self.dock_stage = 'prime'
+                        self.dock_slicer_target = target
                     return
             if not self.dock_pending and self.heater.target_temp != target:
                 self.heater.set_temp(0.)
                 raise gcmd.error('Toolhead heating target changed before prime')
             if now >= deadline:
+                if getattr(self, 'dock_retries', 0) and fast_cancel:
+                    self.dock_open_until = now + 5.
+                    self.prime_incomplete = True
+                    self.recover_dock(gcmd, fast_cancel, target, after_prime=False)
+                    return
+                self.dock_stage = None
                 self.heater.set_temp(0.)
                 raise gcmd.error('Toolhead did not reach %.1f C before prime' % threshold)
             now = reactor.pause(min(now + .1, deadline))
+
+    def wait_dock_link(self, fast, expected, deadline):
+        reactor = self.source.reactor
+        now = reactor.monotonic()
+        while now <= deadline:
+            if self.failed or self.printer.is_shutdown() or fast.requested or fast.cleaning:
+                return False
+            status = self.source.get_status(now)
+            state, temp = status['state'], status['temperature']
+            if state == expected and (state == 'disconnected' or (
+                    temp is not None and self.minimum <= temp <= self.maximum and self.valid_samples >= 9)):
+                return True
+            if state in ('short_circuit', 'invalid', 'stale') or now == deadline:
+                return False
+            now = reactor.pause(min(now + .1, deadline))
+        return False
+
+    def park_recovery_tool(self, gcmd, fast, after_prime):
+        slot = fast.slot
+        if slot not in range(4):
+            return False
+        dock = self.printer.lookup_object('gcode_macro _T%d_RETRY_DOCK_XY' % (slot + 1), None)
+        if dock is None:
+            return False
+        reactor = self.source.reactor
+        now = reactor.monotonic()
+        route = dock.get_status(now)
+        head = self.printer.lookup_object('toolhead').get_status(now)
+        move = self.printer.lookup_object('gcode_move').get_status(now)
+        xyz = move['gcode_position']
+        exit_x, release_x, clear_x = route['retry_exit']
+        allowed_x = (route['retry_x'], exit_x, exit_x + 2.5) if after_prime else (route['retry_x'],)
+        if (set(head['homed_axes']) != set('xyz') or not move['absolute_coordinates']
+                or not any(abs(xyz[0] - x) <= .1 for x in allowed_x)
+                or abs(xyz[1] - route['retry_y']) > .1
+                or any(abs(head['position'][i] - xyz[i]) > .1 for i in (0, 1))):
+            return False
+        self.park_off(gcmd)  # Explicitly verify queued auxiliary PWM is off.
+        nozzle = self.printer.lookup_object('extruder').get_heater()
+        deadline = reactor.monotonic() + 3.
+        while nozzle.last_pwm_value and reactor.monotonic() < deadline and not fast.requested:
+            reactor.pause(reactor.monotonic() + .05)
+        if nozzle.last_pwm_value or nozzle.target_temp:
+            return False
+        reactor.pause(reactor.monotonic() + nozzle.get_pwm_delay() + .05)
+        run = self.source.gcode.run_script_from_command
+        for command in ('G1 X%g F700' % exit_x, 'G1 X%g F700' % release_x,
+                        'G1 X%g F1800' % clear_x, '_T%d_RETRY_PARK_XY' % (slot + 1)):
+            if not self.wait_dock_link(fast, 'connected', reactor.monotonic()):
+                return False
+            run(command + '\nM400')
+        return self.wait_dock_link(fast, 'disconnected', reactor.monotonic() + 1.)
+
+    def recover_dock(self, gcmd, fast, target, after_prime):
+        try:
+            return self.try_recover_dock(gcmd, fast, target, after_prime)
+        except self.source.gcode.error as exc:
+            if self.printer.is_shutdown():
+                raise
+            self.hold_dock(gcmd, fast, 'Toolhead recovery paused: ' + str(exc))
+            return False
+
+    def try_recover_dock(self, gcmd, fast, target, after_prime):
+        reactor = self.source.reactor
+        nozzle = self.printer.lookup_object('extruder').get_heater()
+        nozzle_target = nozzle.target_temp
+        nozzle.set_temp(0.)
+        reconnect_until = self.dock_open_until
+        self.dock_stage = None  # The deliberate disconnection while parking is expected.
+        self.dock_open_until = None
+        if not self.wait_dock_link(fast, 'connected', reconnect_until):
+            self.hold_dock(gcmd, fast, 'Toolhead connection did not return; print paused',
+                           replay=not after_prime and not self.prime_incomplete)
+            return False
+        if self.park_recovery_tool(gcmd, fast, after_prime):
+            if self.dock_retries >= 2 or self.prime_incomplete:
+                self.hold_dock(gcmd, fast, 'Toolhead parked; print paused after a docking or prime fault')
+                return False
+            ready_at = reactor.monotonic() + 1.
+            reactor.pause(ready_at)
+            if self.wait_dock_link(fast, 'disconnected', reactor.monotonic()):
+                self.dock_retries += 1
+                self.source.gcode.respond_info('Toolhead redock attempt %d/2' % self.dock_retries)
+                self.source.gcode.run_script_from_command('_T%d_RETRY_DOCK_XY\nM400' % (fast.slot + 1))
+                if self.wait_dock_link(fast, 'connected', reactor.monotonic() + 5.):
+                    self.dock_stage = 'preheat'
+                    self.dock_restored_nozzle = nozzle_target
+                    nozzle.set_temp(nozzle_target)
+                    self.heater.set_temp(target)
+                    return True
+        self.hold_dock(gcmd, fast, 'Toolhead position or connection uncertain; print paused',
+                       replay=not after_prime and not self.prime_incomplete)
+        return False
+
+    def prime_complete(self, gcmd):
+        if self.dock_stage != 'prime':
+            return
+        fast = self.printer.lookup_object('fast_cancel')
+        toolhead = self.printer.lookup_object('toolhead')
+        toolhead.wait_moves()
+        while not fast.requested and self.dock_open_until is not None:
+            if not self.recover_dock(gcmd, fast, self.dock_slicer_target, after_prime=True):
+                return
+            self.wait_for_prime(gcmd)
+            if fast.dock_abort or fast.requested or self.printer.is_shutdown():
+                break
+            exit_x = gcmd.get_float('EXIT_X')
+            self.source.gcode.run_script_from_command('G1 X%g F700\nM400' % exit_x)
+        self.dock_stage = None
+
+    def skip_interrupted_prime_line(self, command):
+        if (self.dock_stage == 'prime' and self.dock_open_until is not None
+                and command[0] not in ('FAST_CANCEL_PRIME', 'TOOLHEAD_PRIME_COMPLETE')):
+            self.prime_incomplete = True
+            return True
+        return False
 
     def park_off(self, gcmd):
         self.manual_parked = True
@@ -241,7 +400,10 @@ class DetachableHeaterSensor:
         # Called on the FIRST raw open-circuit sample, before presence debounce.
         target = self.heater.target_temp
         tool, state, filename, blocked = self.context(now)
-        if target > 0 and self.reconnect is None and not blocked and tool in (0, 1, 2, 3):
+        staged = state == 'printing' and not blocked and getattr(self, 'dock_stage', None) is not None
+        if staged and self.dock_open_until is None:
+            self.dock_open_until = now + 5.
+        if not staged and target > 0 and self.reconnect is None and not blocked and tool in (0, 1, 2, 3):
             self.reconnect = (now + 5., target, tool, state, filename)
         self.dock_pending = False
         self.original_set_temp(0.)
@@ -250,7 +412,7 @@ class DetachableHeaterSensor:
         self.heater.set_pwm(print_time, 0.)
         if target > 0:
             self.source.gcode.respond_info('Toolhead detached: auxiliary heater off; reconnect window 5 seconds')
-            if state == 'printing':
+            if state == 'printing' and not staged:
                 self.source.reactor.register_callback(self.pause_detached_print)
 
     def pause_detached_print(self, eventtime):
@@ -304,6 +466,9 @@ class DetachableHeaterSensor:
 
     def ready(self):
         self.nozzle_heater = self.printer.lookup_object('extruder').get_heater()
+        fast = self.printer.lookup_object('fast_cancel', None)
+        if fast is not None:
+            fast.toolhead_adapter = self
         self.manual_controls = (self.nozzle_heater.control, self.heater.control)
         self.start_time = self.source.reactor.monotonic()
         self.source.reactor.register_timer(self.watchdog, self.source.reactor.NOW)

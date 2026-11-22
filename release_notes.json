@@ -10,17 +10,20 @@
     }
   },
   "lugoware_system": {
-    "version": "1.2.36",
-    "date": "2026/11/21",
+    "version": "1.2.37",
+    "date": "2026/11/22",
     "notes": {
       "ko": [
-        "툴헤드 예열 보조 버전에서 도킹 확인 오류가 나면, 화면에서 툴이 거치된 상태를 확인한 뒤 같은 출력을 재개할 수 있습니다."
+        "툴헤드 예열 보조 버전은 툴체인지 중 센서 연결이 잠깐 끊겨도 다시 연결되면 최대 두 번 재도킹을 시도합니다.",
+        "재시도가 실패하거나 프라임이 중간에 끊기면 출력을 일시정지하고, 툴 상태가 확인되면 거치합니다."
       ],
       "en": [
-        "With auxiliary toolhead heating, you can recover a paused print after a docking check fails by confirming the tool is parked on the printer screen."
+        "Auxiliary toolhead heating can retry docking up to twice if the sensor reconnects during a tool change.",
+        "The printer pauses after a failed recovery or incomplete prime and parks the tool when its state can be verified."
       ],
       "zh_CN": [
-        "辅助工具头预热版本在对接检查失败后，可在打印机屏幕上确认工具头已归位，再继续当前打印。"
+        "辅助工具头预热版本在换头期间检测到传感器恢复连接后，最多重新对接两次。",
+        "恢复失败或预挤出未完成时，打印将暂停；确认工具头状态后可将其归位。"
       ]
     }
   }

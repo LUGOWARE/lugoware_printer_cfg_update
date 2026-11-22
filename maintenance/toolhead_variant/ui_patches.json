@@ -107,6 +107,10 @@
     [
       "'tool': self.slot, 'message': self.message}",
       "'tool': self.slot, 'message': self.message,\n                'dock_recovery_ready': self.dock_recovery.available(),\n                'dock_recovery_id': self.dock_recovery.sequence}"
+    ],
+    [
+      "                    break\n                if (getattr(self, 'inline_prime_skip', False)",
+      "                    break\n                adapter = getattr(self, 'toolhead_adapter', None)\n                if (adapter is not None and command and not recovery and self.phase == 'priming'\n                        and adapter.skip_interrupted_prime_line(command)):\n                    continue\n                if (getattr(self, 'inline_prime_skip', False)"
     ]
   ],
   "klipper/klippy/extras/lugo_tool_temperature.py": [

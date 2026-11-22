@@ -77,6 +77,7 @@ def dock_temperature_actions(text, enable):
     for slot in range(4):
         m = section(text, 'gcode_macro DOCK_TOOL_%d' % slot)
         block = m[0].replace(gate, '')
+        block = re.sub(r'(?m)^    TOOLHEAD_PRIME_COMPLETE EXIT_X=[\d.]+\n', '', block)
         if enable:
             block = block.replace('    {% set preheat_temp = normal_temp + 20 %}\n', '', 1)
             block = block.replace('    # M104 S{preheat_temp}\n    # TEMPERATURE_WAIT SENSOR=extruder',
@@ -87,6 +88,10 @@ def dock_temperature_actions(text, enable):
                                   '    {% set preheat_temp = normal_temp %}\n    M104')
             if block.count(gate) != 1:
                 raise ValueError('Missing safe preheat gate for DOCK_TOOL_%d' % slot)
+            block, count = re.subn(r'(?m)^(    FAST_CANCEL_PRIME STATE=end TOOL=%d EXIT_X=([\d.]+)\n)' % slot,
+                                   r'\1    TOOLHEAD_PRIME_COMPLETE EXIT_X=\2\n', block)
+            if count != 1:
+                raise ValueError('Missing prime completion checkpoint for DOCK_TOOL_%d' % slot)
         else:
             block = block.replace('    M104 S{preheat_temp}\n    TOOLHEAD_DOCK_HEAT TEMP={slicer_temp}',
                                   '    # M104 S{preheat_temp}\n    TOOLHEAD_DOCK_HEAT TEMP={slicer_temp}')
