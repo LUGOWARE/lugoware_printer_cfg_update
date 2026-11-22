@@ -117,7 +117,12 @@ class ServiceTest(unittest.TestCase):
         self.assertEqual((self.nozzle.target_temp, self.aux.target_temp), (0., 0.))
         self.assertEqual(self.saved['PAUSE_STATE']['last_position'], [7., 8., 20., 13.])
         self.assertFalse(self.service.get_status(0)['blocks_resume'])
-        self.assertLess(self.trace.index('TOOLHEAD_PARK_OFF'), self.trace.index('_TOOL_RETRY_PARK_XY_T2'))
+        self.assertIn('_TOOL_RETRY_DOCK_XY_T2 APPROACH_F=20000', self.trace)
+        park = '_TOOL_RETRY_PARK_XY_T2 APPROACH_F=20000'
+        self.assertLess(self.trace.index('TOOLHEAD_PARK_OFF'), self.trace.index(park))
+        self.assertEqual(self.trace.count('G1 X0 F20000'), 2)
+        self.assertEqual(self.trace.count('G1 Y125 F20000'), 2)
+        self.assertIn('G1 X366 F700', self.trace)
 
     def test_no_start_when_unpaused_unhomed_or_heating(self):
         self.pause.is_paused = False
@@ -140,7 +145,7 @@ class ServiceTest(unittest.TestCase):
         self.assertTrue(self.pause.is_paused)
         self.assertEqual(self.fast.phase, 'dock_sensor_hold')
         self.assertEqual(self.service.get_status(0)['phase'], 'fault')
-        self.assertNotIn('G1 X0 F6000', self.trace)
+        self.assertNotIn('G1 X0 F20000', self.trace)
 
     def test_lost_attachment_switches_heaters_off_without_movement(self):
         self.service.dock(self.gcmd)

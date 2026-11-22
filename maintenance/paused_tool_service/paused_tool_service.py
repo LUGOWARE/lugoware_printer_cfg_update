@@ -4,6 +4,7 @@ import math
 
 SERVICE_X = 0.
 SERVICE_Y = 125.
+SERVICE_TRAVEL_FEED = 20000
 
 
 class PausedToolService:
@@ -182,9 +183,9 @@ class PausedToolService:
 
     def return_to_service(self, gcmd, state):
         self.wait_sensor(gcmd, state)
-        self.run_motion(gcmd, 'G1 X0 F6000')
+        self.run_motion(gcmd, f'G1 X{SERVICE_X:g} F{SERVICE_TRAVEL_FEED}')
         self.wait_sensor(gcmd, state)
-        self.run_motion(gcmd, 'G1 Y125 F6000')
+        self.run_motion(gcmd, f'G1 Y{SERVICE_Y:g} F{SERVICE_TRAVEL_FEED}')
         self.wait_sensor(gcmd, state)
         self.position = self.pose(gcmd)
 
@@ -223,7 +224,7 @@ class PausedToolService:
                 if self.restore_switch:
                     run('SET_FILAMENT_SENSOR SENSOR=toolhead_sensor ENABLE=0')
             run('SAVE_GCODE_STATE NAME=LUGO_PAUSED_TOOL\nG90')
-            self.run_motion(gcmd, '_TOOL_RETRY_DOCK_XY_T%d' % (slot + 1))
+            self.run_motion(gcmd, f'_TOOL_RETRY_DOCK_XY_T{slot + 1} APPROACH_F={SERVICE_TRAVEL_FEED}')
             self.wait_sensor(gcmd, 'connected')
             x, y, _ = self.pose(gcmd)
             if abs(x - route['retry_x']) > .12 or abs(y - route['retry_y']) > .12:
@@ -250,7 +251,7 @@ class PausedToolService:
         try:
             self.ensure_off(gcmd, True)
             run('SAVE_GCODE_STATE NAME=LUGO_PAUSED_TOOL\nG90')
-            self.run_motion(gcmd, '_TOOL_RETRY_PARK_XY_T%d' % (self.slot + 1))
+            self.run_motion(gcmd, f'_TOOL_RETRY_PARK_XY_T{self.slot + 1} APPROACH_F={SERVICE_TRAVEL_FEED}')
             self.return_to_service(gcmd, 'disconnected')
             run('RESTORE_GCODE_STATE NAME=LUGO_PAUSED_TOOL MOVE=0')
             if self.restore_switch:

@@ -10,17 +10,17 @@
     }
   },
   "lugoware_system": {
-    "version": "1.2.49",
+    "version": "1.2.50",
     "date": "2026/11/22",
     "notes": {
       "ko": [
-        "FLEX4 M·L·W의 printer.cfg를 모델과 버전에 맞춰 정리하고 기기별 설정을 유지합니다."
+        "일시정지 중 툴 가져오기와 파킹에서 거치대 접근과 대기 위치 복귀를 빠르게 했습니다."
       ],
       "en": [
-        "Organized printer.cfg for each FLEX4 M, L and W edition while keeping device settings."
+        "Sped up travel to the dock and back to the service position when getting or parking a tool during a pause."
       ],
       "zh_CN": [
-        "按 FLEX4 M、L、W 型号及版本整理 printer.cfg，并保留每台设备的设置。"
+        "加快了暂停期间取放工具时前往工具座和返回维护位置的移动速度。"
       ]
     }
   }

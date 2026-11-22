@@ -81,6 +81,8 @@ def add_dock_retry(text, assets):
                 y = float(re.findall(r'\bY(-?[\d.]+)', '\n'.join(commands))[-1])
                 block += ('variable_retry_x: %s\nvariable_retry_y: %s\nvariable_retry_exit: %r\n'
                           % (x, y, (366. + delta, 361. + delta, 334.5 + delta)))
+            # Only the approach is clear of the rack. Automatic recovery uses its original feed.
+            commands[0] = re.sub(r'F(\d+)$', r'F{params.APPROACH_F|default(\1)|int}', commands[0])
             blocks.append(block + 'gcode:\n    ' + '\n    '.join(commands + ['M400']) + '\n')
     return text.rstrip() + '\n\n' + '\n'.join(blocks)
 
