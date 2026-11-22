@@ -1,4 +1,4 @@
-"""Preserve an already installed auxiliary paused-tool service across updates."""
+"""Install the paused-tool service on supported M5P model configurations."""
 import re
 
 SUBSCRIPTION = '                "paused_tool_service": None,\n'
@@ -12,17 +12,28 @@ TEMP_GUARD = (
     "            if service is not None and service.service_attached():\n"
     "                return service.manual_heat(cmd, self.original[name])\n"
 )
+CANCEL_DISPATCH_GUARD = (
+    "        if name == 'CANCEL_PRINT':\n"
+    "            service = self.printer.lookup_object('paused_tool_service', None)\n"
+    "            if service is not None and service.motion_locked():\n"
+    "                raise cmd.error('정비용 툴을 먼저 파킹해 주세요.')\n"
+)
 RESUME_IF = '{% if printer.paused_tool_service.blocks_resume %}'
 RESUME_ERROR = '{action_raise_error("Park the service tool before resuming.")}'
 DOCK_IF = "{% if printer.fast_cancel.phase == 'dock_sensor_hold' %}"
 DOCK_ELIF = DOCK_IF.replace(' if ', ' elif ')
+PAUSED_IF = '{% if printer.pause_resume.is_paused %}'
+PAUSED_ELIF = PAUSED_IF.replace(' if ', ' elif ')
+FILES = {
+    'klipper/klippy/extras/paused_tool_service.py': 'paused_tool_service.py',
+    'KlipperScreen/panels/paused_tool_service.py': 'panel.py',
+}
+HOOKS = ('KlipperScreen/screen.py', 'klipper/klippy/extras/lugo_tool_temperature.py',
+         'klipper/klippy/extras/fast_cancel.py')
 
 
 def installed(home):
-    return all((home / path).is_file() for path in (
-        'klipper/klippy/extras/paused_tool_service.py',
-        'KlipperScreen/panels/paused_tool_service.py',
-    ))
+    return any((home / path).is_file() for path in FILES)
 
 
 def add_subscription(text):
@@ -38,18 +49,20 @@ def insert(text, anchor, addition):
 
 
 def strip_config(text):
-    guard = (r'(?m)^([ \t]*)' + re.escape(RESUME_IF) + r'\n[ \t]+'
-             + re.escape(RESUME_ERROR) + r'\n[ \t]*' + re.escape(DOCK_ELIF))
-    text = re.sub(guard, lambda m: m[1] + DOCK_IF, text)
+    for old, new in ((DOCK_ELIF, DOCK_IF), (PAUSED_ELIF, PAUSED_IF)):
+        guard = (r'(?m)^([ \t]*)' + re.escape(RESUME_IF) + r'\n[ \t]+'
+                 + re.escape(RESUME_ERROR) + r'\n[ \t]*' + re.escape(old))
+        text = re.sub(guard, lambda m: m[1] + new, text)
     return re.sub(r'(?m)^\[paused_tool_service\][ \t]*\n(?:[ \t]*\n)*', '', text)
 
 
-def configure(text):
-    guard = r'(?m)^([ \t]*)' + re.escape(DOCK_IF) + r'$'
+def configure(text, auxiliary):
+    before, after = (DOCK_IF, DOCK_ELIF) if auxiliary else (PAUSED_IF, PAUSED_ELIF)
+    guard = r'(?m)^([ \t]*)' + re.escape(before) + r'$'
     text, count = re.subn(guard, lambda m: '\n'.join(
-        (m[1] + RESUME_IF, m[1] + '  ' + RESUME_ERROR, m[1] + DOCK_ELIF)), text)
+        (m[1] + RESUME_IF, m[1] + '  ' + RESUME_ERROR, m[1] + after)), text)
     if count != 1:
-        raise ValueError('Missing auxiliary RESUME guard for paused-tool service')
+        raise ValueError('Missing RESUME guard for paused-tool service')
     return text.rstrip() + '\n\n[paused_tool_service]\n'
 
 
@@ -83,8 +96,9 @@ def hooks(text, path, enabled):
         text = text.replace(SUBSCRIPTION, '')
         return add_subscription(text) if enabled else text
     if path == 'klipper/klippy/extras/lugo_tool_temperature.py':
-        text = text.replace(TEMP_GUARD, '')
-        return insert(text, '    def dispatch(self, name, cmd):\n', TEMP_GUARD) if enabled else text
+        text = text.replace(TEMP_GUARD, '').replace(CANCEL_DISPATCH_GUARD, '')
+        return insert(text, '    def dispatch(self, name, cmd):\n',
+                      CANCEL_DISPATCH_GUARD + TEMP_GUARD) if enabled else text
     if path == 'klipper/klippy/extras/fast_cancel.py':
         for arg in ('request', 'cmd'):
             name = 'request' if arg == 'request' else 'cmd_cancel'

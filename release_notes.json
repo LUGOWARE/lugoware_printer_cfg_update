@@ -10,17 +10,17 @@
     }
   },
   "lugoware_system": {
-    "version": "1.2.42",
+    "version": "1.2.43",
     "date": "2026/11/22",
     "notes": {
       "ko": [
-        "설정 업데이트 후 프린터 서비스가 시작되지 않으면 이전 설정을 자동으로 복원합니다."
+        "일시정지 중 설정에서 T1~T4 툴을 가져와 필라멘트를 교체하거나 정비한 뒤 다시 거치할 수 있습니다. FLEX4 M·L·W 표준 및 툴헤드 보조 버전에 적용됩니다."
       ],
       "en": [
-        "Restores the previous configuration if the printer services fail to start after a configuration update."
+        "While paused, use Settings to fetch T1–T4 for a filament change or maintenance, then park it again. Available on FLEX4 M, L and W in both Standard and Auxiliary Toolhead versions."
       ],
       "zh_CN": [
-        "配置更新后如果打印机服务无法启动，将自动恢复之前的配置。"
+        "打印暂停时，可在设置中取出 T1 至 T4 工具，更换耗材或维护后再放回。适用于 FLEX4 M、L、W 的标准版和工具头辅助加热版。"
       ]
     }
   }

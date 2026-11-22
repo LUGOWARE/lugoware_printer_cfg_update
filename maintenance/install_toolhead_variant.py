@@ -32,10 +32,15 @@ RESUME_DOCK_CONFIRM = (
 )
 
 
-def remove_dock_retry(text):
+def strip_dock_routes(text):
     for slot in range(1, 5):
         for action in ('PARK', 'DOCK'):
             text = remove_section(text, 'gcode_macro _T%d_RETRY_%s_XY' % (slot, action))
+    return text
+
+
+def remove_dock_retry(text):
+    text = strip_dock_routes(text)
     alternate = '|'.join(r'\n'.join(r'[ \t]+' + re.escape(l.lstrip()) for l in body)
                          for body in ((RESUME_DOCK_MESSAGE,), RESUME_DOCK_CONFIRM))
     guard = r'(?m)^([ \t]*)' + re.escape(RESUME_DOCK_HOLD) + r'\n(?:' + alternate + ')'
@@ -44,11 +49,15 @@ def remove_dock_retry(text):
 
 
 def add_dock_retry(text, assets):
+    text = strip_dock_routes(text)
     release = json.loads((assets / 'dock_retry_paths.json').read_text(encoding='utf-8'))
     moves = []
     for slot in range(4):
         for action in ('DOCK', 'PARK'):
-            block = section(text, 'gcode_macro %s_TOOL_%d' % (action, slot))[0]
+            match = section(text, 'gcode_macro %s_TOOL_%d' % (action, slot))
+            if not match:
+                return text
+            block = match[0]
             moves.extend(' '.join(line.split()) for line in block.splitlines()
                          if re.match(r'^\s*G[01]\s', line))
     signature = hashlib.sha256('\n'.join(moves).encode()).hexdigest()
@@ -394,7 +403,7 @@ def toolchange_profile(base, variant, assets):
         base = dock_wait_profile(base, dock_patches, 'standard')
     base = base_profile(base, variant)
     if variant == 'standard':
-        return base
+        return add_dock_retry(base, assets)
     base = dock_temperature_actions(dock_wait_profile(base, dock_patches, 'toolhead'), True)
     resume = section(base, 'gcode_macro RESUME')
     if not resume:
@@ -407,6 +416,30 @@ def toolchange_profile(base, variant, assets):
     if count != 1:
         raise ValueError('Unsupported RESUME macro for auxiliary dock safety')
     return add_dock_retry(base[:resume.start()] + guarded + base[resume.end():], assets)
+
+
+def plan_paused_tools(home, assets, base, variant, screen_override, changes):
+    config = home / 'printer_data/config'
+    available = all(section(base, 'gcode_macro _T%d_RETRY_%s_XY' % (slot, action))
+                    for slot in range(1, 5) for action in ('DOCK', 'PARK'))
+    if not available and not paused_tools.installed(home):
+        return base
+    if available:
+        base = paused_tools.configure(base, variant == 'toolhead')
+        for rel, name in paused_tools.FILES.items():
+            data = (assets.parent / 'paused_tool_service' / name).read_bytes()
+            ast.parse(data)
+            changes[home / rel] = data
+    screen_path = config / 'KlipperScreen.conf'
+    screen = screen_override if screen_override is not None else screen_path.read_text(encoding='utf-8')
+    changes[screen_path] = paused_tools.menu(screen, available).encode()
+    for rel in paused_tools.HOOKS:
+        path = home / rel
+        old = changes[path].decode() if path in changes else path.read_text(encoding='utf-8')
+        new = paused_tools.hooks(old, rel, available)
+        ast.parse(new)
+        changes[path] = new.encode()
+    return base
 
 
 def plan(home, variant, assets, base_override=None, screen_override=None):
@@ -428,6 +461,10 @@ def plan(home, variant, assets, base_override=None, screen_override=None):
         if organized != original_header:
             changes[header_path] = organized.encode()
         changes[marker] = json.dumps({'variant': variant}).encode()
+        new = add_dock_retry(paused_tools.strip_config(base), assets)
+        new = plan_paused_tools(home, assets, new, variant, screen_override, changes)
+        if new != base:
+            changes[base_path] = new.encode()
         return changes
     auxiliary = config / 'toolhead_auxiliary.cfg'
     if variant == 'toolhead':
@@ -455,23 +492,17 @@ def plan(home, variant, assets, base_override=None, screen_override=None):
         header = '[include toolhead_auxiliary.cfg]\n' + header
     changes[header_path] = organize_printer_header(nozzle_header_profile(header, variant)).encode()
     base = toolchange_profile(paused_tools.strip_config(base), variant, assets)
-    service_installed = paused_tools.installed(home)
-    service_active = service_installed and variant == 'toolhead' and base.count('variable_retry_x: 367.5\n') == 4
-    changes[base_path] = (paused_tools.configure(base) if service_active else base).encode()
-    if service_installed:
-        screen_path = config / 'KlipperScreen.conf'
-        screen = screen_override if screen_override is not None else screen_path.read_text(encoding='utf-8')
-        changes[screen_path] = paused_tools.menu(screen, service_active).encode()
     patches = json.loads((assets / 'ui_patches.json').read_text(encoding='utf-8'))
     for rel, edits in patches.items():
         path = home / rel
         old = path.read_text(encoding='utf-8')
         try:
-            new = paused_tools.hooks(patch_ui(old, edits, variant), rel, service_active)
+            new = patch_ui(old, edits, variant)
         except ValueError as exc:
             raise ValueError('%s: %s' % (rel, exc)) from exc
         ast.parse(new)
         changes[path] = new.encode()
+    changes[base_path] = plan_paused_tools(home, assets, base, variant, screen_override, changes).encode()
     if variant == 'toolhead':
         for name in TOOLHEAD_MODULES:
             data = (assets / name).read_bytes()
@@ -573,6 +604,8 @@ def preflight(home, variant, assets, screen_upgrade_pending=None):
     json.loads((assets / 'dock_retry_paths.json').read_text(encoding='utf-8'))
     for name in TOOLHEAD_MODULES:
         ast.parse((assets / name).read_bytes())
+    for name in paused_tools.FILES.values():
+        ast.parse((assets.parent / 'paused_tool_service' / name).read_bytes())
     for name in ('toolhead_auxiliary.cfg', 'lugoware-toolhead-temperature.js'):
         if not (assets / name).read_bytes():
             raise ValueError('Empty variant package asset: ' + name)
