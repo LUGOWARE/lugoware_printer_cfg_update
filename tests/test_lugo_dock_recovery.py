@@ -26,6 +26,7 @@ def fast_class():
 class DockRecoveryTest(unittest.TestCase):
     def setUp(self):
         self.pose = [367.5, 178.5, 4., 100.]
+        self.mesh_z = 0.
         self.route = {'retry_x': 367.5, 'retry_y': 178.5, 'retry_exit': (366., 361., 334.5)}
         self.settings = {'homing_override': {'axes': 'z'},
                          'stepper_x': {'position_min': 0, 'position_max': 381}}
@@ -41,8 +42,13 @@ class DockRecoveryTest(unittest.TestCase):
         self.gcode = NS(register_command=self.registered.__setitem__, run_script_from_command=self.execute)
         self.pause = NS(is_paused=True)
         objs = {
-            'toolhead': NS(get_status=lambda t: {'position': self.pose, 'homed_axes': 'xyz'}),
-            'gcode_move': NS(get_status=lambda t: {'absolute_coordinates': True, 'gcode_position': self.pose}),
+            'toolhead': NS(get_status=lambda t: {
+                'position': [*self.pose[:2], self.pose[2] + self.mesh_z, self.pose[3]],
+                'homed_axes': 'xyz', 'axis_maximum': (381, 260, 370)}),
+            'gcode_move': NS(get_status=lambda t: {'absolute_coordinates': True,
+                                                  'gcode_position': self.pose, 'position': self.pose},
+                             position_with_transform=lambda: self.pose,
+                             saved_states={'PAUSE_STATE': {'last_position': self.pose.copy()}}),
             'toolhead_auxiliary': NS(get_status=lambda t: {'state': self.sensor}),
             'pause_resume': self.pause,
             'configfile': NS(get_status=lambda t: {'settings': self.settings}),
@@ -121,6 +127,32 @@ class DockRecoveryTest(unittest.TestCase):
         self.assertIn('G1 X230.5 F1800', self.trace)
         self.assertNotIn('G1 X361 F700', self.trace)
         self.assertIn('BASE_RESUME', self.trace)
+
+    def test_mesh_compensation_during_xy_travel_is_allowed(self):
+        self.hold()
+        self.mesh_z = .32
+        self.rec.require_safe(self.command, self.rec.record, at_dock=False)
+        self.pose[2] += .32
+        with self.assertRaises(ValueError):
+            self.rec.require_safe(self.command, self.rec.record, at_dock=False)
+
+    def test_print_disconnection_needs_an_inactive_sd_file_and_safe_height(self):
+        self.settings['gcode_macro resume_action_t1'] = {}
+        self.pause.sd_paused = True
+        self.rec.begin_print_hold(1, (230., 230.))
+        self.assertIsNone(self.rec.record)
+        self.from_sd = False
+        self.fast.phase = 'dock_sensor_hold'
+        self.rec.begin_print_hold(1, (230., 230.))
+        self.assertTrue(self.rec.available())
+        self.assertEqual(self.rec.record['offset'], self.sd.file_position)
+        self.assertEqual(self.rec.record['kind'], 'print')
+        last_position = self.rec.record['pause_state']['last_position']
+        self.pose[2] = 367.
+        self.assertEqual(last_position[2], 4.)
+        self.rec.record = None
+        self.rec.begin_print_hold(1, (230., 230.))
+        self.assertIsNone(self.rec.record)
 
     def test_unknown_route_cannot_resume(self):
         self.route = {}

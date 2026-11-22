@@ -10,17 +10,20 @@
     }
   },
   "lugoware_system": {
-    "version": "1.2.40",
+    "version": "1.2.41",
     "date": "2026/11/22",
     "notes": {
       "ko": [
-        "업데이트 후 일시정지 중 툴 가져오기 메뉴가 다시 열리도록 화면 설정 저장 방식을 보완했습니다."
+        "도킹 복구 중 베드 메시를 사용해도 재개 좌표를 올바르게 확인하도록 수정했습니다.",
+        "출력 중 툴헤드 센서 연결이 끊기면, 툴을 거치한 뒤 재개 화면에서 확인하고 다시 도킹해 출력을 이어갈 수 있습니다."
       ],
       "en": [
-        "Fixed preservation of the paused tool service menu after KlipperScreen restarts."
+        "Corrected the position check for dock recovery when bed mesh is active.",
+        "If the toolhead sensor disconnects during a print, park the tool and confirm on the Resume screen to redock it and continue printing."
       ],
       "zh_CN": [
-        "修复 KlipperScreen 重启后暂停取工具菜单消失的问题。"
+        "修复启用热床网格补偿时工具重新对接的位置检查。",
+        "打印时工具头传感器断开后，可将工具放回支架，在恢复界面确认，重新对接并继续打印。"
       ]
     }
   }

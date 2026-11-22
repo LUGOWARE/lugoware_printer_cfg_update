@@ -114,7 +114,7 @@ class DetachableHeaterSensor:
             return
         self.hold_dock(gcmd, fast, 'Toolhead sensor check failed; paused without movement', True)
 
-    def hold_dock(self, gcmd, fast, message, replay=False):
+    def hold_dock(self, gcmd, fast, message, replay=False, print_fault=None):
         self.dock_stage = None
         self.dock_pending = False
         self.reconnect = None
@@ -129,6 +129,8 @@ class DetachableHeaterSensor:
         fast.message = message
         try:
             self.printer.lookup_object('pause_resume').cmd_PAUSE(gcmd)
+            if print_fault is not None:
+                fast.dock_recovery.begin_print_hold(*print_fault)
         finally:
             # Let BASE_PAUSE save its position before stopping the dock macro.
             fast.dock_abort = True
@@ -476,12 +478,13 @@ class DetachableHeaterSensor:
         if target > 0:
             self.source.gcode.respond_info('Toolhead detached: auxiliary heater off; reconnect window 5 seconds')
             if state == 'printing' and not staged:
-                self.queue_print_fault(tool, filename, 'Toolhead sensor disconnected')
+                self.queue_print_fault(tool, filename, 'Toolhead sensor disconnected',
+                                       (self.nozzle_heater.target_temp, target))
 
-    def queue_print_fault(self, tool, filename, reason):
+    def queue_print_fault(self, tool, filename, reason, targets=None):
         if getattr(self, 'pending_print_fault', None) is None:
             self.reconnect = None
-            self.pending_print_fault = (tool, filename, reason)
+            self.pending_print_fault = (tool, filename, reason, targets)
             self.source.reactor.register_callback(self.pause_fault_callback)
 
     def pause_fault_callback(self, _eventtime):
@@ -495,11 +498,15 @@ class DetachableHeaterSensor:
         now = self.source.reactor.monotonic()
         fast = self.printer.lookup_object('fast_cancel')
         tool, state, filename, blocked = self.context(now)
-        slot, job, reason = pending
+        slot, job, reason, targets = pending
         if state != 'printing' or blocked or job != filename:
             return
         head = self.printer.lookup_object('toolhead')
         head.wait_moves()
+        if (targets is not None and slot == tool == fast.slot and fast.phase == 'docked'
+                and not fast.sd.is_cmd_from_sd()):
+            self.hold_dock(gcmd, fast, reason, print_fault=(slot, targets))
+            return
         if (slot == tool == fast.slot and fast.phase == 'docked'
                 and set(head.get_status(now)['homed_axes']) == set('xyz')
                 and self.wait_dock_link(fast, 'connected', self.source.reactor.monotonic())):
