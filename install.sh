@@ -192,8 +192,12 @@ copy_config "$BACKUP_DIR/printer-base-prepared.cfg" "$CONFIG_DIR/printer_base.cf
 fi
 copy_config "$REPO_DIR/crowsnest.conf" "$CONFIG_DIR/crowsnest.conf"
 if (( ! SYSTEM_ONLY )); then
+SCREEN_CONFIG="$REPO_DIR/KlipperScreen.conf"
+if [[ "$LUGOWARE_VARIANT" == toolhead && -f "$REPO_DIR/KlipperScreen_toolhead.conf" ]]; then
+    SCREEN_CONFIG="$REPO_DIR/KlipperScreen_toolhead.conf"
+fi
 python3 "$COMMON_REPO/maintenance/install_screen_config.py" \
-    "$REPO_DIR/KlipperScreen.conf" "$CONFIG_DIR/KlipperScreen.conf" "$BACKUP_DIR/KlipperScreen.conf"
+    "$SCREEN_CONFIG" "$CONFIG_DIR/KlipperScreen.conf" "$BACKUP_DIR/KlipperScreen.conf"
 fi
 echo "  -> 복사 완료"
 

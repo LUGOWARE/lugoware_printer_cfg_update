@@ -69,6 +69,10 @@ class ChannelTests(unittest.TestCase):
                 (repo / 'printer_base.cfg').write_text('# standard\n[printer]\nkinematics: cartesian\n')
                 if available:
                     (repo / 'printer_base_toolhead.cfg').write_text('# auxiliary\n[printer]\nkinematics: cartesian\n')
+                if available:
+                    (repo / 'KlipperScreen_toolhead.conf').write_text(
+                        '[menu __main test]\nname: Auxiliary screen\n')
+                    (repo / 'toolhead_auxiliary.cfg').write_text('published auxiliary config')
                 with patch.object(worker, 'selected_variant', return_value=variant), \
                         patch.object(worker, 'variant_plan', return_value={}) as plan, \
                         patch.object(worker, 'validate_config'), patch.object(worker, 'check_idle'), \
@@ -76,6 +80,10 @@ class ChannelTests(unittest.TestCase):
                     worker.apply_config(repo, home, backup)
                 self.assertTrue((target / 'printer_base.cfg').read_text().startswith('# ' + expected))
                 self.assertEqual(plan.call_args.args[1], variant)
+                uses_auxiliary = variant == 'toolhead' and available
+                self.assertEqual(plan.call_args.kwargs['auxiliary_override'],
+                                 'published auxiliary config' if uses_auxiliary else None)
+                self.assertEqual('Auxiliary screen' in (target / 'KlipperScreen.conf').read_text(), uses_auxiliary)
 
     def test_validation_failure_does_not_touch_files(self):
         with tempfile.TemporaryDirectory() as d:

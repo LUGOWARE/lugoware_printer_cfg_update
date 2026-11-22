@@ -10,20 +10,20 @@
     }
   },
   "lugoware_system": {
-    "version": "1.2.46",
+    "version": "1.2.47",
     "date": "2026/11/22",
     "notes": {
       "ko": [
-        "표준과 툴헤드 보조 버전의 프린터 설정을 따로 업데이트합니다.",
-        "툴헤드 보조 버전의 화면 설정 버전은 V3.1.1부터 시작합니다."
+        "표준과 툴헤드 보조 버전에서 각자의 화면 설정을 불러옵니다.",
+        "툴헤드 보조 설정을 프린터 설정과 함께 업데이트할 수 있습니다."
       ],
       "en": [
-        "Standard and auxiliary toolhead editions now update their printer configurations separately.",
-        "The auxiliary edition starts its displayed configuration version at V3.1.1."
+        "Standard and auxiliary toolhead editions can load separate screen settings.",
+        "Auxiliary toolhead settings can be updated together with the printer configuration."
       ],
       "zh_CN": [
-        "标准版和工具头辅助加热版现可分别更新打印机配置。",
-        "工具头辅助加热版的屏幕配置版本从 V3.1.1 开始。"
+        "标准版和工具头辅助加热版可分别加载各自的屏幕设置。",
+        "工具头辅助设置可随打印机配置一起更新。"
       ]
     }
   }

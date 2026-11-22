@@ -449,7 +449,33 @@ def plan_paused_tools(home, assets, base, variant, screen_override, changes):
     return base
 
 
-def plan(home, variant, assets, base_override=None, screen_override=None):
+def merge_auxiliary_release(content, defaults):
+    # The published file supplies macros and tuning. Hardware and local preference
+    # settings on an already-configured device are carried forward.
+    for name, options in (
+        (AUX[0], ('sensor_pin', 'pullup_resistor', 'sync_manual_preheat')),
+        ('heater_generic Toolhead', ('heater_pin', 'sensor_type', 'min_temp', 'max_temp',
+                                    'min_extrude_temp', 'max_power')),
+    ):
+        installed, release = section(content, name), section(defaults, name)
+        if not release:
+            raise ValueError('Missing section in released auxiliary config: ' + name)
+        if not installed:
+            continue
+        block = release[0]
+        for option in options:
+            pattern = re.compile(r'(?mi)^[ \t]*' + option + r'[ \t]*[:=][^\n]*\n')
+            old = pattern.search(installed[0])
+            if old:
+                block, count = pattern.subn(lambda match: old[0], block, count=1)
+                if not count:
+                    split = block.index('\n') + 1
+                    block = block[:split] + old[0] + block[split:]
+        defaults = defaults[:release.start()] + block + defaults[release.end():]
+    return defaults
+
+
+def plan(home, variant, assets, base_override=None, screen_override=None, auxiliary_override=None):
     if variant not in VARIANTS:
         raise ValueError('Invalid variant')
     config = home / 'printer_data/config'
@@ -483,12 +509,18 @@ def plan(home, variant, assets, base_override=None, screen_override=None):
             content = auxiliary.read_text(encoding='utf-8')
         else:
             content = (assets / 'toolhead_auxiliary.cfg').read_text(encoding='utf-8')
-        # Upgrade existing auxiliary configs as well as fresh installations.
-        defaults = (assets / 'toolhead_auxiliary.cfg').read_text(encoding='utf-8')
-        content = apply_release_tuning(migrate_auxiliary_section(content), defaults)
-        for name in ('gcode_macro TOOLHEAD_IDLE_STATE', 'delayed_gcode turn_off_toolhead'):
-            content = remove_section(content, name).rstrip() + '\n\n' + section(defaults, name)[0]
-        changes[auxiliary] = pid_profile(content, 'heater_generic Toolhead', TOOLHEAD_PID).encode()
+        content = migrate_auxiliary_section(content)
+        if auxiliary_override is not None:
+            defaults = migrate_auxiliary_section(auxiliary_override.rstrip() + '\n')
+            content = merge_auxiliary_release(content if all(blocks) or auxiliary.exists() else '', defaults)
+            content = apply_release_tuning(content, content)
+        else:
+            defaults = (assets / 'toolhead_auxiliary.cfg').read_text(encoding='utf-8')
+            content = apply_release_tuning(content, defaults)
+            for name in ('gcode_macro TOOLHEAD_IDLE_STATE', 'delayed_gcode turn_off_toolhead'):
+                content = remove_section(content, name).rstrip() + '\n\n' + section(defaults, name)[0]
+            content = pid_profile(content, 'heater_generic Toolhead', TOOLHEAD_PID)
+        changes[auxiliary] = content.encode()
     for name in AUX:
         header = remove_section(header, name)
     if variant == 'standard':
@@ -588,7 +620,11 @@ def commit(changes, backup):
 
 def apply(home, variant, backup, base_override=None):
     assets = Path(__file__).with_name('toolhead_variant')
-    changes = plan(home, variant, assets, base_override)
+    auxiliary_path = home / 'lugoware_config/toolhead_auxiliary.cfg'
+    auxiliary = None
+    if variant == 'toolhead' and auxiliary_path.is_file():
+        auxiliary = auxiliary_path.read_text(encoding='utf-8-sig')
+    changes = plan(home, variant, assets, base_override, auxiliary_override=auxiliary)
     commit(changes, backup)
 
 

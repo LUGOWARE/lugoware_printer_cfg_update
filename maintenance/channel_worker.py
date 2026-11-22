@@ -57,7 +57,16 @@ def apply_config(repo, home, backup):
         if guard.is_file() and 'def prepare_first(' in guard.read_text(encoding='utf-8'):
             from followup_features import first_tool
             base = first_tool(base)
-    template = (repo / 'KlipperScreen.conf').read_text(encoding='utf-8-sig')
+    screen_source = repo / 'KlipperScreen.conf'
+    auxiliary_screen = repo / 'KlipperScreen_toolhead.conf'
+    auxiliary_path = repo / 'toolhead_auxiliary.cfg'
+    auxiliary_config = None
+    if variant == 'toolhead':
+        if auxiliary_screen.is_file():
+            screen_source = auxiliary_screen
+        if auxiliary_path.is_file():
+            auxiliary_config = auxiliary_path.read_text(encoding='utf-8-sig')
+    template = screen_source.read_text(encoding='utf-8-sig')
     previous_screen = (target / 'KlipperScreen.conf').read_text(encoding='utf-8')
     if (home / 'klipper/klippy/extras/print_sensor.py').is_file() and '[menu __print lock]' not in template:
         template += '\n[menu __print lock]\nenable: False\n'
@@ -70,7 +79,7 @@ def apply_config(repo, home, backup):
     validate_config(base, screen, home)
     changes = {'printer_base.cfg': base.encode(), 'KlipperScreen.conf': screen.encode()}
     variant_changes = variant_plan(home, variant, Path(__file__).with_name('toolhead_variant'),
-                                   base_override=base, screen_override=screen)
+                                   base_override=base, screen_override=screen, auxiliary_override=auxiliary_config)
     previous = {name: (target / name).read_bytes() for name in changes}
     for name, content in previous.items():
         (backup / name).write_bytes(content)
@@ -126,9 +135,11 @@ def sync_latest_config(home, branch, backup):
         data = subprocess.check_output(git + ['show', commit + ':' + name])
         (snapshot / name).write_bytes(data)
     if selected_variant(home) == 'toolhead':
-        name = 'printer_base_toolhead.cfg'
-        if output('ls-tree', '--name-only', commit, '--', name) == name:
-            (snapshot / name).write_bytes(subprocess.check_output(git + ['show', commit + ':' + name]))
+        names = ('printer_base_toolhead.cfg', 'KlipperScreen_toolhead.conf', 'toolhead_auxiliary.cfg')
+        available = set(output('ls-tree', '--name-only', commit, '--', *names).splitlines())
+        for name in names:
+            if name in available:
+                (snapshot / name).write_bytes(subprocess.check_output(git + ['show', commit + ':' + name]))
     print('Applying latest model config: ' + branch + ' ' + commit, flush=True)
     apply_config(snapshot, home, backup)
     print('System and model config applied: ' + commit, flush=True)

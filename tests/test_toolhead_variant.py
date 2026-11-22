@@ -28,6 +28,18 @@ def profile():
 
 
 class VariantTests(unittest.TestCase):
+    def test_auxiliary_release_uses_published_tuning_and_preserves_device_settings(self):
+        defaults = (Path(variant.__file__).parent / 'toolhead_variant/toolhead_auxiliary.cfg').read_text(encoding='utf-8')
+        installed = defaults.replace('sync_manual_preheat: False', 'sync_manual_preheat: True')
+        installed = installed.replace('max_temp: 300', 'max_temp: 285')
+        released = defaults.replace('prime_timeout: 60', 'prime_timeout: 55')
+        released = released.replace('pid_kp: 37.681', 'pid_kp: 37.690')
+        result = variant.merge_auxiliary_release(installed, released)
+        self.assertIn('sync_manual_preheat: True', result)
+        self.assertIn('max_temp: 285', result)
+        self.assertIn('prime_timeout: 55', result)
+        self.assertIn('pid_kp: 37.690', result)
+
     def test_prepare_extrusion_upgrade_changes_one_stock_move(self):
         old = 'G1 E{10.0 * factor} F{8.0 * 60 / (3.141592653589793 * (dia / 2) ** 2)}'
         cfg = ('[gcode_macro PREPARE_ACTION]\ngcode:\n    ' + old
