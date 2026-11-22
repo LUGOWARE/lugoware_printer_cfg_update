@@ -15,6 +15,7 @@ from install_screen_config import merge
 from patch_print_controls import macros, feature_macros
 from preserve_sensor_pins import preserve
 from install_toolhead_variant import plan as variant_plan, selected as selected_variant, commit as commit_variant
+from install_toolhead_variant import restore as restore_variant
 
 
 def atomic(path, data):
@@ -71,7 +72,23 @@ def apply_config(repo, home, backup):
     check_idle()
     combined = {target / name: content for name, content in changes.items()}
     combined.update(variant_changes)
-    commit_variant(combined, backup / 'hardware-variant')
+    variant_backup = backup / 'hardware-variant'
+    commit_variant(combined, variant_backup)
+    try:
+        activate_config()
+    except (Exception, SystemExit) as exc:
+        print('Config activation failed; restoring previous files from ' + str(variant_backup), flush=True)
+        try:
+            restore_variant(variant_backup)
+            activate_config()
+        except (Exception, SystemExit) as rollback_error:
+            raise RuntimeError('Config activation failed (%s); automatic recovery did not finish (%s). Backup: %s'
+                               % (exc, rollback_error, variant_backup)) from rollback_error
+        raise RuntimeError('Config activation failed (%s); previous files restored and services ready. Backup: %s'
+                           % (exc, variant_backup)) from exc
+
+
+def activate_config():
     subprocess.run(['sudo', '-n', 'systemctl', 'restart', 'klipper', 'KlipperScreen'], check=True)
     subprocess.run([sys.executable, str(Path(__file__).with_name('wait_ready.py')), '--ready-only'], check=True)
     subprocess.run(['systemctl', 'is-active', '--quiet', 'KlipperScreen'], check=True)

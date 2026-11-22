@@ -552,6 +552,20 @@ def apply(home, variant, backup, base_override=None):
     commit(changes, backup)
 
 
+def restore(backup):
+    """Restore the files and modes saved by a completed commit."""
+    entries = json.loads((backup / 'manifest.json').read_text())
+    for index, entry in enumerate(reversed(entries)):
+        path = Path(entry['path'])
+        if entry['backup'] is None:
+            path.unlink(missing_ok=True)
+            continue
+        temporary = backup / ('.variant-restore-' + str(index))
+        temporary.write_bytes((backup / entry['backup']).read_bytes())
+        temporary.chmod(entry['mode'])
+        os.replace(temporary, path)
+
+
 def preflight(home, variant, assets, screen_upgrade_pending=None):
     """Check package integrity and non-replaced UI before system mutations."""
     patches = json.loads((assets / 'ui_patches.json').read_text(encoding='utf-8'))

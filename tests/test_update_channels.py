@@ -104,6 +104,37 @@ class ChannelTests(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError, 'system first'):
                     worker.validate_config('[gcode_macro TEST]\ngcode:\n  FAST_CANCEL_NEW_FEATURE\n', '', home)
 
+    def test_activation_failure_restores_config_and_optional_variant_files(self):
+        with tempfile.TemporaryDirectory() as d:
+            home, repo, backup, target = self.fixture(Path(d))
+            old = {p.name: p.read_bytes() for p in target.iterdir()}
+            optional = target / 'toolhead_auxiliary.cfg'
+            calls = []
+
+            def activate():
+                calls.append((optional.exists(), (target / 'printer_base.cfg').read_bytes()))
+                if len(calls) == 1:
+                    raise SystemExit('Klipper did not become ready')
+
+            with patch.object(worker, 'variant_plan', return_value={optional: b'new'}), \
+                    patch.object(worker, 'validate_config'), patch.object(worker, 'check_idle'), \
+                    patch.object(worker, 'activate_config', side_effect=activate):
+                with self.assertRaisesRegex(RuntimeError, 'previous files restored and services ready'):
+                    worker.apply_config(repo, home, backup)
+            self.assertTrue(calls[0][0])
+            self.assertEqual(calls[1], (False, b'old'))
+            self.assertEqual({p.name: p.read_bytes() for p in target.iterdir()}, old)
+
+    def test_activation_reports_failed_restart_after_restoration(self):
+        with tempfile.TemporaryDirectory() as d:
+            home, repo, backup, target = self.fixture(Path(d))
+            with patch.object(worker, 'validate_config'), patch.object(worker, 'check_idle'), \
+                    patch.object(worker, 'activate_config',
+                                 side_effect=[OSError('restart failed'), OSError('service offline')]):
+                with self.assertRaisesRegex(RuntimeError, 'automatic recovery did not finish.*service offline'):
+                    worker.apply_config(repo, home, backup)
+            self.assertEqual((target / 'printer_base.cfg').read_bytes(), b'old')
+
     def test_waits_for_moonraker_lock_release(self):
         with patch.object(worker, 'request', side_effect=[{'busy': True}, {'busy': False}]), patch.object(worker.time, 'sleep') as sleep:
             worker.wait_manager()

@@ -10,20 +10,17 @@
     }
   },
   "lugoware_system": {
-    "version": "1.2.41",
+    "version": "1.2.42",
     "date": "2026/11/22",
     "notes": {
       "ko": [
-        "도킹 복구 중 베드 메시를 사용해도 재개 좌표를 올바르게 확인하도록 수정했습니다.",
-        "출력 중 툴헤드 센서 연결이 끊기면, 툴을 거치한 뒤 재개 화면에서 확인하고 다시 도킹해 출력을 이어갈 수 있습니다."
+        "설정 업데이트 후 프린터 서비스가 시작되지 않으면 이전 설정을 자동으로 복원합니다."
       ],
       "en": [
-        "Corrected the position check for dock recovery when bed mesh is active.",
-        "If the toolhead sensor disconnects during a print, park the tool and confirm on the Resume screen to redock it and continue printing."
+        "Restores the previous configuration if the printer services fail to start after a configuration update."
       ],
       "zh_CN": [
-        "修复启用热床网格补偿时工具重新对接的位置检查。",
-        "打印时工具头传感器断开后，可将工具放回支架，在恢复界面确认，重新对接并继续打印。"
+        "配置更新后如果打印机服务无法启动，将自动恢复之前的配置。"
       ]
     }
   }
