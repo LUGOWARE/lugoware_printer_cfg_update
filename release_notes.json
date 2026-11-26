@@ -10,17 +10,17 @@
     }
   },
   "lugoware_system": {
-    "version": "1.2.53",
+    "version": "1.2.54",
     "date": "2026/11/26",
     "notes": {
       "ko": [
-        "툴헤드 보조 버전에서 도킹 직후 미부착인 경우 최대 두 차례 재도킹합니다. 센서를 다시 읽은 뒤에만 예열과 프라임을 진행합니다."
+        "툴헤드 보조 버전에서 일시정지 또는 취소 후 X10 Y125로 복귀합니다. 파킹은 끝났지만 센서 상태가 불확실하면 X10까지만 이동합니다."
       ],
       "en": [
-        "The auxiliary toolhead edition attempts up to two redocks if the tool is not detected after docking. Heating and priming require a valid sensor reading."
+        "The auxiliary toolhead edition returns to X10 Y125 after a pause or cancellation. If parking is complete but the sensor reading is uncertain, it moves only to X10."
       ],
       "zh_CN": [
-        "工具头辅助加热版本在对接后未检测到工具时最多重试两次，传感器读数正常后才加热和预挤出。"
+        "工具头辅助加热版本在暂停或取消打印后返回 X10 Y125。如果已完成停放但传感器状态不确定，则仅移动至 X10。"
       ]
     }
   }

@@ -510,6 +510,106 @@ def toolchange_profile(base, variant, assets):
     return add_dock_retry(base[:resume.start()] + guarded + base[resume.end():], assets)
 
 
+PAUSE_RETURN = 'gcode_macro _PAUSE_RETURN_XY'
+PAUSE_RETURN_CALL = '_PAUSE_RETURN_XY'
+CANCEL_RETURN_CHECK = '_PAUSE_RETURN_XY PARK_SLOT={tool} CANCEL_CHECK=1'
+
+
+def pause_return_profile(base, enable):
+    # Undo our hooks before reapplying them, including the initial on-device patch.
+    if section(base, PAUSE_RETURN):
+        base = remove_section(base, PAUSE_RETURN)
+        base = re.sub(r'(?m)^([ \t]+)_PAUSE_RETURN_XY(?: PARK_SLOT=[0-3])?[ \t]*$',
+                      r'\1G1 X0 F40000', base)
+        base = re.sub(r'(?m)^([ \t]+)_PAUSE_RETURN_XY EMPTY_PATH=1[ \t]*$',
+                      r'\1G1 X0 F40000\n\1SET_GCODE_VARIABLE MACRO=TOOL_STATE VARIABLE=active_tool VALUE=-1', base)
+        base = re.sub(r'(?m)^[ \t]+' + re.escape(CANCEL_RETURN_CHECK) + r'[ \t]*\n', '', base)
+    if not enable:
+        return base
+
+    exits = []
+    edits = {}
+    for slot in range(4):
+        park = section(base, 'gcode_macro PARK_TOOL_%d' % slot)
+        route = section(base, 'gcode_macro _TOOL_RETRY_PARK_XY_T%d' % (slot + 1))
+        exit_pattern = (r'(?m)^    G1 Y([0-9.]+) F[^\n]+\n    G1 X\S+ F[^\n]+\n'
+                        r'    G1 X([0-9.]+) F[^\n]+\n    M400[ \t]*$')
+        park_exit = re.search(exit_pattern, park[0]) if park else None
+        route_exit = re.search(exit_pattern, route[0]) if route else None
+        if (not park_exit or not route_exit or park_exit.groups() != route_exit.groups()
+                or 'FAST_CANCEL_PHASE PHASE=empty TOOL=%d' % slot not in park[0]):
+            exits = []
+            break
+        exits.append((float(park_exit[2]), float(park_exit[1])))
+
+    for action in ('T0', 'T1', 'T2', 'T3', 'A1'):
+        name = 'gcode_macro PAUSE_ACTION_' + action
+        match = section(base, name)
+        pattern = r'(?m)^([ \t]+)G1 X0 F40000[ \t]*$'
+        args = ' PARK_SLOT=' + action[1] if action.startswith('T') else ' EMPTY_PATH=1'
+        if action == 'A1':
+            pattern += r'\n[ \t]+SET_GCODE_VARIABLE MACRO=TOOL_STATE VARIABLE=active_tool VALUE=-1[ \t]*$'
+        if not match:
+            return base
+        changed, count = re.subn(pattern, lambda m: m[1] + PAUSE_RETURN_CALL + args, match[0])
+        if count != 1:
+            return base
+        edits[name] = changed
+
+    cancel_name = 'gcode_macro _FAST_CANCEL_MOTION'
+    cancel = section(base, cancel_name)
+    if exits and cancel:
+        pattern = r'(?m)^(([ \t]+)PARK_TOOL_\{tool\}[^\n]*\n[ \t]+M400[ \t]*\n)(?=[ \t]+\{% endif %\})'
+        changed, count = re.subn(pattern, lambda m: m[1] + m[2] + CANCEL_RETURN_CHECK + '\n', cancel[0])
+        if count == 1:
+            edits[cancel_name] = changed
+
+    for name, body in edits.items():
+        match = section(base, name)
+        base = base[:match.start()] + body + base[match.end():]
+    return base.rstrip() + '\n\n' + pause_return_macro(exits)
+
+
+def pause_return_macro(exits):
+    return """[gcode_macro _PAUSE_RETURN_XY]
+gcode:
+    {% set sensor = printer['filament_switch_sensor toolhead_sensor'] %}
+    {% set tool = printer['gcode_macro TOOL_STATE'] %}
+    {% set head = printer.toolhead %}
+    {% set origin = printer.gcode_move.homing_origin %}
+    {% set empty_path = params.EMPTY_PATH|default(0)|int %}
+    {% set slot = params.PARK_SLOT|default(-1)|int %}
+    {% set cancel_check = params.CANCEL_CHECK|default(0)|int %}
+    {% set uncertain = sensor.filament_detected or (sensor.source|default('') == 'PA2 thermistor' and sensor.state != 'disconnected') %}
+    {% set x_in_range = head.axis_minimum.x <= 10 + origin.x <= head.axis_maximum.x %}
+    {% set y_in_range = head.axis_minimum.y <= 125 + origin.y <= head.axis_maximum.y %}
+    {% set exits = PARK_EXIT_COORDINATES %}
+    {% set at_park_exit = slot >= 0 and slot < exits|length and printer.fast_cancel.phase == 'empty' and printer.fast_cancel.tool == slot and tool.is_parked|int and (head.position.x - exits[slot][0])|abs < 0.1 and (head.position.y - exits[slot][1])|abs < 0.1 and origin.x|abs < 0.1 and origin.y|abs < 0.1 %}
+    {% if 'x' not in head.homed_axes or 'y' not in head.homed_axes or 'z' not in head.homed_axes or not x_in_range %}
+        {action_respond_info("Return skipped: position or X10 clearance could not be verified.")}
+    {% elif uncertain and at_park_exit %}
+        G90
+        G1 X10 F3600
+        M400
+        RESPOND MSG="Moved to X10 only. Inspect the toolhead attachment."
+    {% elif cancel_check %}
+        # Normal cancel still verifies detachment before moving Y.
+    {% elif printer.fast_cancel.phase not in ['normal', 'empty'] or uncertain or (empty_path and tool.active_tool|int in [0, 1, 2, 3] and not tool.is_parked|int) %}
+        {action_respond_info("Pause return skipped: inspect the toolhead attachment.")}
+    {% elif not y_in_range %}
+        {action_respond_info("Pause return skipped: Y125 is outside axis limits.")}
+    {% else %}
+        G90
+        G1 X10 F40000
+        G1 Y125 F20000
+        M400
+        {% if empty_path %}
+            SET_GCODE_VARIABLE MACRO=TOOL_STATE VARIABLE=active_tool VALUE=-1
+        {% endif %}
+    {% endif %}
+""".replace('PARK_EXIT_COORDINATES', repr(exits))
+
+
 def plan_paused_tools(home, assets, base, variant, screen_override, changes):
     config = home / 'printer_data/config'
     available = all(section(base, 'gcode_macro _TOOL_RETRY_%s_XY_T%d' % (action, slot))
@@ -580,6 +680,7 @@ def plan(home, variant, assets, base_override=None, screen_override=None, auxili
             changes[header_path] = organized.encode()
         changes[marker] = json.dumps({'variant': variant}).encode()
         new = add_dock_retry(paused_tools.strip_config(prepare_extrusion_distance(base)), assets)
+        new = pause_return_profile(new, False)
         new = plan_paused_tools(home, assets, new, variant, screen_override, changes)
         if new != base:
             changes[base_path] = new.encode()
@@ -607,6 +708,7 @@ def plan(home, variant, assets, base_override=None, screen_override=None, auxili
         header = '[include toolhead_auxiliary.cfg]\n' + header
     changes[header_path] = organize_printer_header(nozzle_header_profile(header, variant), order, model).encode()
     base = toolchange_profile(paused_tools.strip_config(prepare_extrusion_distance(base)), variant, assets)
+    base = pause_return_profile(base, variant == 'toolhead')
     patches = json.loads((assets / 'ui_patches.json').read_text(encoding='utf-8'))
     for rel, edits in patches.items():
         path = home / rel
