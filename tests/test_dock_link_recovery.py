@@ -51,10 +51,21 @@ class DockLinkRecoveryTests(unittest.TestCase):
     def test_no_link_means_no_move(self):
         self.adapter.wait_dock_link.return_value = False
         self.assertFalse(self.recover())
-        self.adapter.wait_dock_link.assert_called_once_with(self.fast, 'connected', 15.)
+        self.assertEqual([call.args[1] for call in self.adapter.wait_dock_link.call_args_list],
+                         ['connected', 'disconnected'])
         self.adapter.park_recovery_tool.assert_not_called()
         self.adapter.fault_wait_position.assert_not_called()
         self.assertEqual(self.trace, [])
+
+    def test_preprime_disconnected_retries_twice_without_heating(self):
+        self.adapter.wait_dock_link.side_effect = lambda fast, state, deadline: state == 'disconnected'
+        self.assertFalse(self.recover())
+        self.assertEqual(self.trace, ['_TOOL_RETRY_DOCK_XY_T2\nM400'] * 2)
+        self.assertEqual(self.adapter.park_recovery_tool.call_count, 2)
+        self.assertTrue(self.adapter.park_recovery_tool.call_args.kwargs['allow_disconnected'])
+        self.adapter.heater.set_temp.assert_not_called()
+        self.nozzle.set_temp.assert_called_once_with(0.)
+        self.adapter.hold_dock.assert_called_once()
 
     def test_incomplete_prime_can_park_without_replaying(self):
         self.adapter.dock_stage = 'prime'
@@ -66,7 +77,7 @@ class DockLinkRecoveryTests(unittest.TestCase):
         self.assertEqual(self.trace, [])
 
     def test_unconfirmed_redock_stops_before_another_move(self):
-        self.adapter.wait_dock_link.side_effect = [True, True, False]
+        self.adapter.wait_dock_link.side_effect = [True, True, False, False]
         self.assertFalse(self.recover())
         self.assertEqual(self.trace, ['_TOOL_RETRY_DOCK_XY_T2\nM400'])
         self.adapter.heater.set_temp.assert_not_called()

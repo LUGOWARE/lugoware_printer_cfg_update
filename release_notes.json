@@ -10,17 +10,17 @@
     }
   },
   "lugoware_system": {
-    "version": "1.2.52",
-    "date": "2026/11/22",
+    "version": "1.2.53",
+    "date": "2026/11/26",
     "notes": {
       "ko": [
-        "툴헤드 보조 버전에서 툴체인지 복구 대기 중 X축 원점을 잡은 뒤에도, 툴 거치 확인 후 출력을 재개할 수 있습니다."
+        "툴헤드 보조 버전에서 도킹 직후 미부착인 경우 최대 두 차례 재도킹합니다. 센서를 다시 읽은 뒤에만 예열과 프라임을 진행합니다."
       ],
       "en": [
-        "The auxiliary toolhead edition can resume a held tool change after X homing once the parked tool is confirmed."
+        "The auxiliary toolhead edition attempts up to two redocks if the tool is not detected after docking. Heating and priming require a valid sensor reading."
       ],
       "zh_CN": [
-        "在工具头辅助加热版本中，换工具恢复等待期间执行 X 轴归零后，确认工具归位即可继续打印。"
+        "工具头辅助加热版本在对接后未检测到工具时最多重试两次，传感器读数正常后才加热和预挤出。"
       ]
     }
   }

@@ -271,7 +271,7 @@ class DetachableHeaterSensor:
             now = reactor.pause(min(now + .1, deadline))
         return False
 
-    def park_recovery_tool(self, gcmd, fast, after_prime, at_exit=False):
+    def park_recovery_tool(self, gcmd, fast, after_prime, at_exit=False, allow_disconnected=False):
         slot = fast.slot
         if slot not in range(4):
             return False
@@ -304,7 +304,9 @@ class DetachableHeaterSensor:
         retreat = () if at_exit else ('G1 X%g F700' % exit_x, 'G1 X%g F700' % release_x,
                                       'G1 X%g F1800' % clear_x)
         for command in (*retreat, '_TOOL_RETRY_PARK_XY_T%d' % (slot + 1)):
-            if not self.wait_dock_link(fast, 'connected', reactor.monotonic()):
+            if not (self.wait_dock_link(fast, 'connected', reactor.monotonic())
+                    or (allow_disconnected and not after_prime and not at_exit
+                        and self.wait_dock_link(fast, 'disconnected', reactor.monotonic()))):
                 return False
             run(command + '\nM400')
         return self.wait_dock_link(fast, 'disconnected', reactor.monotonic() + 1.)
@@ -356,27 +358,39 @@ class DetachableHeaterSensor:
         reconnect_until = self.dock_open_until
         self.dock_stage = None  # The deliberate disconnection while parking is expected.
         self.dock_open_until = None
-        if not self.wait_dock_link(fast, 'connected', reconnect_until):
-            self.hold_dock(gcmd, fast, 'Toolhead connection did not return; print paused',
-                           replay=not after_prime and not self.prime_incomplete)
-            return False
-        if self.park_recovery_tool(gcmd, fast, after_prime):
+        connected = self.wait_dock_link(fast, 'connected', reconnect_until)
+        while True:
+            if connected:
+                parked = self.park_recovery_tool(gcmd, fast, after_prime)
+            elif (not after_prime and not self.prime_incomplete and self.dock_retries < 2
+                  and self.wait_dock_link(fast, 'disconnected', reactor.monotonic())):
+                # Only the verified pre-prime dock pose is eligible without a sensor reading.
+                parked = self.park_recovery_tool(gcmd, fast, False, allow_disconnected=True)
+            else:
+                self.hold_dock(gcmd, fast, 'Toolhead connection did not return; print paused',
+                               replay=not after_prime and not self.prime_incomplete)
+                return False
+            if not parked:
+                break
             if self.dock_retries >= 2 or self.prime_incomplete:
                 self.fault_wait_position(fast)
                 self.hold_dock(gcmd, fast, 'Toolhead parked; print paused after a docking or prime fault')
                 return False
-            ready_at = reactor.monotonic() + 1.
-            reactor.pause(ready_at)
-            if self.wait_dock_link(fast, 'disconnected', reactor.monotonic()):
-                self.dock_retries += 1
-                self.source.gcode.respond_info('Toolhead redock attempt %d/2' % self.dock_retries)
-                self.source.gcode.run_script_from_command('_TOOL_RETRY_DOCK_XY_T%d\nM400' % (fast.slot + 1))
-                if self.wait_dock_link(fast, 'connected', reactor.monotonic() + 5.):
-                    self.dock_stage = 'preheat'
-                    self.dock_restored_nozzle = nozzle_target
-                    nozzle.set_temp(nozzle_target)
-                    self.heater.set_temp(target)
-                    return True
+            reactor.pause(reactor.monotonic() + 1.)
+            if not self.wait_dock_link(fast, 'disconnected', reactor.monotonic()):
+                break
+            self.dock_retries += 1
+            self.source.gcode.respond_info('Toolhead redock attempt %d/2' % self.dock_retries)
+            self.source.gcode.run_script_from_command('_TOOL_RETRY_DOCK_XY_T%d\nM400' % (fast.slot + 1))
+            connected = self.wait_dock_link(fast, 'connected', reactor.monotonic() + 5.)
+            if connected:
+                self.dock_stage = 'preheat'
+                self.dock_restored_nozzle = nozzle_target
+                nozzle.set_temp(nozzle_target)
+                self.heater.set_temp(target)
+                return True
+            if after_prime:
+                break
         self.hold_dock(gcmd, fast, 'Toolhead position or connection uncertain; print paused',
                        replay=not after_prime and not self.prime_incomplete)
         return False
