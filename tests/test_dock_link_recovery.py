@@ -15,7 +15,8 @@ class DockLinkRecoveryTests(unittest.TestCase):
         self.fast = NS(slot=1, requested=False, cleaning=False)
         self.time = 10.
         self.trace = []
-        a.printer = NS(lookup_object=lambda name: NS(get_heater=lambda: self.nozzle))
+        a.printer = NS(lookup_object=lambda name: NS(get_heater=lambda: self.nozzle),
+                       is_shutdown=lambda: False)
         a.source = NS(reactor=NS(monotonic=lambda: self.time, pause=self.pause),
                       gcode=NS(error=ValueError, respond_info=Mock(),
                                run_script_from_command=self.trace.append))
@@ -29,6 +30,7 @@ class DockLinkRecoveryTests(unittest.TestCase):
         a.hold_dock = Mock()
         a.fault_wait_position = Mock(return_value=True)
         a.log_dock_block = Mock()
+        a.home_before_redock = Mock(side_effect=lambda fast: self.trace.append("G28 X Y") is None)
 
     def pause(self, deadline):
         self.time = deadline
@@ -43,11 +45,51 @@ class DockLinkRecoveryTests(unittest.TestCase):
             self.assertTrue(self.recover())
         self.adapter.dock_open_until = self.time + 5.
         self.assertFalse(self.recover())
-        self.assertEqual(self.trace, ['_TOOL_RETRY_DOCK_XY_T2\nM400'] * 2)
-        self.assertEqual(self.time, 12.)
+        self.assertEqual(self.trace, ['_TOOL_RETRY_DOCK_XY_T2\nM400', 'G28 X Y', '_TOOL_RETRY_DOCK_XY_T2\nM400'])
+        self.assertEqual(self.time, 11.)
         self.assertEqual(self.adapter.park_recovery_tool.call_count, 3)
         self.adapter.fault_wait_position.assert_called_once_with(self.fast)
         self.adapter.hold_dock.assert_called_once()
+
+    def test_second_redock_stops_when_link_changes_during_home(self):
+        a = self.adapter
+        a.dock_retries = 1
+        can_move = Mock(side_effect=[True, False])
+        self.assertFalse(a.redock_parked_tool(self.fast, can_move))
+        a.home_before_redock.assert_called_once_with(self.fast)
+        self.assertEqual(self.trace, ['G28 X Y'])
+        self.assertEqual(a.dock_retries, 1)
+
+    def test_second_redock_home_requires_clear_rack_and_confirmed_origin(self):
+        a = self.adapter
+        del a.home_before_redock
+        a.heater = NS(target_temp=0., last_pwm_value=0.)
+        self.nozzle.target_temp = self.nozzle.last_pwm_value = 0.
+        position = [334., 168., 2.]
+        head = NS(get_status=lambda _: {
+            'position': position.copy(), 'homed_axes': 'xyz',
+            'axis_minimum': (-2., -2., 0.), 'axis_maximum': (381., 257., 375.)})
+        mover = NS(get_status=lambda _: {'absolute_coordinates': True,
+                                        'gcode_position': position.copy()})
+        config = NS(get_status=lambda _: {'settings': {
+            'printer': {'kinematics': 'cartesian'}, 'homing_override': {'axes': 'z'},
+            'stepper_x': {'position_endstop': 0.}, 'stepper_y': {'position_endstop': 255.}}})
+        route = NS(get_status=lambda _: {'retry_exit': (366., 361., 334.5)})
+        a.printer.lookup_object = {
+            'toolhead': head, 'gcode_move': mover, 'configfile': config,
+            'extruder': NS(get_heater=lambda: self.nozzle),
+            'gcode_macro _TOOL_RETRY_DOCK_XY_T2': route,
+        }.__getitem__
+        home = Mock()
+        self.fast.dock_recovery = NS(home_xy=home)
+        position[0] = 367.5
+        self.assertFalse(a.home_before_redock(self.fast))
+        home.assert_not_called()
+        position[0] = 334.
+        self.assertFalse(a.home_before_redock(self.fast))
+        home.assert_called_once()
+        home.side_effect = lambda: position.__setitem__(slice(None, 2), [0., 255.])
+        self.assertTrue(a.home_before_redock(self.fast))
 
     def test_no_link_checks_return_without_attempting_parking(self):
         self.adapter.wait_dock_link.return_value = False
@@ -61,7 +103,7 @@ class DockLinkRecoveryTests(unittest.TestCase):
     def test_preprime_disconnected_retries_twice_without_heating(self):
         self.adapter.wait_dock_link.side_effect = lambda fast, state, deadline=None: state == 'disconnected'
         self.assertFalse(self.recover())
-        self.assertEqual(self.trace, ['_TOOL_RETRY_DOCK_XY_T2\nM400'] * 2)
+        self.assertEqual(self.trace, ['_TOOL_RETRY_DOCK_XY_T2\nM400', 'G28 X Y', '_TOOL_RETRY_DOCK_XY_T2\nM400'])
         self.assertEqual(self.adapter.park_recovery_tool.call_count, 2)
         self.assertTrue(self.adapter.park_recovery_tool.call_args.kwargs['allow_disconnected'])
         self.adapter.heater.set_temp.assert_not_called()
@@ -291,7 +333,7 @@ class DockLinkRecoveryTests(unittest.TestCase):
                 self.assertEqual(self.trace, [])
 
     def test_unconfirmed_redock_stops_before_another_move(self):
-        self.adapter.wait_dock_link.side_effect = [True, True, False, False]
+        self.adapter.wait_dock_link.side_effect = [True, True, True, False, False]
         self.assertFalse(self.recover())
         self.assertEqual(self.trace, ['_TOOL_RETRY_DOCK_XY_T2\nM400'])
         self.adapter.heater.set_temp.assert_not_called()

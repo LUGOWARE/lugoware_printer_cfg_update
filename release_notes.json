@@ -10,17 +10,17 @@
     }
   },
   "lugoware_system": {
-    "version": "1.2.62",
+    "version": "1.2.63",
     "date": "2026/11/28",
     "notes": {
       "ko": [
-        "툴헤드 보조 버전에서 출력 재개 시 XY 원점 복귀를 우선하고, 지연 원인을 확인할 수 있도록 로그를 남깁니다."
+        "툴헤드 자동 재도킹은 첫 시도에서 1초 대기 후 진행하며, 두 번째 시도에서는 XY 원점 복귀 후 진행합니다."
       ],
       "en": [
-        "Auxiliary toolhead profiles prioritize XY homing during print recovery and log callback timing for troubleshooting."
+        "Automatic toolhead redocking waits one second on the first retry and homes XY before the second retry."
       ],
       "zh_CN": [
-        "辅助工具头版本在恢复打印时优先执行 XY 回零，并记录回调耗时，便于排查延迟。"
+        "工具头第一次自动重试对接前等待一秒，第二次重试前先执行 XY 回零。"
       ]
     }
   }

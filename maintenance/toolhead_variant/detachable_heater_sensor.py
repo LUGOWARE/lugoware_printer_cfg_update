@@ -110,7 +110,6 @@ class DetachableHeaterSensor:
             if fast.slot in range(4) and status['state'] == 'connected' and temp is not None and temp < self.minimum:
                 if not self.retry_at_dock(fast, status):
                     break
-                self.dock_retries += 1
             else:
                 reactor.pause(reactor.monotonic() + 1.)
         if fast.stop_wait():
@@ -191,11 +190,70 @@ class DetachableHeaterSensor:
         if not safe_to_move_with_sensor('connected'):
             return False
         gcode.run_script_from_command('_TOOL_RETRY_PARK_XY_T%d' % (slot + 1))
-        reactor.pause(reactor.monotonic() + 1.)
-        if not safe_to_move_with_sensor('disconnected'):
+        if not self.redock_parked_tool(fast, lambda: safe_to_move_with_sensor('disconnected')):
             return False
-        gcode.run_script_from_command('_TOOL_RETRY_DOCK_XY_T%d' % (slot + 1))
         reactor.pause(reactor.monotonic() + 1.)
+        return True
+
+    def redock_parked_tool(self, fast, can_move):
+        if not can_move():
+            return False
+        reactor = self.source.reactor
+        if self.dock_retries == 0:
+            reactor.pause(reactor.monotonic() + 1.)
+        elif self.dock_retries == 1:
+            if not self.home_before_redock(fast):
+                return False
+        else:
+            return False
+        if not can_move():
+            return False
+        self.dock_retries += 1
+        gcode = self.source.gcode
+        gcode.respond_info('Toolhead redock attempt %d/2' % self.dock_retries)
+        gcode.run_script_from_command('_TOOL_RETRY_DOCK_XY_T%d\nM400' % (fast.slot + 1))
+        return True
+
+    def home_before_redock(self, fast):
+        now = self.source.reactor.monotonic()
+        cfg = self.printer.lookup_object('configfile').get_status(now)['settings']
+        dock = self.printer.lookup_object('gcode_macro _TOOL_RETRY_DOCK_XY_T%d' % (fast.slot + 1))
+        clearance_x = dock.get_status(now)['retry_exit'][2]
+        head = self.printer.lookup_object('toolhead')
+        mover = self.printer.lookup_object('gcode_move')
+        nozzle = self.printer.lookup_object('extruder').get_heater()
+        pos = head.get_status(now)
+        move = mover.get_status(now)
+        x_axis = cfg.get('stepper_x', {})
+        x_home = x_axis.get('position_endstop', float('inf'))
+        if (cfg.get('printer', {}).get('kinematics') != 'cartesian'
+                or cfg.get('homing_override', {}).get('axes') != 'z'
+                or x_axis.get('homing_positive_dir', False)
+                or x_home > pos['axis_minimum'][0] + .25 * (pos['axis_maximum'][0] - pos['axis_minimum'][0])
+                or set(pos['homed_axes']) != set('xyz') or not move['absolute_coordinates']
+                or not pos['axis_minimum'][0] <= pos['position'][0] <= clearance_x
+                or any(abs(pos['position'][i] - move['gcode_position'][i]) > .1 for i in (0, 1))
+                or any(heater.target_temp or heater.last_pwm_value for heater in (nozzle, self.heater))):
+            self.log_dock_block(fast, 'second redock: XY homing prerequisites not met')
+            return False
+        try:
+            fast.dock_recovery.home_xy()
+        except self.source.gcode.error:
+            if self.printer.is_shutdown():
+                raise
+            self.log_dock_block(fast, 'second redock: XY homing failed')
+            return False
+        now = self.source.reactor.monotonic()
+        homed = head.get_status(now)
+        current = mover.get_status(now)
+        y_home = cfg.get('stepper_y', {}).get('position_endstop', float('inf'))
+        if (set(homed['homed_axes']) != set('xyz') or not current['absolute_coordinates']
+                or abs(homed['position'][0] - x_home) > .1
+                or abs(homed['position'][1] - y_home) > .1
+                or any(abs(homed['position'][i] - current['gcode_position'][i]) > .1 for i in (0, 1))
+                or abs(current['gcode_position'][2] - move['gcode_position'][2]) > .1):
+            self.log_dock_block(fast, 'second redock: XY home or Z clearance not confirmed')
+            return False
         return True
 
     def dock_heat(self, gcmd):
@@ -473,13 +531,9 @@ class DetachableHeaterSensor:
                                replay=returned and not after_prime and not self.prime_incomplete,
                                returned=returned)
                 return False
-            reactor.pause(reactor.monotonic() + 1.)
-            if not self.wait_dock_link(fast, 'disconnected'):
-                self.log_dock_block(fast, 'parked, but detachment changed during the one-second wait')
+            if not self.redock_parked_tool(fast, lambda: self.wait_dock_link(fast, 'disconnected')):
+                self.log_dock_block(fast, 'parked, but the redock was blocked')
                 break
-            self.dock_retries += 1
-            self.source.gcode.respond_info('Toolhead redock attempt %d/2' % self.dock_retries)
-            self.source.gcode.run_script_from_command('_TOOL_RETRY_DOCK_XY_T%d\nM400' % (fast.slot + 1))
             connected = self.wait_dock_link(fast, 'connected', reactor.monotonic() + 5.)
             if connected:
                 self.dock_stage = 'preheat'
@@ -489,6 +543,9 @@ class DetachableHeaterSensor:
                 return True
             if after_prime:
                 break
+        if fast.requested or self.printer.is_shutdown():
+            fast.dock_abort = True
+            return False
         returned = self.fault_wait_position(fast)
         self.hold_dock(gcmd, fast, 'Toolhead position or connection uncertain; print paused',
                        replay=not after_prime and not self.prime_incomplete, returned=returned)
