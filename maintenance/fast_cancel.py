@@ -381,17 +381,34 @@ class FastCancel:
                     toolhead.get_kinematics().clear_homing_state('xyz')
                     self.homing_active = False
                     raise self.gcode.error('Homing cancelled; position not established, return skipped.')
-                mounted = self.printer.lookup_object('filament_switch_sensor toolhead_sensor').get_status(self.reactor.monotonic())['filament_detected']
+                sense = self.printer.lookup_object('filament_switch_sensor toolhead_sensor').get_status(
+                    self.reactor.monotonic())
+                mounted = sense['filament_detected']
                 state = self.printer.lookup_object('gcode_macro TOOL_STATE').get_status(self.reactor.monotonic())
                 tool = self.slot if self.phase == 'docked' else int(state['active_tool'])
-                if self.critical or (mounted and (self.phase == 'empty' or tool not in range(4))):
+                adapter = getattr(self, 'toolhead_adapter', None)
+                uncertain = self.critical or (mounted and (self.phase == 'empty' or tool not in range(4)))
+                if adapter is None and uncertain:
                     raise self.gcode.error('Tool attachment is uncertain; automatic parking skipped. Inspect the head.')
                 if set('xyz') - set(status['homed_axes']):
                     raise self.gcode.error('Axes are not homed; automatic parking and return skipped.')
-                # All parking and return motion is maintained in printer_base.cfg.
-                self.gcode.run_script_from_command(
-                    '_FAST_CANCEL_MOTION TOOL=%d SKIP_EXTRUDE=%d'
-                    % (tool, int(getattr(self, 'prime_skipped', False))))
+                if adapter is not None:
+                    uncertain = (uncertain or (not mounted and tool in range(4) and self.phase != 'empty')
+                                 or sense.get('state', 'connected' if mounted else 'disconnected')
+                                 not in ('connected', 'disconnected'))
+                try:
+                    if uncertain:
+                        raise self.gcode.error('Tool attachment is uncertain; cancel return requires a verified path.')
+                    self.gcode.run_script_from_command(
+                        '_FAST_CANCEL_MOTION TOOL=%d SKIP_EXTRUDE=%d'
+                        % (tool, int(getattr(self, 'prime_skipped', False))))
+                except self.gcode.error:
+                    if adapter is None or self.printer.is_shutdown():
+                        raise
+                    self.heaters.turn_off_all_heaters()
+                    if not adapter.fault_wait_position(self, lower_bed=True):
+                        raise
+                    self.gcode.respond_info('Cancelled at X10 Y125; check tool attachment.')
                 self.message = 'Print cancelled'
                 cleanup_complete = True
             except Exception as exc:

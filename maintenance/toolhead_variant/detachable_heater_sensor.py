@@ -115,7 +115,10 @@ class DetachableHeaterSensor:
         if fast.stop_wait():
             fast.dock_abort = True
             return
-        self.hold_dock(gcmd, fast, 'Toolhead sensor check failed; paused without movement', True)
+        returned = self.fault_wait_position(fast)
+        message = ('Toolhead sensor check failed; paused at X10 Y125' if returned
+                   else 'Toolhead sensor check failed; paused without movement')
+        self.hold_dock(gcmd, fast, message, replay=True, returned=returned)
 
     def hold_dock(self, gcmd, fast, message, replay=False, print_fault=None, returned=False):
         self.dock_stage = None
@@ -314,21 +317,69 @@ class DetachableHeaterSensor:
             run(command + '\nM400')
         return self.wait_dock_link(fast, 'disconnected', reactor.monotonic() + 1.)
 
-    def fault_wait_position(self, fast, return_x=10.):
-        now = self.source.reactor.monotonic()
-        head = self.printer.lookup_object('toolhead').get_status(now)
-        move = self.printer.lookup_object('gcode_move').get_status(now)
-        if (set(head['homed_axes']) != set('xyz') or not move['absolute_coordinates']
-                or not head['axis_minimum'][0] <= return_x <= head['axis_maximum'][0]
-                or not head['axis_minimum'][1] <= 125 <= head['axis_maximum'][1]
-                or any(abs(head['position'][i] - move['gcode_position'][i]) > .1 for i in (0, 1))):
-            logging.info('Toolhead return blocked: unverified homing, coordinates or limits')
+    def fault_wait_position(self, fast, return_x=10., lower_bed=False):
+        if self.failed or self.printer.is_shutdown() or (fast.requested and not lower_bed):
             return False
-        for command in ('G1 X%g F6000' % return_x, 'G1 Y125 F6000'):
-            if not self.wait_dock_link(fast, 'disconnected'):
-                self.log_dock_block(fast, 'return: carriage sensor did not confirm detached')
+        toolhead = self.printer.lookup_object('toolhead')
+        toolhead.wait_moves()
+        now = self.source.reactor.monotonic()
+        head = toolhead.get_status(now)
+        move = self.printer.lookup_object('gcode_move').get_status(now)
+        x, y, z = head['position'][:3]
+        low, high = head['axis_minimum'], head['axis_maximum']
+        if (self.failed or self.printer.is_shutdown()
+                or set(head['homed_axes']) != set('xyz')
+                or not low[0] <= return_x <= high[0] or not low[1] <= 125 <= high[1]
+                or not low[2] <= z <= high[2]
+                or any(abs(head['position'][i] - move['gcode_position'][i]) > .1 for i in (0, 1))):
+            self.log_dock_block(fast, 'return: homing, coordinates or limits not verified')
+            return False
+
+        routes = []
+        for slot in range(4):
+            dock = self.printer.lookup_object('gcode_macro _TOOL_RETRY_DOCK_XY_T%d' % (slot + 1), None)
+            if dock is not None:
+                routes.append(dock.get_status(now))
+        if not routes:
+            self.log_dock_block(fast, 'return: verified rack exit missing')
+            return False
+        clearance_x = min(route['retry_exit'][2] for route in routes)
+        exit_moves = []
+        if x > clearance_x + .1:
+            matches = [route for route in routes if abs(y - route['retry_y']) <= .1]
+            if len(matches) != 1:
+                self.log_dock_block(fast, 'return: outside a verified rack exit')
                 return False
-            self.source.gcode.run_script_from_command(command + '\nM400')
+            route = matches[0]
+            exit_x, release_x, clear_x = route['retry_exit']
+            if not any(abs(x - p) <= .1 for p in (route['retry_x'], exit_x, release_x, clear_x)):
+                self.log_dock_block(fast, 'return: current X is outside a rack exit checkpoint')
+                return False
+            exit_moves = ['G1 X%g F%d' % (point, feed)
+                          for point, feed in ((exit_x, 700), (release_x, 700), (clear_x, 1800))
+                          if point < x - .1 and low[0] <= point <= high[0]]
+            if x > clear_x + .1 and (not exit_moves or not low[0] <= clear_x <= high[0]):
+                return False
+
+        nozzle = self.printer.lookup_object('extruder').get_heater()
+        if nozzle.target_temp or self.heater.target_temp:
+            self.log_dock_block(fast, 'return: heater target is still on')
+            return False
+
+        run = self.source.gcode.run_script_from_command
+        commands = ['G90', *exit_moves]
+        room = max(0., high[2] - z)
+        lift = min(room, 5.) if lower_bed else 0.
+        if lift:
+            commands.append('G91\nG1 Z%.4f F600\nG90' % lift)
+        commands.extend(('G1 X%g F6000' % return_x, 'G1 Y125 F6000'))
+        lower = min(room, 100.) - lift if lower_bed else 0.
+        if lower > 0.0001:
+            commands.append('G91\nG1 Z%.4f F1800\nG90' % lower)
+        for command in commands:
+            if self.printer.is_shutdown() or (fast.requested and not lower_bed):
+                return False
+            run(command + '\nM400')
         return True
 
     def log_dock_block(self, fast, reason):
@@ -360,10 +411,9 @@ class DetachableHeaterSensor:
             elif fast.phase == 'empty' and self.wait_dock_link(fast, 'disconnected'):
                 # A completed park already established an empty carriage.
                 parked = True
-            if parked:
-                returned = self.fault_wait_position(fast)
-            else:
-                self.log_dock_block(fast, 'pause: safe parking could not be confirmed')
+            if not parked:
+                self.log_dock_block(fast, 'pause: parking unconfirmed; checking rack exit')
+            returned = self.fault_wait_position(fast)
         except self.source.gcode.error as exc:
             reason += ': ' + str(exc)
         if not self.printer.is_shutdown() and not fast.requested:
@@ -389,23 +439,34 @@ class DetachableHeaterSensor:
         self.dock_open_until = None
         connected = self.wait_dock_link(fast, 'connected', reconnect_until)
         while True:
+            if self.dock_retries >= 2 and not connected:
+                returned = self.fault_wait_position(fast)
+                message = 'Toolhead connection did not return; print paused'
+                if returned:
+                    message += ' at X10 Y125'
+                self.hold_dock(gcmd, fast, message,
+                               replay=not after_prime and not self.prime_incomplete,
+                               returned=returned)
+                return False
             if connected:
                 parked = self.park_recovery_tool(gcmd, fast, after_prime)
-            elif (not after_prime and not self.prime_incomplete and self.dock_retries < 2
+            elif (not after_prime and not self.prime_incomplete
                   and self.wait_dock_link(fast, 'disconnected')):
-                # Only the verified pre-prime dock pose is eligible without a sensor reading.
                 parked = self.park_recovery_tool(gcmd, fast, False, allow_disconnected=True)
             else:
                 self.log_dock_block(fast, 'neither stable attachment nor verified pre-prime detachment')
+                returned = self.fault_wait_position(fast)
                 self.hold_dock(gcmd, fast, 'Toolhead connection did not return; print paused',
-                               replay=not after_prime and not self.prime_incomplete)
+                               replay=not after_prime and not self.prime_incomplete,
+                               returned=returned)
                 return False
             if not parked:
                 self.log_dock_block(fast, 'parking pose, heater output or park-exit sensor check failed')
                 break
             if self.dock_retries >= 2 or self.prime_incomplete:
                 returned = self.fault_wait_position(fast)
-                self.hold_dock(gcmd, fast, 'Toolhead parked; print paused after a docking or prime fault',
+                message = 'Toolhead parked; print paused after a docking or prime fault'
+                self.hold_dock(gcmd, fast, message,
                                replay=returned and not after_prime and not self.prime_incomplete,
                                returned=returned)
                 return False
@@ -425,8 +486,9 @@ class DetachableHeaterSensor:
                 return True
             if after_prime:
                 break
+        returned = self.fault_wait_position(fast)
         self.hold_dock(gcmd, fast, 'Toolhead position or connection uncertain; print paused',
-                       replay=not after_prime and not self.prime_incomplete)
+                       replay=not after_prime and not self.prime_incomplete, returned=returned)
         return False
 
     def prime_complete(self, gcmd):

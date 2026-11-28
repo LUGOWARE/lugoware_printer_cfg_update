@@ -49,13 +49,13 @@ class DockLinkRecoveryTests(unittest.TestCase):
         self.adapter.fault_wait_position.assert_called_once_with(self.fast)
         self.adapter.hold_dock.assert_called_once()
 
-    def test_no_link_means_no_move(self):
+    def test_no_link_checks_return_without_attempting_parking(self):
         self.adapter.wait_dock_link.return_value = False
         self.assertFalse(self.recover())
         self.assertEqual([call.args[1] for call in self.adapter.wait_dock_link.call_args_list],
                          ['connected', 'disconnected'])
         self.adapter.park_recovery_tool.assert_not_called()
-        self.adapter.fault_wait_position.assert_not_called()
+        self.adapter.fault_wait_position.assert_called_once_with(self.fast)
         self.assertEqual(self.trace, [])
 
     def test_preprime_disconnected_retries_twice_without_heating(self):
@@ -71,7 +71,7 @@ class DockLinkRecoveryTests(unittest.TestCase):
     def test_retry_exhaustion_executes_real_diagnostic_before_hold(self):
         a = self.adapter
         self.fast.phase = 'docking'
-        a.dock_retries = 2
+        a.dock_retries = 1
         a.wait_dock_link.return_value = False
         a.valid_samples = 0
         a.source.get_status = Mock(return_value={'state': 'disconnected', 'temperature': None})
@@ -83,7 +83,7 @@ class DockLinkRecoveryTests(unittest.TestCase):
         del a.log_dock_block
         with self.assertLogs(level='INFO') as caught:
             self.assertFalse(self.recover())
-        self.assertIn('retries=2 sensor=disconnected', caught.output[0])
+        self.assertIn('retries=1 sensor=disconnected', caught.output[0])
         a.hold_dock.assert_called_once()
         a.hold_dock.reset_mock()
         a.source.get_status.side_effect = RuntimeError('diagnostic missing')
@@ -144,19 +144,63 @@ class DockLinkRecoveryTests(unittest.TestCase):
         a.fault_wait_position.assert_called_once_with(self.fast)
         self.assertTrue(a.hold_dock.call_args.kwargs['returned'])
 
-    def test_pause_moves_only_for_confirmed_empty_carriage(self):
+    def test_pause_checks_return_for_either_attachment_state(self):
         a = self.adapter
         a.printer.is_shutdown = lambda: False
         a.wait_dock_link.side_effect = lambda fast, state: state == 'disconnected'
         self.fast.phase = 'docking'
         a.pause_at_dock(None, self.fast, 'test')
         a.park_recovery_tool.assert_not_called()
-        a.fault_wait_position.assert_not_called()
+        a.fault_wait_position.assert_called_once_with(self.fast)
+        a.fault_wait_position.reset_mock()
         a.log_dock_block.assert_called_once()
         self.fast.phase = 'empty'
         a.pause_at_dock(None, self.fast, 'test')
         a.park_recovery_tool.assert_not_called()
         a.fault_wait_position.assert_called_once_with(self.fast)
+
+    def test_second_failure_uses_verified_exit_without_sensor_or_third_redock(self):
+        a = self.adapter
+        a.dock_retries = 2
+        a.wait_dock_link.return_value = False
+        a.fault_wait_position.return_value = True
+        self.assertFalse(self.recover())
+        a.park_recovery_tool.assert_not_called()
+        self.assertEqual(self.trace, [])
+        a.hold_dock.assert_called_once()
+        self.assertTrue(a.hold_dock.call_args.kwargs['returned'])
+
+    def test_return_uses_verified_rack_exit_and_lowers_bed_only_on_cancel(self):
+        a = self.adapter
+        del a.fault_wait_position
+        a.failed = False
+        a.heater.target_temp = 0.
+        self.nozzle.target_temp = 0.
+        a.printer.is_shutdown = lambda: False
+        pos = [367.5, 178.5, 372.]
+        route = {'retry_x': 367.5, 'retry_y': 178.5, 'retry_exit': (366., 361., 334.5)}
+        head = NS(wait_moves=Mock(), get_status=lambda _: {
+            'position': pos, 'homed_axes': 'xyz',
+            'axis_minimum': (0., 0., 0.), 'axis_maximum': (381., 260., 375.)})
+        objects = {'toolhead': head,
+                   'gcode_move': NS(get_status=lambda _: {'gcode_position': pos}),
+                   'gcode_macro _TOOL_RETRY_DOCK_XY_T2': NS(get_status=lambda _: route),
+                   'extruder': NS(get_heater=lambda: self.nozzle)}
+        a.printer.lookup_object = objects.get
+        a.wait_dock_link.side_effect = AssertionError('Return must not depend on attachment')
+        self.assertTrue(a.fault_wait_position(self.fast))
+        steps = ['G90', 'G1 X366 F700', 'G1 X361 F700', 'G1 X334.5 F1800']
+        to_wait = ['G1 X10 F6000', 'G1 Y125 F6000']
+        self.assertEqual(self.trace, [step + '\nM400' for step in steps + to_wait])
+        self.trace.clear()
+        self.fast.requested = True
+        self.assertTrue(a.fault_wait_position(self.fast, lower_bed=True))
+        lift = ['G91\nG1 Z3.0000 F600\nG90']
+        self.assertEqual(self.trace, [step + '\nM400' for step in steps + lift + to_wait])
+        self.trace.clear()
+        pos[0] = 370.
+        self.assertFalse(a.fault_wait_position(self.fast, lower_bed=True))
+        self.assertEqual(self.trace, [])
 
     def test_protected_sensor_faults_still_stop_heating(self):
         for state, temp, power, last_active in (

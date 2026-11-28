@@ -10,20 +10,20 @@
     }
   },
   "lugoware_system": {
-    "version": "1.2.58",
+    "version": "1.2.59",
     "date": "2026/11/28",
     "notes": {
       "ko": [
-        "툴헤드 재도킹이 두 번 실패했을 때 내부 오류로 종료되던 문제를 수정했습니다.",
-        "툴헤드 센서·예열·일시정지·재개 알림에 화면 언어를 적용했습니다."
+        "툴헤드 보조 두 버전에서 도킹 복구에 실패하면, 이동 경로가 확인된 경우 X10 Y125에서 일시정지합니다.",
+        "툴 장착 상태가 불확실할 때도 경로가 확인되면 취소 시 X10 Y125로 복귀하고 베드를 내립니다."
       ],
       "en": [
-        "Fixed an internal error after the second unsuccessful toolhead redock attempt.",
-        "Toolhead sensor, heating, pause and resume notifications now follow the display language."
+        "Both auxiliary toolhead editions pause at X10 Y125 after failed dock recovery when the return path can be verified.",
+        "When tool attachment is uncertain, cancellation returns to X10 Y125 and lowers the bed if the path can be verified."
       ],
       "zh_CN": [
-        "修复了工具头重新装载两次失败后触发内部错误的问题。",
-        "工具头传感器、加热、暂停和恢复的提示现在使用界面所选语言。"
+        "两种工具头辅助加热版本在装载恢复失败后，若确认返回路径安全，将在 X10 Y125 暂停。",
+        "无法确认工具是否安装时，若可验证返回路径，取消打印仍会返回 X10 Y125 并降低热床。"
       ]
     }
   }

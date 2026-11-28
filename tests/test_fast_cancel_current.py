@@ -51,6 +51,16 @@ class Tests(unittest.TestCase):
         self.assertFalse(self.obj.requested)
         self.assertFalse(self.obj.cleaning)
 
+    def test_auxiliary_cancel_returns_despite_uncertain_attachment(self):
+        self.obj.phase, self.obj.slot = 'dock_sensor_hold', 1
+        self.obj.critical = True
+        self.obj.toolhead_adapter = Obj(
+            fault_wait_position=lambda obj, lower_bed: self.log.append(('return', lower_bed)) or True)
+        self.obj.finish(0)
+        self.assertEqual(self.log, ['off', ('return', True), 'Cancelled at X10 Y125; check tool attachment.',
+                                    '_FAST_CANCEL_FINALIZE', 'off', 'cancel'])
+        self.assertFalse(self.obj.requested)
+
     def test_cfg_failure_still_turns_heaters_off_and_cancels(self):
         def fail(script):
             self.log.append(script)

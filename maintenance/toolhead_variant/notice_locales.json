@@ -63,7 +63,9 @@
     "Toolhead heater safety stop: Sensor unavailable during heater control": 5,
     "Toolhead heater safety stop: Auxiliary heater still active during preheat dock check": 5,
     "Toolhead heater safety stop: Toolhead sensor not ready after docking": 5,
-    "Toolhead heater safety stop: No recent temperature samples": 5
+    "Toolhead heater safety stop: No recent temperature samples": 5,
+    "Toolhead connection did not return; print paused at X10 Y125": 12,
+    "Toolhead sensor check failed; paused at X10 Y125": 12
   },
   "patterns": [
     [
