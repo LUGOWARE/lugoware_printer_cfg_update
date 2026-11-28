@@ -10,17 +10,17 @@
     }
   },
   "lugoware_system": {
-    "version": "1.2.65",
+    "version": "1.2.66",
     "date": "2026/11/28",
     "notes": {
       "ko": [
-        "툴헤드의 두 번째 자동 재도킹에서 진단 정보가 없어도 XY 원점 복귀가 진행되도록 수정했습니다."
+        "툴헤드 보조 1과 2의 모델 설정을 각각 배포하고 적용할 수 있습니다."
       ],
       "en": [
-        "Fixed a diagnostic error that could interrupt XY homing before the second automatic toolhead redock."
+        "The two auxiliary toolhead profiles can now receive separate model configuration updates."
       ],
       "zh_CN": [
-        "修复了第二次自动重试对接前，诊断信息缺失可能导致 XY 回零中断的问题。"
+        "两个辅助工具头版本现在可分别更新各自的机型配置。"
       ]
     }
   }

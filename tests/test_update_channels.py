@@ -90,6 +90,27 @@ class ChannelTests(unittest.TestCase):
                                    'auxiliary header' if available else None)
                 self.assertEqual(plan.call_args.kwargs['header_template'], selected_header)
 
+    def test_single_profile_uses_all_its_own_model_files(self):
+        with tempfile.TemporaryDirectory() as d:
+            home, repo, backup, target = self.fixture(Path(d))
+            (repo / 'printer_base_toolhead.cfg').write_text('shared base')
+            (repo / 'toolhead_auxiliary.cfg').write_text('shared auxiliary')
+            (repo / 'printer_base_toolhead_single.cfg').write_text('single base')
+            (repo / 'printer_header_toolhead_single.cfg').write_text('single header')
+            (repo / 'toolhead_auxiliary_single.cfg').write_text('single auxiliary')
+            (repo / 'KlipperScreen_toolhead_single.conf').write_text(
+                '[menu __main test]\nname: Single screen\n')
+            with patch.object(worker, 'selected_variant', return_value='toolhead_single'), \
+                    patch.object(worker, 'variant_plan', return_value={}) as plan, \
+                    patch.object(worker, 'validate_config'), patch.object(worker, 'check_idle'), \
+                    patch.object(worker, 'activate_config'):
+                worker.apply_config(repo, home, backup)
+            self.assertEqual(plan.call_args.kwargs['base_override'], 'single base')
+            self.assertEqual(plan.call_args.kwargs['header_template'], 'single header')
+            self.assertEqual(plan.call_args.kwargs['auxiliary_override'], 'single auxiliary')
+            self.assertTrue(plan.call_args.kwargs['single_auxiliary_override'])
+            self.assertIn('Single screen', plan.call_args.kwargs['screen_override'])
+
     def test_published_configs_preserve_motor_sensor_calibration_and_screen_settings(self):
         for profile, version in (('standard', '2.4.20'), ('toolhead', '3.1.2')):
             with self.subTest(profile=profile), tempfile.TemporaryDirectory() as d:

@@ -191,6 +191,19 @@ def is_auxiliary(variant):
     return variant in ('toolhead', SINGLE_HEATER)
 
 
+def model_cfg_path(repo, variant, standard, auxiliary=None):
+    if is_auxiliary(variant) and auxiliary is not None:
+        if variant == SINGLE_HEATER:
+            legacy = Path(auxiliary)
+            single = repo / (legacy.stem + '_single' + legacy.suffix)
+            if single.is_file():
+                return single
+        common = repo / auxiliary
+        if common.is_file():
+            return common
+    return repo / standard if standard is not None else None
+
+
 def selected(home):
     value = os.environ.get('LUGOWARE_VARIANT')
     if not value:
@@ -781,7 +794,7 @@ def merge_auxiliary_release(content, defaults):
 
 
 def plan(home, variant, assets, base_override=None, screen_override=None, auxiliary_override=None,
-         header_template=None):
+         header_template=None, single_auxiliary_override=False):
     if variant not in VARIANTS:
         raise ValueError('Invalid variant')
     profile = variant
@@ -828,8 +841,9 @@ def plan(home, variant, assets, base_override=None, screen_override=None, auxili
         merged = merge_auxiliary_release(content, defaults)
         if single:
             merged = option_profile(merged, AUX[1], 'heater_pin', 'PA7')
-            merged = option_profile(merged, AUX[0], 'prime_temperature_margin', '0')
-            merged = pid_profile(merged, AUX[1], toolhead_pid)
+            if not single_auxiliary_override:
+                merged = option_profile(merged, AUX[0], 'prime_temperature_margin', '0')
+                merged = pid_profile(merged, AUX[1], toolhead_pid)
         elif previous == SINGLE_HEATER:
             merged = option_profile(merged, AUX[1], 'heater_pin', 'PB7')
         elif (heater_pin(merged) or '').lstrip('!^~') in ('PC5', 'PA7'):
@@ -949,14 +963,15 @@ def commit(changes, backup):
 
 def apply(home, variant, backup, base_override=None):
     assets = Path(__file__).with_name('toolhead_variant')
-    auxiliary_path = home / 'lugoware_config/toolhead_auxiliary.cfg'
-    auxiliary = None
-    if is_auxiliary(variant) and auxiliary_path.is_file():
-        auxiliary = auxiliary_path.read_text(encoding='utf-8-sig')
-    template_name = 'printer_header_toolhead.cfg' if is_auxiliary(variant) else 'printer_header.cfg'
-    template_path = home / 'lugoware_config' / template_name
-    template = template_path.read_text(encoding='utf-8-sig') if template_path.is_file() else None
-    changes = plan(home, variant, assets, base_override, auxiliary_override=auxiliary, header_template=template)
+    repo = home / 'lugoware_config'
+    auxiliary_path = model_cfg_path(repo, variant, None, 'toolhead_auxiliary.cfg')
+    auxiliary = auxiliary_path.read_text(encoding='utf-8-sig') if auxiliary_path else None
+    template_path = model_cfg_path(repo, variant, None if is_auxiliary(variant) else 'printer_header.cfg',
+                                'printer_header_toolhead.cfg')
+    template = template_path.read_text(encoding='utf-8-sig') if template_path and template_path.is_file() else None
+    changes = plan(home, variant, assets, base_override, auxiliary_override=auxiliary,
+                   header_template=template, single_auxiliary_override=(
+                       auxiliary_path is not None and auxiliary_path.name == 'toolhead_auxiliary_single.cfg'))
     commit(changes, backup)
 
 

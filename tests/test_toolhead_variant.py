@@ -28,6 +28,20 @@ def profile():
 
 
 class VariantTests(unittest.TestCase):
+    def test_model_cfg_prefers_single_profile_and_falls_back_to_shared_file(self):
+        with tempfile.TemporaryDirectory() as directory:
+            repo = Path(directory)
+            standard = repo / 'printer_base.cfg'
+            common = repo / 'printer_base_toolhead.cfg'
+            single = repo / 'printer_base_toolhead_single.cfg'
+            common.touch()
+            get = lambda profile: variant.model_cfg_path(repo, profile, standard.name, common.name)
+            self.assertEqual(get('toolhead_single'), common)
+            single.touch()
+            self.assertEqual(get('toolhead_single'), single)
+            self.assertEqual(get('toolhead'), common)
+            self.assertEqual(get('standard'), standard)
+
     def test_legacy_single_heater_retains_its_wiring_profile(self):
         with tempfile.TemporaryDirectory() as directory, patch.dict(os.environ, {'LUGOWARE_VARIANT': ''}):
             home = Path(directory)

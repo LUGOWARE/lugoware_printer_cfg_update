@@ -161,7 +161,9 @@ fi
 # Capture sensor wiring before the existing header/includes are replaced.
 if (( ! SYSTEM_ONLY )); then
 BASE_CONFIG="$REPO_DIR/printer_base.cfg"
-if [[ "$LUGOWARE_VARIANT" == toolhead* && -f "$REPO_DIR/printer_base_toolhead.cfg" ]]; then
+if [[ "$LUGOWARE_VARIANT" == toolhead_single && -f "$REPO_DIR/printer_base_toolhead_single.cfg" ]]; then
+    BASE_CONFIG="$REPO_DIR/printer_base_toolhead_single.cfg"
+elif [[ "$LUGOWARE_VARIANT" == toolhead* && -f "$REPO_DIR/printer_base_toolhead.cfg" ]]; then
     BASE_CONFIG="$REPO_DIR/printer_base_toolhead.cfg"
 fi
 python3 "$COMMON_REPO/maintenance/preserve_sensor_pins.py" \
@@ -197,7 +199,9 @@ fi
 copy_config "$REPO_DIR/crowsnest.conf" "$CONFIG_DIR/crowsnest.conf"
 if (( ! SYSTEM_ONLY )); then
 SCREEN_CONFIG="$REPO_DIR/KlipperScreen.conf"
-if [[ "$LUGOWARE_VARIANT" == toolhead* && -f "$REPO_DIR/KlipperScreen_toolhead.conf" ]]; then
+if [[ "$LUGOWARE_VARIANT" == toolhead_single && -f "$REPO_DIR/KlipperScreen_toolhead_single.conf" ]]; then
+    SCREEN_CONFIG="$REPO_DIR/KlipperScreen_toolhead_single.conf"
+elif [[ "$LUGOWARE_VARIANT" == toolhead* && -f "$REPO_DIR/KlipperScreen_toolhead.conf" ]]; then
     SCREEN_CONFIG="$REPO_DIR/KlipperScreen_toolhead.conf"
 fi
 python3 "$COMMON_REPO/maintenance/install_screen_config.py" \

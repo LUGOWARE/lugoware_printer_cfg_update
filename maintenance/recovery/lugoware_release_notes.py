@@ -59,7 +59,10 @@ def read_notes(home, channel, revision, language):
                 variant = json.loads(variant_path.read_text(encoding='utf-8')).get('variant')
             except (OSError, ValueError, AttributeError):
                 variant = None
-            if variant in ('toolhead', 'toolhead_single'):
+            if variant == 'toolhead_single':
+                config = subprocess.run(git + ['show', revision + ':printer_base_toolhead_single.cfg'],
+                                        capture_output=True, timeout=4)
+            if variant in ('toolhead', 'toolhead_single') and (config is None or config.returncode):
                 config = subprocess.run(git + ['show', revision + ':printer_base_toolhead.cfg'],
                                         capture_output=True, timeout=4)
             if config is None or config.returncode:

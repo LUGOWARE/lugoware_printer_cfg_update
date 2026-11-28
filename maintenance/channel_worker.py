@@ -15,7 +15,7 @@ from install_screen_config import merge
 from patch_print_controls import macros, feature_macros
 from preserve_sensor_pins import preserve
 from install_toolhead_variant import plan as variant_plan, selected as selected_variant, commit as commit_variant
-from install_toolhead_variant import is_auxiliary, restore as restore_variant
+from install_toolhead_variant import is_auxiliary, model_cfg_path, restore as restore_variant
 
 
 def atomic(path, data):
@@ -45,10 +45,7 @@ def validate_config(text, screen, home):
 def apply_config(repo, home, backup):
     target = home / 'printer_data/config'
     variant = selected_variant(home)
-    source = repo / 'printer_base.cfg'
-    auxiliary = repo / 'printer_base_toolhead.cfg'
-    if is_auxiliary(variant) and auxiliary.is_file():
-        source = auxiliary
+    source = model_cfg_path(repo, variant, 'printer_base.cfg', 'printer_base_toolhead.cfg')
     base = source.read_text(encoding='utf-8-sig')
     base = preserve(base, target / 'printer.cfg')
     if (home / 'klipper/klippy/extras/print_sensor.py').is_file():
@@ -57,15 +54,9 @@ def apply_config(repo, home, backup):
         if guard.is_file() and 'def prepare_first(' in guard.read_text(encoding='utf-8'):
             from followup_features import first_tool
             base = first_tool(base)
-    screen_source = repo / 'KlipperScreen.conf'
-    auxiliary_screen = repo / 'KlipperScreen_toolhead.conf'
-    auxiliary_path = repo / 'toolhead_auxiliary.cfg'
-    auxiliary_config = None
-    if is_auxiliary(variant):
-        if auxiliary_screen.is_file():
-            screen_source = auxiliary_screen
-        if auxiliary_path.is_file():
-            auxiliary_config = auxiliary_path.read_text(encoding='utf-8-sig')
+    screen_source = model_cfg_path(repo, variant, 'KlipperScreen.conf', 'KlipperScreen_toolhead.conf')
+    auxiliary_path = model_cfg_path(repo, variant, None, 'toolhead_auxiliary.cfg')
+    auxiliary_config = auxiliary_path.read_text(encoding='utf-8-sig') if auxiliary_path else None
     template = screen_source.read_text(encoding='utf-8-sig')
     previous_screen = (target / 'KlipperScreen.conf').read_text(encoding='utf-8')
     if (home / 'klipper/klippy/extras/print_sensor.py').is_file() and '[menu __print lock]' not in template:
@@ -78,12 +69,13 @@ def apply_config(repo, home, backup):
         screen = screen_menu(screen_config(screen))
     validate_config(base, screen, home)
     changes = {'printer_base.cfg': base.encode(), 'KlipperScreen.conf': screen.encode()}
-    header_name = 'printer_header_toolhead.cfg' if is_auxiliary(variant) else 'printer_header.cfg'
-    header_path = repo / header_name
-    header_template = header_path.read_text(encoding='utf-8-sig') if header_path.is_file() else None
+    header_path = model_cfg_path(repo, variant, None if is_auxiliary(variant) else 'printer_header.cfg',
+                                'printer_header_toolhead.cfg')
+    header_template = header_path.read_text(encoding='utf-8-sig') if header_path and header_path.is_file() else None
     variant_changes = variant_plan(home, variant, Path(__file__).with_name('toolhead_variant'),
                                    base_override=base, screen_override=screen, auxiliary_override=auxiliary_config,
-                                   header_template=header_template)
+                                   header_template=header_template, single_auxiliary_override=(
+                                       auxiliary_path is not None and auxiliary_path.name == 'toolhead_auxiliary_single.cfg'))
     previous = {name: (target / name).read_bytes() for name in changes}
     for name, content in previous.items():
         (backup / name).write_bytes(content)
@@ -139,14 +131,17 @@ def sync_latest_config(home, branch, backup):
         data = subprocess.check_output(git + ['show', commit + ':' + name])
         (snapshot / name).write_bytes(data)
     if is_auxiliary(selected_variant(home)):
-        names = ('printer_base_toolhead.cfg', 'KlipperScreen_toolhead.conf', 'toolhead_auxiliary.cfg')
+        names = ('printer_base_toolhead.cfg', 'KlipperScreen_toolhead.conf', 'toolhead_auxiliary.cfg',
+                 'printer_header_toolhead.cfg', 'printer_base_toolhead_single.cfg',
+                 'KlipperScreen_toolhead_single.conf', 'toolhead_auxiliary_single.cfg',
+                 'printer_header_toolhead_single.cfg')
         available = set(output('ls-tree', '--name-only', commit, '--', *names).splitlines())
         for name in names:
             if name in available:
                 (snapshot / name).write_bytes(subprocess.check_output(git + ['show', commit + ':' + name]))
-    header_name = 'printer_header_toolhead.cfg' if is_auxiliary(selected_variant(home)) else 'printer_header.cfg'
-    if (repo / header_name).is_file():
-        (snapshot / header_name).write_bytes(subprocess.check_output(git + ['show', commit + ':' + header_name]))
+    if (repo / 'printer_header.cfg').is_file():
+        (snapshot / 'printer_header.cfg').write_bytes(
+            subprocess.check_output(git + ['show', commit + ':printer_header.cfg']))
     print('Applying latest model config: ' + branch + ' ' + commit, flush=True)
     apply_config(snapshot, home, backup)
     print('System and model config applied: ' + commit, flush=True)
