@@ -224,7 +224,8 @@ class Panel(ScreenPanel):
             percent = self.test_progress(test_kind, values, elapsed, phase)
             if not running and record.get('outcome') in ('passed', 'warning', 'review'):
                 percent = 100
-            elif not running and test_kind == 'heater' and 'result2' in values:
+            elif not running and test_kind == 'heater' and (
+                    'result2' in values or (values.get('heater_count') == 1 and 'result1' in values)):
                 percent = 100
             if running:
                 percent = min(99, percent)
@@ -245,7 +246,7 @@ class Panel(ScreenPanel):
         if phase == 'homing' or not data:
             return 0
         if kind == 'heater':
-            value = elapsed / 32. * 100
+            value = elapsed / (10. if data.get('heater_count') == 1 else 32.) * 100
         elif kind == 'probe':
             value = (data.get('deployment_cycles',0)*2 + data.get('sets',0)*8
                      if data.get('schema') == 4 else len(data.get('samples', []))*10)
@@ -315,7 +316,7 @@ class Panel(ScreenPanel):
         if kind == 'heater':
             grades = {'normal': _('Normal operation'), 'degraded': _('Suspected heater degradation'),
                       'fault': _('Heater fault')}
-            for number in (1, 2):
+            for number in range(1, data.get('heater_count', 2) + 1):
                 box = card()
                 delta = data.get(f'delta{number}')
                 row(box, f'H{number}', f'{delta:+.2f} °C' if delta is not None else '—', True)

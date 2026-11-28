@@ -1,5 +1,5 @@
 """Bounded, user-started appliance diagnostics. No test runs on load."""
-from .lugo_factory_qc import FactoryQC
+from .lugo_factory_qc import FactoryQC, dual_nozzle
 import json
 import logging
 import math
@@ -227,9 +227,11 @@ class Diagnostics:
 
     def test_heater(self, now):
         if self.step == 0:
+            dual = dual_nozzle(self)
             self.saved['heater'] = True
-            self.data = {'reference': {'normal': 7., 'degraded': 5.}, 'schema': 2}
-            self.script('M104 S0\nSET_MULTI_PIN_MODE PIN=dual_hotend_heater MODE=1')
+            self.data = {'reference': {'normal': 7., 'degraded': 5.}, 'schema': 2,
+                         'heater_count': 2 if dual else 1}
+            self.script('M104 S0\nSET_MULTI_PIN_MODE PIN=dual_hotend_heater MODE=1' if dual else 'M104 S0')
             self.heater_start = float(self.status('extruder')['temperature'])
             self.script('M104 S200')
             self.heater_due = self.reactor.monotonic() + 10.
@@ -245,8 +247,9 @@ class Diagnostics:
             delta = float(self.status('extruder')['temperature']) - self.heater_start
             self.data['delta%d' % heater] = delta
             self.data['result%d' % heater] = self.heater_grade(delta)
-            self.script('M104 S0\nSET_MULTI_PIN_MODE PIN=dual_hotend_heater MODE=0')
-        if self.step == 1:
+            dual = self.data['heater_count'] == 2
+            self.script('M104 S0\nSET_MULTI_PIN_MODE PIN=dual_hotend_heater MODE=0' if dual else 'M104 S0')
+        if self.step == 1 and self.data['heater_count'] == 2:
             self.step = 2
             self.phase = 'heater_cooling'
             self.heater_due = self.reactor.monotonic() + 12.
@@ -256,7 +259,7 @@ class Diagnostics:
             self.step = 3
             self.heater_due = self.reactor.monotonic() + 10.
         else:
-            grades = [self.data['result1'], self.data['result2']]
+            grades = [self.data['result%d' % i] for i in range(1, self.data['heater_count'] + 1)]
             outcome = 'failed' if 'fault' in grades else 'warning' if 'degraded' in grades else 'passed'
             self.finish(outcome, 'Heater test complete')
 
@@ -452,7 +455,8 @@ class Diagnostics:
             self.script('M106 S0')
             self.data['completed'].append('part')
             self.saved['heater'] = True
-            self.script('SET_MULTI_PIN_MODE PIN=dual_hotend_heater MODE=0\nM104 S50')
+            mode = 'SET_MULTI_PIN_MODE PIN=dual_hotend_heater MODE=0\n' if dual_nozzle(self) else ''
+            self.script(mode + 'M104 S50')
             self.data.update(stage=3, temperature=self.status('extruder')['temperature'])
             self.phase = 'fan_heating'
             self.heat_deadline = now + 90.
@@ -477,7 +481,9 @@ class Diagnostics:
             velocity,accel = saved['motion_limits']
             scripts.append('SET_VELOCITY_LIMIT VELOCITY=%.6f ACCEL=%.6f' % (velocity,accel))
         if saved.get('heater'):
-            scripts.extend(['M104 S0', 'SET_MULTI_PIN_MODE PIN=dual_hotend_heater MODE=0'])
+            scripts.append('M104 S0')
+            if dual_nozzle(self, require=False):
+                scripts.append('SET_MULTI_PIN_MODE PIN=dual_hotend_heater MODE=0')
         if saved.get('probe'):
             scripts.append('Probe_Stow')
         if saved.get('fan_test'):

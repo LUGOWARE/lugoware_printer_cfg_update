@@ -65,9 +65,12 @@ def translate_toolhead_notice(text, language):
 def translate_printer_message(text, tr):
     raw = str(text)
     value = raw.strip()
-    localized = tr(value)
-    if value not in _keys and localized != value:
-        return localized
+    notices, notice_patterns = toolhead_notice_catalog()
+    if (value in notices.get('exact', {}) or
+            any(pattern.fullmatch(value) for pattern, *_ in notice_patterns)):
+        localized = tr(value)
+        if value not in _keys and localized != value:
+            return localized
     if value in _aliases:
         return tr(_aliases[value])
     if value in _keys:

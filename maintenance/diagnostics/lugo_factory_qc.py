@@ -4,6 +4,14 @@ import re
 import statistics
 
 
+def dual_nozzle(host, require=True):
+    settings = host.status('configfile').get('settings', {})
+    pin = settings.get('extruder', {}).get('heater_pin')
+    if not pin and require:
+        raise ValueError('Nozzle heater configuration unavailable')
+    return pin == 'multi_pin:dual_hotend_heater'
+
+
 def route(source, parking=False):
     # Accept only the simple manual DOCK_n/PARK_n layout, not print macros.
     if parking:
@@ -142,7 +150,8 @@ class FactoryQC:
             h.script('Probe_Stow')
             h.toolhead.manual_move([None,None,20.],min(40.,h.toolhead.get_kinematics().max_z_velocity))
             h.toolhead.wait_moves()
-            h.script('SET_MULTI_PIN_MODE PIN=dual_hotend_heater MODE=0\nM104 S250\nM140 S60\nM106 S255')
+            mode = 'SET_MULTI_PIN_MODE PIN=dual_hotend_heater MODE=0\n' if dual_nozzle(h) else ''
+            h.script(mode + 'M104 S250\nM140 S60\nM106 S255')
             self.stage_start=h.reactor.monotonic();self.test_start=self.stage_start;self.phase='docking'
             h.data['home_seconds']=round(self.stage_start-h.started,3)
             if not self.calibration and len(self.profile)==3:
@@ -224,9 +233,11 @@ class FactoryQC:
     def cleanup(self):
         if not self.armed:return
         h=self.h
-        for command in ('TURN_OFF_HEATERS','M107','Probe_Stow',
-                        'SET_MULTI_PIN_MODE PIN=dual_hotend_heater MODE=0',
-                        'SET_VELOCITY_LIMIT VELOCITY=%s ACCEL=%s'%self.saved_limits):
+        commands = ['TURN_OFF_HEATERS', 'M107', 'Probe_Stow']
+        if dual_nozzle(h, require=False):
+            commands.append('SET_MULTI_PIN_MODE PIN=dual_hotend_heater MODE=0')
+        commands.append('SET_VELOCITY_LIMIT VELOCITY=%s ACCEL=%s' % self.saved_limits)
+        for command in commands:
             try:h.script(command)
             except Exception:h.data.setdefault('cleanup_errors',[]).append(command)
         if self.current_tool is not None:h.data['manual_parking_required']=True

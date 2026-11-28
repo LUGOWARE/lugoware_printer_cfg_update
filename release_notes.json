@@ -10,20 +10,20 @@
     }
   },
   "lugoware_system": {
-    "version": "1.2.59",
+    "version": "1.2.60",
     "date": "2026/11/28",
     "notes": {
       "ko": [
-        "툴헤드 보조 두 버전에서 도킹 복구에 실패하면, 이동 경로가 확인된 경우 X10 Y125에서 일시정지합니다.",
-        "툴 장착 상태가 불확실할 때도 경로가 확인되면 취소 시 X10 Y125로 복귀하고 베드를 내립니다."
+        "노즐 히터 1개 버전에서 마지막 설치 확인 단계가 미완료로 표시되던 문제를 수정했습니다.",
+        "히터와 팬 점검은 설치된 노즐 히터 구성에 맞춰 실행합니다."
       ],
       "en": [
-        "Both auxiliary toolhead editions pause at X10 Y125 after failed dock recovery when the return path can be verified.",
-        "When tool attachment is uncertain, cancellation returns to X10 Y125 and lowers the bed if the path can be verified."
+        "Fixed incomplete installation status during the final checks of the single-nozzle-heater edition.",
+        "Heater and fan diagnostics now follow the installed nozzle heater configuration."
       ],
       "zh_CN": [
-        "两种工具头辅助加热版本在装载恢复失败后，若确认返回路径安全，将在 X10 Y125 暂停。",
-        "无法确认工具是否安装时，若可验证返回路径，取消打印仍会返回 X10 Y125 并降低热床。"
+        "修复了单喷嘴加热器版本在最后验证阶段显示安装未完成的问题。",
+        "加热器和风扇检测现按已安装的喷嘴加热器配置运行。"
       ]
     }
   }

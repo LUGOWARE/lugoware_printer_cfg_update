@@ -32,7 +32,7 @@ class Fixture:
             'print_stats': {'state': 'standby'}, 'pause_resume': {'is_paused': False},
             'virtual_sdcard': {'is_active': False},
             'toolhead': {'homed_axes': 'xyz', 'axis_minimum': [-2., -2., -4.], 'axis_maximum': [277.,257.,275.]},
-            'configfile': {'settings': {'bed_mesh': {'mesh_min':[0,27],'mesh_max':[200,240]}, 'probe': {'x_offset':-30.7,'y_offset':28.5}}},
+            'configfile': {'settings': {'extruder': {'heater_pin': 'multi_pin:dual_hotend_heater'}, 'bed_mesh': {'mesh_min':[0,27],'mesh_max':[200,240]}, 'probe': {'x_offset':-30.7,'y_offset':28.5}}},
             'heaters': {'available_heaters': ['extruder', 'heater_bed']},
             'extruder': {'temperature': 25., 'target': 0}, 'heater_bed': {'target': 0},
             'filament_switch_sensor toolhead_sensor': {'filament_detected': False, 'enabled': True},
@@ -227,6 +227,19 @@ class Tests(unittest.TestCase):
         self.f.d.validate('heater')
         self.f.states['filament_switch_sensor toolhead_sensor']['filament_detected']=True
         with self.assertRaises(ValueError):self.f.d.validate('heater')
+
+    def test_single_heater_runs_one_stage_and_never_switches_pins(self):
+        self.f.states['configfile']['settings']['extruder']['heater_pin'] = 'PC5'
+        self.f.d.start('heater')
+        self.f.tick()
+        self.assertEqual(self.f.d.data['heater_count'], 1)
+        self.f.states['extruder']['temperature'] = 32.
+        self.f.tick(10)
+        self.assertEqual(self.f.d.phase, 'passed')
+        self.assertEqual(self.f.d.data['result1'], 'normal')
+        self.assertNotIn('result2', self.f.d.data)
+        self.assertEqual(self.f.scripts[-1], 'M104 S0')
+        self.assertFalse(any('SET_MULTI_PIN_MODE' in script for script in self.f.scripts))
 
     def test_heater_two_timed_stages_and_history(self):
         self.f.d.start('heater');self.f.tick()

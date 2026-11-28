@@ -35,6 +35,7 @@ class TimedTests(unittest.TestCase):
         cfg=configparser.RawConfigParser(strict=False)
         cfg.read(Path(__file__).parent/'fixtures/factory_qc_routes.cfg',encoding='utf8')
         self.h=Fake();self.h.cfg={s.lower():dict(cfg[s]) for s in cfg.sections()}
+        self.h.cfg.setdefault('extruder', {'heater_pin': 'multi_pin:dual_hotend_heater'})
         self.h.cfg['extruder']['max_temp']=350;self.h.cfg['heater_bed']['max_temp']=130
         self.f=FactoryQC(self.h);self.h.factory=self.f
     def test_routes_all_tools_no_extrusion(self):

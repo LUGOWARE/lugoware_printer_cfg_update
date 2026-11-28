@@ -40,6 +40,20 @@ class ExtensionTests(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError, 'not registered'):
             verify(self.folder, self.source, lambda url: self.query(url) if url == '/printer/info' else {})
 
+    def test_single_heater_verifies_runtime_pins_without_dual_command(self):
+        install(self.folder, self.source)
+        settings = {'extruder': {'heater_pin': 'PC5'},
+                    'heater_generic toolhead': {'heater_pin': 'PA7'}}
+        def query(path):
+            if path == '/printer/info':
+                return self.query(path)
+            self.assertEqual(path, '/printer/objects/query?configfile&lugo_diagnostics')
+            return {'status': {'configfile': {'settings': settings}, 'lugo_diagnostics': {}}}
+        verify(self.folder, self.source, query, profile='toolhead_single')
+        settings['heater_generic toolhead']['heater_pin'] = 'PB7'
+        with self.assertRaisesRegex(RuntimeError, 'Single-nozzle'):
+            verify(self.folder, self.source, query, profile='toolhead_single')
+
     def test_stale_cache_removed(self):
         cache = self.target.parent / '__pycache__/multi_pin.cpython-39.pyc'
         cache.parent.mkdir()

@@ -131,7 +131,7 @@ fi
 status '[확인 완료] 펌웨어 정책 검증 및 Klipper READY'
 stage='히터 테스트 코드 실행 검증'
 python3 "$ASSET_DIR/verify_multi_pin.py" "$KLIPPER_DIR"
-status '[확인 완료] 히터 테스트: 파일 일치 및 SET_MULTI_PIN_MODE 명령 등록'
+status '[확인 완료] 히터 점검: 설치된 히터 구성에 맞는 실행 조건 검증'
 stage='KlipperScreen 여러 줄 안내 패치'
 status '[진행] KlipperScreen prompts.py 패치 및 문법 검사'
 bash "$ASSET_DIR/apply_prompts.sh"
