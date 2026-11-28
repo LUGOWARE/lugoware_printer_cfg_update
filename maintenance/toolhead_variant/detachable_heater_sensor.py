@@ -24,6 +24,7 @@ class DetachableHeaterSensor:
         self.print_heat_ready = False
         self.print_heat_fault_since = None
         self.pending_print_fault = None
+        self.dock_exit = None
         source.gcode.register_command("TOOLHEAD_DOCK_HEAT", self.dock_heat)
         source.gcode.register_command("TOOLHEAD_CHECK_DOCK_READY", self.check_dock_before_heat)
         source.gcode.register_command("TOOLHEAD_WAIT_FOR_PRIME", self.wait_for_prime,
@@ -123,6 +124,7 @@ class DetachableHeaterSensor:
     def hold_dock(self, gcmd, fast, message, replay=False, print_fault=None, returned=False):
         self.dock_stage = None
         self.dock_pending = False
+        self.dock_exit = None
         self.reconnect = None
         self.heater.set_temp(0.)
         self.printer.lookup_object('extruder').get_heater().set_temp(0.)
@@ -197,6 +199,7 @@ class DetachableHeaterSensor:
         return True
 
     def dock_heat(self, gcmd):
+        self.dock_exit = None
         self.reconnect = None
         target = gcmd.get_float('TEMP', minval=0., maxval=self.maximum)
         if self.failed:
@@ -496,6 +499,10 @@ class DetachableHeaterSensor:
             return
         fast = self.printer.lookup_object('fast_cancel')
         toolhead = self.printer.lookup_object('toolhead')
+        if (not fast.requested and not fast.dock_abort and self.dock_open_until is None
+                and self.wait_dock_link(fast, 'connected')):
+            self.dock_stage = 'exit'
+            return
         toolhead.wait_moves()
         while not fast.requested and self.dock_open_until is not None:
             if not self.recover_dock(gcmd, fast, self.dock_slicer_target, after_prime=True):
@@ -519,14 +526,61 @@ class DetachableHeaterSensor:
         self.dock_stage = 'exit'
 
     def verify_dock_exit(self, gcmd):
-        self.printer.lookup_object('toolhead').wait_moves()
+        head = self.printer.lookup_object('toolhead')
         fast = self.printer.lookup_object('fast_cancel')
+        now = self.source.reactor.monotonic()
+        _, state, job, blocked = self.context(now)
+        if (self.dock_stage == 'exit' and state == 'printing' and not blocked
+                and fast.slot in range(4) and self.dock_open_until is None
+                and self.wait_dock_link(fast, 'connected')):
+            record = {'slot': fast.slot, 'job': job, 'time': None,
+                      'targets': (self.nozzle_heater.target_temp, self.heater.target_temp)}
+            self.dock_exit = record
+
+            def exit_time(print_time):
+                if self.dock_exit is record:
+                    record['time'] = print_time
+
+            # This callback gives a scheduled MCU time, not physical completion.
+            head.register_lookahead_callback(exit_time)
+            return
+
+        # Keep the synchronous guard for an already-faulted exit or manual macro use.
+        head.wait_moves()
         flagged = self.dock_stage == 'exit' and self.dock_open_until is not None
         self.dock_stage = None
+        self.dock_exit = None
         if fast.requested or self.printer.is_shutdown():
             return
         if flagged or not self.wait_dock_link(fast, 'connected'):
             self.pause_at_dock(gcmd, fast, 'Toolhead connection failed at dock exit; print paused', at_exit=True)
+
+    def watch_dock_exit(self, now):
+        record = self.dock_exit
+        if record is None:
+            return False
+        fast = self.printer.lookup_object('fast_cancel')
+        _, state, job, blocked = self.context(now)
+        if blocked or state != 'printing' or job != record['job'] or fast.slot != record['slot']:
+            self.dock_exit = self.dock_stage = None
+            return False
+        if self.dock_open_until is None:
+            print_time = record['time']
+            mcu = self.heater.mcu_pwm.get_mcu()
+            if print_time is None or mcu.estimated_print_time(now) < print_time:
+                return False
+            if self.wait_dock_link(fast, 'connected'):
+                self.dock_exit = self.dock_stage = None
+                return False
+        self.dock_exit = self.dock_stage = None
+        self.original_set_temp(0.)
+        self.nozzle_heater.set_temp(0.)
+        # Stop admission of new SD lines while the existing pause handler acquires
+        # the G-code mutex. Already scheduled MCU moves are allowed to drain.
+        fast.sd.must_pause_work = True
+        self.queue_print_fault(record['slot'], job, 'Toolhead connection failed at dock exit; print paused',
+                               record['targets'], dock_exit=True)
+        return True
 
     def skip_interrupted_prime_line(self, command):
         if (self.dock_stage == 'prime' and self.dock_open_until is not None
@@ -536,6 +590,15 @@ class DetachableHeaterSensor:
         return False
 
     def park_off(self, gcmd):
+        if self.dock_exit is not None:
+            # A following toolchange may be parsed before its preceding exit ran.
+            self.printer.lookup_object('toolhead').wait_moves()
+            self.watch_dock_exit(self.source.reactor.monotonic())
+        if self.pending_print_fault is not None and self.pending_print_fault[-1]:
+            fast = self.printer.lookup_object('fast_cancel')
+            if not fast.cleaning and not fast.requested:
+                self.fault_pause(gcmd)
+                return
         self.manual_parked = True
         self.dock_pending = False
         self.heater.set_temp(0.)
@@ -595,16 +658,20 @@ class DetachableHeaterSensor:
         # Schedule zero through the existing MCU heater API, not from stale ADC time.
         print_time = self.heater.mcu_pwm.get_mcu().estimated_print_time(now)
         self.heater.set_pwm(print_time, 0.)
+        if self.dock_exit is not None:
+            self.watch_dock_exit(now)
         if target > 0:
             self.source.gcode.respond_info('Toolhead detached: auxiliary heater off; reconnect window 5 seconds')
             if state == 'printing' and not staged:
                 self.queue_print_fault(tool, filename, 'Toolhead sensor disconnected',
                                        (self.nozzle_heater.target_temp, target))
 
-    def queue_print_fault(self, tool, filename, reason, targets=None):
-        if getattr(self, 'pending_print_fault', None) is None:
+    def queue_print_fault(self, tool, filename, reason, targets=None, dock_exit=False):
+        pending = self.pending_print_fault
+        if pending is None or dock_exit:
             self.reconnect = None
-            self.pending_print_fault = (tool, filename, reason, targets)
+            self.pending_print_fault = (tool, filename, reason, targets, dock_exit)
+        if pending is None:
             self.source.reactor.register_callback(self.pause_fault_callback)
 
     def pause_fault_callback(self, _eventtime):
@@ -618,11 +685,17 @@ class DetachableHeaterSensor:
         now = self.source.reactor.monotonic()
         fast = self.printer.lookup_object('fast_cancel')
         tool, state, filename, blocked = self.context(now)
-        slot, job, reason, targets = pending
-        if state != 'printing' or blocked or job != filename:
+        slot, job, reason, targets, dock_exit = pending
+        active_state = state == 'printing' or (dock_exit and state == 'paused')
+        if not active_state or blocked or job != filename:
             return
         head = self.printer.lookup_object('toolhead')
         head.wait_moves()
+        if dock_exit and state == 'paused' and not fast.sd.is_active():
+            # The SD loop may have already honored must_pause_work. Keep native
+            # pause/resume ownership of that same file when BASE_PAUSE saves it.
+            pause = self.printer.lookup_object('pause_resume')
+            pause.sd_paused = pause.pause_command_sent = True
         if (targets is not None and slot == tool == fast.slot and fast.phase == 'docked'
                 and not fast.sd.is_cmd_from_sd()):
             self.hold_dock(gcmd, fast, reason, print_fault=(slot, targets))
@@ -796,6 +869,7 @@ class DetachableHeaterSensor:
 
     def watchdog(self, eventtime):
         if not self.failed:
+            self.watch_dock_exit(eventtime)
             self.check_reconnect(eventtime)
             self.sync_print_target(eventtime)
             self.watch_print_temperature(eventtime)

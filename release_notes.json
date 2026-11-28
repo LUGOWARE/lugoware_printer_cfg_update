@@ -10,20 +10,20 @@
     }
   },
   "lugoware_system": {
-    "version": "1.2.60",
+    "version": "1.2.61",
     "date": "2026/11/28",
     "notes": {
       "ko": [
-        "노즐 히터 1개 버전에서 마지막 설치 확인 단계가 미완료로 표시되던 문제를 수정했습니다.",
-        "히터와 팬 점검은 설치된 노즐 히터 구성에 맞춰 실행합니다."
+        "툴헤드 프라임 후 정상 도킹이면 거치대를 빠져나와 출력 위치로 바로 이어서 이동합니다.",
+        "이탈 중 센서 이상이 생기면 가열을 차단하고 보호 일시정지합니다."
       ],
       "en": [
-        "Fixed incomplete installation status during the final checks of the single-nozzle-heater edition.",
-        "Heater and fan diagnostics now follow the installed nozzle heater configuration."
+        "After priming, a healthy toolhead moves continuously from the rack to the print.",
+        "A sensor fault during rack exit turns off heating and pauses the print."
       ],
       "zh_CN": [
-        "修复了单喷嘴加热器版本在最后验证阶段显示安装未完成的问题。",
-        "加热器和风扇检测现按已安装的喷嘴加热器配置运行。"
+        "预挤出后，工具头状态正常时连续离开工具架并移向打印位置。",
+        "离开工具架时发现传感器故障，将关闭加热并暂停打印。"
       ]
     }
   }

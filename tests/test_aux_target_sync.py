@@ -9,6 +9,7 @@ class SyncTests(unittest.TestCase):
         obj=mod.DetachableHeaterSensor.__new__(mod.DetachableHeaterSensor)
         self.calls=[];obj.maximum=300;obj.dock_pending=False;obj.reconnect=None;obj.valid_samples=9
         obj.failed = False
+        obj.dock_exit = None
         obj.print_heat_key = None
         obj.nozzle_heater = N(target_temp=target)
         def set_target(value):

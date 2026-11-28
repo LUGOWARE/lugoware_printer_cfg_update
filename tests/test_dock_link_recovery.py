@@ -101,25 +101,96 @@ class DockLinkRecoveryTests(unittest.TestCase):
         self.adapter.hold_dock.assert_called_once()
         self.assertEqual(self.trace, [])
 
-    def test_settle_before_exit_and_check_once_after_motion(self):
+    def prepare_nominal_exit(self):
         a = self.adapter
-        a.printer = NS(lookup_object=lambda name: self.fast if name == 'fast_cancel' else
-                       NS(wait_moves=lambda: self.trace.append('moves drained')),
-                       is_shutdown=lambda: False)
+        self.markers = []
         self.fast.dock_abort = False
+        self.fast.phase = 'docked'
+        self.fast.sd = NS(must_pause_work=False, is_active=lambda: False,
+                          is_cmd_from_sd=lambda: False)
+        self.head = NS(wait_moves=Mock(), register_lookahead_callback=self.markers.append)
+        self.pause = NS(sd_paused=False, pause_command_sent=False)
+        objects = {'toolhead': self.head, 'fast_cancel': self.fast, 'pause_resume': self.pause}
+        a.printer = NS(lookup_object=objects.get, is_shutdown=lambda: False)
+        a.context = lambda now: (1, 'printing', 'job', self.fast.requested)
+        a.heater.target_temp = 220.
+        a.heater.mcu_pwm = NS(get_mcu=lambda: NS(estimated_print_time=lambda now: now))
+        a.nozzle_heater = self.nozzle
+        a.original_set_temp = Mock()
+        a.dock_exit = None
+        a.pending_print_fault = None
+        a.source.reactor.register_callback = Mock()
         a.dock_open_until = None
         a.dock_stage = 'prime'
-        a.pause_at_dock = Mock()
+        return a
+
+    def test_healthy_prime_and_exit_never_drain_or_wait_at_rack(self):
+        a = self.prepare_nominal_exit()
         a.prime_complete(None)
-        a.wait_dock_link.assert_called_once_with(self.fast, 'connected', 11.)
         self.assertEqual(a.dock_stage, 'exit')
-        a.wait_dock_link.reset_mock()
-        a.wait_dock_link.return_value = False
         a.verify_dock_exit(None)
-        a.wait_dock_link.assert_called_once_with(self.fast, 'connected')
-        self.assertEqual(self.trace, ['moves drained', 'moves drained'])
+        self.assertEqual(len(self.markers), 1)
+        self.head.wait_moves.assert_not_called()
+        self.assertEqual(self.time, 10.)
+        self.markers[0](12.)
+        self.assertFalse(a.watch_dock_exit(11.9))
+        self.assertEqual(a.dock_stage, 'exit')
+        self.assertFalse(a.watch_dock_exit(12.))
+        self.assertIsNone(a.dock_exit)
+        self.assertFalse(self.fast.sd.must_pause_work)
+        self.assertIsNone(a.pending_print_fault)
+
+    def test_exit_sensor_fault_stops_sd_and_preserves_resume_owner(self):
+        a = self.prepare_nominal_exit()
+        a.prime_complete(None)
+        a.verify_dock_exit(None)
+        self.markers[0](12.)
+        a.dock_open_until = 15.
+        self.assertTrue(a.watch_dock_exit(10.2))
+        self.assertTrue(self.fast.sd.must_pause_work)
+        a.original_set_temp.assert_called_once_with(0.)
+        self.nozzle.set_temp.assert_called_once_with(0.)
+        a.source.reactor.register_callback.assert_called_once()
+        a.context = lambda now: (1, 'paused', 'job', False)
+        a.fault_pause(None)
+        self.assertTrue(self.pause.sd_paused)
+        self.assertTrue(self.pause.pause_command_sent)
+        self.assertEqual(a.hold_dock.call_args.kwargs['print_fault'], (1, (225., 220.)))
+
+    def test_raw_open_sample_shuts_heaters_and_stops_queue_before_exit_marker(self):
+        a = self.prepare_nominal_exit()
+        a.heater.set_pwm = Mock()
+        a.prime_complete(None)
+        a.verify_dock_exit(None)
+        self.assertIsNone(a.dock_exit['time'])
+        a.detached(10.1)
+        a.heater.set_pwm.assert_called_once_with(10.1, 0.)
+        self.assertTrue(self.fast.sd.must_pause_work)
+        a.source.reactor.register_callback.assert_called_once()
+        self.markers[0](12.)
+        self.assertIsNone(a.dock_exit)
+
+    def test_cancel_before_exit_completion_discards_obsolete_marker(self):
+        a = self.prepare_nominal_exit()
+        a.prime_complete(None)
+        a.verify_dock_exit(None)
+        self.fast.requested = True
+        self.assertFalse(a.watch_dock_exit(11.))
+        self.markers[0](12.)
+        self.assertIsNone(a.dock_exit)
+        a.hold_dock.assert_not_called()
+        self.assertFalse(self.fast.sd.must_pause_work)
+
+    def test_already_bad_exit_still_waits_and_uses_dock_pause(self):
+        a = self.prepare_nominal_exit()
+        a.prime_complete(None)
+        a.wait_dock_link.return_value = False
+        a.pause_at_dock = Mock()
+        a.verify_dock_exit(None)
+        self.head.wait_moves.assert_called_once()
         a.pause_at_dock.assert_called_once()
         self.assertTrue(a.pause_at_dock.call_args.kwargs['at_exit'])
+        self.assertEqual(self.markers, [])
 
     def test_unstable_sensor_holds_before_exit(self):
         a = self.adapter
