@@ -119,6 +119,10 @@ def install(screen, backup, check=False):
     for path in Path(__file__).with_name('screen_locales').glob('*.json'):
         text=path.read_text(encoding='utf-8'); json.loads(text)
         changes[screen/'ks_includes/screen_locales'/path.name]=text
+    path = Path(__file__).with_name('toolhead_variant') / 'notice_locales.json'
+    notices = path.read_text(encoding='utf-8')
+    json.loads(notices)
+    changes[screen/'ks_includes/toolhead_notices.json'] = notices
     catalog_dir=root/'translations'
     for path in catalog_dir.glob('*.json'):
         text=path.read_text(encoding='utf-8'); json.loads(text)

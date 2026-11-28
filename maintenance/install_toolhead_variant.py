@@ -876,8 +876,11 @@ def plan(home, variant, assets, base_override=None, screen_override=None, auxili
     if variant == 'toolhead':
         if '</body>' not in text:
             raise ValueError('Unsupported Mainsail index')
-        text = text.replace('</body>', '<script defer src="./lugoware-toolhead-temperature.js?v=1.2.30"></script></body>')
-        changes[home / 'mainsail/lugoware-toolhead-temperature.js'] = (assets / 'lugoware-toolhead-temperature.js').read_bytes()
+        text = text.replace('</body>', '<script defer src="./lugoware-toolhead-temperature.js?v=1.2.58"></script></body>')
+        source = (assets / 'lugoware-toolhead-temperature.js').read_bytes()
+        catalog = json.loads((assets / 'notice_locales.json').read_text(encoding='utf-8'))
+        changes[home / 'mainsail/lugoware-toolhead-temperature.js'] = source.replace(
+            b'/* LUGOWARE_NOTICE_DATA */ null', json.dumps(catalog, ensure_ascii=True).encode())
     changes[index] = text.encode()
     # Unused module files/auxiliary cfg remain for rollback, but no config loads
     # them in standard mode. The Mainsail script is likewise not included.

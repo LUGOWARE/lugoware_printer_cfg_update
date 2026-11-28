@@ -1,4 +1,7 @@
 # Adapter for the existing PA2 input. Uses Klipper's normal Heater and verifier.
+import logging
+
+
 class DetachableHeaterSensor:
     def __init__(self, source, config):
         self.source = source
@@ -329,17 +332,21 @@ class DetachableHeaterSensor:
         return True
 
     def log_dock_block(self, fast, reason):
-        now = self.source.reactor.monotonic()
-        status = self.source.get_status(now)
-        head = self.printer.lookup_object('toolhead').get_status(now)
-        nozzle = self.printer.lookup_object('extruder').get_heater()
-        logging.info('Toolhead recovery blocked: %s; T%d phase=%s retries=%d '
-                     'sensor=%s temp=%s valid_samples=%d axes=%s position=%s '
-                     'nozzle_target=%s nozzle_pwm=%s aux_target=%s aux_pwm=%s',
-                     reason, fast.slot + 1, fast.phase, self.dock_retries,
-                     status['state'], status['temperature'], self.valid_samples,
-                     head['homed_axes'], head['position'][:3], nozzle.target_temp,
-                     nozzle.last_pwm_value, self.heater.target_temp, self.heater.last_pwm_value)
+        try:
+            now = self.source.reactor.monotonic()
+            status = self.source.get_status(now)
+            head = self.printer.lookup_object('toolhead').get_status(now)
+            nozzle = self.printer.lookup_object('extruder').get_heater()
+            logging.info('Toolhead recovery blocked: %s; T%d phase=%s retries=%d '
+                         'sensor=%s temp=%s valid_samples=%d axes=%s position=%s '
+                         'nozzle_target=%s nozzle_pwm=%s aux_target=%s aux_pwm=%s',
+                         reason, fast.slot + 1, fast.phase, self.dock_retries,
+                         status['state'], status['temperature'], self.valid_samples,
+                         head['homed_axes'], head['position'][:3], nozzle.target_temp,
+                         nozzle.last_pwm_value, self.heater.target_temp, self.heater.last_pwm_value)
+        except Exception:
+            # A diagnostic failure must never prevent the safe hold.
+            logging.exception('Unable to collect toolhead recovery diagnostics')
 
     def pause_at_dock(self, gcmd, fast, reason, at_exit=False, after_prime=False):
         self.dock_stage = None

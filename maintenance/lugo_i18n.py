@@ -19,6 +19,7 @@ class Translations(gettext.NullTranslations):
         self.upstream = upstream
         directory = Path(directory) if directory else Path(__file__).with_name('lugoware_locales')
         self.catalog = {}
+        self.language = {'ja': 'jp', 'sr': 'rs'}.get(language, language)
         language = {'ja': 'jp', 'sr': 'rs'}.get(language, language)
         # Only read a locale basename, never an arbitrary path from configuration.
         if re.fullmatch(r'[A-Za-z_]+', language or ''):
@@ -44,7 +45,15 @@ class Translations(gettext.NullTranslations):
 
     def gettext(self, message):
         original = self.upstream.gettext(message)
-        return original if original != message else self.catalog.get(message, original)
+        if original != message:
+            return original
+        if message in self.catalog:
+            return self.catalog[message]
+        try:
+            from ks_includes.printer_messages import translate_toolhead_notice
+        except ModuleNotFoundError:
+            from printer_messages import translate_toolhead_notice
+        return translate_toolhead_notice(message, self.language) or original
 
     def ngettext(self, singular, plural, n):
         return self.upstream.ngettext(singular, plural, n)

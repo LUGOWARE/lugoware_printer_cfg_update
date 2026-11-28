@@ -68,6 +68,30 @@ class DockLinkRecoveryTests(unittest.TestCase):
         self.nozzle.set_temp.assert_called_once_with(0.)
         self.adapter.hold_dock.assert_called_once()
 
+    def test_retry_exhaustion_executes_real_diagnostic_before_hold(self):
+        a = self.adapter
+        self.fast.phase = 'docking'
+        a.dock_retries = 2
+        a.wait_dock_link.return_value = False
+        a.valid_samples = 0
+        a.source.get_status = Mock(return_value={'state': 'disconnected', 'temperature': None})
+        head = NS(get_status=lambda now: {'homed_axes': 'xyz', 'position': [367.5, 178.5, 2.]})
+        a.printer.lookup_object = lambda name: (head if name == 'toolhead' else
+                                               NS(get_heater=lambda: self.nozzle))
+        self.nozzle.last_pwm_value = 0.
+        a.heater.target_temp = a.heater.last_pwm_value = 0.
+        del a.log_dock_block
+        with self.assertLogs(level='INFO') as caught:
+            self.assertFalse(self.recover())
+        self.assertIn('retries=2 sensor=disconnected', caught.output[0])
+        a.hold_dock.assert_called_once()
+        a.hold_dock.reset_mock()
+        a.source.get_status.side_effect = RuntimeError('diagnostic missing')
+        with self.assertLogs(level='ERROR') as caught:
+            self.assertFalse(self.recover())
+        self.assertIn('Unable to collect toolhead recovery diagnostics', caught.output[0])
+        a.hold_dock.assert_called_once()
+
     def test_incomplete_prime_can_park_without_replaying(self):
         self.adapter.dock_stage = 'prime'
         self.assertTrue(self.adapter.skip_interrupted_prime_line(['G1', 'E1']))

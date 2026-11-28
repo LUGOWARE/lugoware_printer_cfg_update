@@ -15,6 +15,21 @@ from install_i18n import patch_config, patch_screen, patch_prompts, patch_temper
 
 
 class I18nTests(unittest.TestCase):
+    def test_toolhead_notices_follow_every_screen_locale(self):
+        from printer_messages import toolhead_notice_catalog
+        data, _ = toolhead_notice_catalog()
+        self.assertEqual(set(data['locales']), {p.stem for p in (ROOT/'translations').glob('*.json')})
+        for lang, row in data['locales'].items():
+            tr = Translations(gettext.NullTranslations(), lang).gettext
+            self.assertEqual(tr('Toolhead redock attempt 2/2'),
+                             'Toolhead redock attempt 2/2' if lang == 'en' else row[3] + ' · 2/2')
+            self.assertEqual(tr('T2 툴헤드의 센서를 확인하세요'), 'T2 · ' + row[0])
+            self.assertEqual(tr('G1 X10 Y125'), 'G1 X10 Y125')
+            if lang != 'en':
+                self.assertIn('-8.2 °C', tr('Toolhead heater safety stop: Sensor connected, temperature -8.2 during heating/cooldown guard'))
+                self.assertIn(row[2], tr('Toolhead connection did not return; print paused'))
+            self.assertTrue(all(item.strip() for item in row))
+
     def test_tool_service_translations_follow_the_selected_language(self):
         payload = tool_service_strings()
         self.assertEqual(set(payload['ui']), {p.stem for p in (ROOT/'translations').glob('*.json')})

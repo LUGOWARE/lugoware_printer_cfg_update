@@ -1,0 +1,726 @@
+{
+  "exact": {
+    "툴헤드의 센서를 확인하세요": 0,
+    "툴헤드 센서 단락 의심": 0,
+    "툴헤드 온도센서 단락 의심": 0,
+    "툴헤드 온도센서 측정 범위 이상": 0,
+    "툴헤드 온도센서 응답 대기": 0,
+    "Toolhead sensor is not connected; heating blocked": 0,
+    "Sensor unavailable during heater control": 0,
+    "No recent temperature samples": 0,
+    "Toolhead sensor not ready after docking": 0,
+    "툴 거치 확인": 7,
+    "Toolhead sensor disconnected": 1,
+    "툴헤드 미부착 / 온도센서 연결 끊김": 1,
+    "Toolhead detached: auxiliary heater off; reconnect window 5 seconds": 1,
+    "Toolhead connection did not return; print paused": 12,
+    "Toolhead connection failed at dock exit; print paused": 12,
+    "Toolhead connection not stable before leaving dock; print paused": 12,
+    "Toolhead position or connection uncertain; print paused": 12,
+    "Toolhead sensor check failed; paused without movement": 12,
+    "Toolhead parked; print paused after a docking or prime fault": 2,
+    "Toolhead preheat timed out; print paused": 13,
+    "Print recovery heating timed out.": 4,
+    "Unsafe heater state before dock check": 5,
+    "Auxiliary heater still active during preheat dock check": 5,
+    "Toolhead safety stop during dock check": 5,
+    "Toolhead heater safety stop before prime": 5,
+    "Toolhead heater safety stop is active": 5,
+    "Toolhead heater safety stop during parking": 5,
+    "Toolhead heater is not off; parking blocked": 5,
+    "Auxiliary heater off: nozzle target exceeds toolhead maximum": 5,
+    "Dock recovery is unavailable. Inspect the tool and cancel the held print.": 6,
+    "Dock sensor check requires an active dock slot": 6,
+    "Held print changed. Dock recovery stopped.": 6,
+    "Dock recovery is no longer waiting for tool confirmation.": 6,
+    "Homing or position changed. Dock recovery stopped.": 6,
+    "Carriage position changed from the verified X10 Y125 wait position.": 6,
+    "The saved tool position is outside the verified dock exit.": 6,
+    "Carriage position changed outside the verified dock or its X0 exit. Print remains paused.": 6,
+    "No recoverable dock pause. Confirm the tool is parked before retrying.": 6,
+    "The tool did not finish docking.": 6,
+    "Homing or position changed. Print recovery stopped.": 6,
+    "The tool did not finish docking. Print recovery stopped.": 6,
+    "Safe Z height changed during XY homing.": 6,
+    "Empty carriage or auxiliary heater state changed before docking.": 6,
+    "A heater target changed during print recovery.": 6,
+    "Dock recovery did not finish. Inspect the tool and cancel.": 6,
+    "Return skipped: position or X10 clearance could not be verified.": 6,
+    "Pause return skipped: Y125 is outside axis limits.": 6,
+    "Heaters not linked: target outside shared temperature range": 6,
+    "Toolhead heating target changed before prime": 6,
+    "Confirm the carriage is empty and the tool is seated in its rack.": 7,
+    "Use the printer screen to confirm the tool is parked before resuming.": 7,
+    "Wait for both heater outputs to turn off before dock recovery.": 6,
+    "Park the service tool before resuming.": 7,
+    "Pause return skipped: inspect the toolhead attachment.": 6,
+    "Moved to X10 only. Inspect the toolhead attachment.": 6,
+    "Toolhead temperature dropped": 8,
+    "Toolhead overheating": 9,
+    "Toolhead recovery did not finish. Inspect the tool and cancel.": 6,
+    "Print recovery did not finish. Inspect the tool and cancel.": 6,
+    "Toolhead not attached": 1,
+    "Toolhead heater safety stop: Sensor unavailable during heater control": 5,
+    "Toolhead heater safety stop: Auxiliary heater still active during preheat dock check": 5,
+    "Toolhead heater safety stop: Toolhead sensor not ready after docking": 5,
+    "Toolhead heater safety stop: No recent temperature samples": 5
+  },
+  "patterns": [
+    [
+      "Toolhead redock attempt ([12]/2)",
+      3
+    ],
+    [
+      "T([1-4]) 툴헤드의 센서를 확인하세요",
+      10
+    ],
+    [
+      "툴 T([1-4])가 거치대에 완전히 들어가 있고 헤드는 비어 있습니까\\? X0까지의 이동 경로도 확인해 주세요\\.",
+      11
+    ],
+    [
+      "Toolhead did not reach ([-+\\d.]+) C before prime",
+      4,
+      " °C"
+    ],
+    [
+      "Toolhead sensor unavailable before prime: (?:checking|stale|invalid|disconnected|short_circuit)",
+      0
+    ],
+    [
+      "Toolhead recovery paused: .+",
+      12
+    ],
+    [
+      "Toolhead heater safety stop: Temperature ([-+\\d.]+) above maximum ([-+\\d.]+)",
+      5,
+      " °C"
+    ],
+    [
+      "Toolhead heater safety stop: Sensor \\w+, temperature ([-+\\d.]+) during heating/cooldown guard",
+      5,
+      " °C"
+    ],
+    [
+      "툴헤드 온도센서 연결: ([-+\\d.]+)°C \\(센서 연결 감지\\)",
+      14,
+      " °C"
+    ],
+    [
+      "Toolhead reconnected: auxiliary preheat restored; print is not automatically resumed",
+      14
+    ],
+    [
+      "Toolhead heater turned off after 10 minutes idle\\.",
+      15
+    ],
+    [
+      "T[1-4] print temperature: ([-+\\d.]+) C",
+      16,
+      " °C"
+    ],
+    [
+      "툴헤드 온도센서 연결: ([-+\\d.]+)°C \\(센서 연결 감지\\)",
+      14,
+      " °C"
+    ],
+    [
+      "Toolhead reconnected: auxiliary preheat restored; print is not automatically resumed",
+      14
+    ],
+    [
+      "Toolhead heater turned off after 10 minutes idle\\.",
+      15
+    ],
+    [
+      "T[1-4] print temperature: ([-+\\d.]+) C",
+      16,
+      " °C"
+    ]
+  ],
+  "locales": {
+    "en": [
+      "Check the toolhead sensor",
+      "Toolhead connection lost",
+      "Print paused",
+      "Toolhead redock attempt",
+      "Toolhead preheat timed out",
+      "Toolhead heater safety stop",
+      "Dock recovery unavailable",
+      "Confirm that the tool is parked and the carriage is empty",
+      "Toolhead temperature dropped",
+      "Toolhead overheating"
+    ],
+    "ko": [
+      "툴헤드 센서를 확인하세요",
+      "툴헤드 센서 연결이 끊겼습니다",
+      "출력을 일시정지했습니다",
+      "툴헤드 재도킹 시도",
+      "툴헤드 예열 시간이 초과되었습니다",
+      "툴헤드 히터 보호가 작동했습니다",
+      "도킹 복구를 진행할 수 없습니다",
+      "툴을 거치했고 헤드가 비어 있는지 확인하세요",
+      "툴헤드 온도가 낮아졌습니다",
+      "툴헤드 온도가 너무 높습니다"
+    ],
+    "zh_CN": [
+      "请检查工具头传感器",
+      "工具头连接已断开",
+      "打印已暂停",
+      "工具头重新装载尝试",
+      "工具头预热超时",
+      "工具头加热器保护已触发",
+      "无法恢复工具头装载",
+      "请确认工具已归位且滑座为空",
+      "工具头温度下降",
+      "工具头过热"
+    ],
+    "zh_TW": [
+      "請檢查工具頭感測器",
+      "工具頭連線已中斷",
+      "列印已暫停",
+      "工具頭重新裝載嘗試",
+      "工具頭預熱逾時",
+      "工具頭加熱器保護已觸發",
+      "無法恢復工具頭裝載",
+      "請確認工具已歸位且滑座為空",
+      "工具頭溫度下降",
+      "工具頭過熱"
+    ],
+    "jp": [
+      "ツールヘッドのセンサーを確認してください",
+      "ツールヘッドの接続が切れました",
+      "印刷を一時停止しました",
+      "ツールヘッドの再装着試行",
+      "ツールヘッドの予熱がタイムアウトしました",
+      "ツールヘッドヒーターの保護機能が作動しました",
+      "ドッキングを復旧できません",
+      "ツールが格納され、キャリッジが空であることを確認してください",
+      "ツールヘッドの温度が低下しました",
+      "ツールヘッドが過熱しています"
+    ],
+    "de": [
+      "Werkzeugkopfsensor prüfen",
+      "Verbindung zum Werkzeugkopf unterbrochen",
+      "Druck pausiert",
+      "Erneuter Andockversuch",
+      "Zeitlimit für das Vorheizen des Werkzeugkopfs erreicht",
+      "Sicherheitsabschaltung der Werkzeugkopfheizung",
+      "Andockvorgang kann nicht wiederhergestellt werden",
+      "Bitte prüfen, ob das Werkzeug abgelegt und der Schlitten leer ist",
+      "Temperatur des Werkzeugkopfs gesunken",
+      "Werkzeugkopf überhitzt"
+    ],
+    "fr": [
+      "Vérifier le capteur de la tête d’outil",
+      "Connexion à la tête d’outil perdue",
+      "Impression mise en pause",
+      "Tentative de réaccrochage de la tête d’outil",
+      "Délai de préchauffage de la tête d’outil dépassé",
+      "Arrêt de sécurité du chauffage de la tête d’outil",
+      "Reprise de l’accrochage impossible",
+      "Confirmer que l’outil est rangé et que le chariot est vide",
+      "La température de la tête d’outil a baissé",
+      "Surchauffe de la tête d’outil"
+    ],
+    "es": [
+      "Compruebe el sensor del cabezal de herramienta",
+      "Se perdió la conexión con el cabezal",
+      "Impresión pausada",
+      "Intento de reacoplar el cabezal",
+      "Se agotó el tiempo de precalentamiento del cabezal",
+      "Parada de seguridad del calentador del cabezal",
+      "No se puede recuperar el acoplamiento",
+      "Confirme que la herramienta está estacionada y el carro está vacío",
+      "Ha bajado la temperatura del cabezal",
+      "Sobrecalentamiento del cabezal"
+    ],
+    "it": [
+      "Verificare il sensore della testa utensile",
+      "Connessione alla testa utensile interrotta",
+      "Stampa in pausa",
+      "Tentativo di riaggancio della testa utensile",
+      "Tempo di preriscaldamento della testa utensile scaduto",
+      "Arresto di sicurezza del riscaldatore della testa utensile",
+      "Ripristino dell’aggancio non disponibile",
+      "Confermare che l’utensile è parcheggiato e il carrello è vuoto",
+      "Temperatura della testa utensile in calo",
+      "Surriscaldamento della testa utensile"
+    ],
+    "pt": [
+      "Verifique o sensor da cabeça de ferramenta",
+      "Ligação à cabeça de ferramenta interrompida",
+      "Impressão em pausa",
+      "Tentativa de voltar a encaixar a cabeça",
+      "Tempo de pré-aquecimento da cabeça excedido",
+      "Paragem de segurança do aquecedor da cabeça",
+      "Não é possível recuperar o encaixe",
+      "Confirme que a ferramenta está no suporte e que o carro está vazio",
+      "A temperatura da cabeça baixou",
+      "Sobreaquecimento da cabeça"
+    ],
+    "pt_BR": [
+      "Verifique o sensor do cabeçote",
+      "Conexão com o cabeçote interrompida",
+      "Impressão pausada",
+      "Tentativa de reacoplar o cabeçote",
+      "Tempo de pré-aquecimento do cabeçote excedido",
+      "Parada de segurança do aquecedor do cabeçote",
+      "Não foi possível recuperar o acoplamento",
+      "Confirme que a ferramenta está no suporte e o carro está vazio",
+      "A temperatura do cabeçote caiu",
+      "Superaquecimento do cabeçote"
+    ],
+    "nl": [
+      "Controleer de sensor van de gereedschapskop",
+      "Verbinding met de gereedschapskop verbroken",
+      "Afdruk gepauzeerd",
+      "Nieuwe poging om de gereedschapskop aan te koppelen",
+      "Voorverwarming van de gereedschapskop duurt te lang",
+      "Veiligheidsstop van de gereedschapskopverwarming",
+      "Herstel van de koppeling niet beschikbaar",
+      "Bevestig dat het gereedschap geparkeerd is en de slede leeg is",
+      "Temperatuur van de gereedschapskop gedaald",
+      "Gereedschapskop oververhit"
+    ],
+    "da": [
+      "Kontrollér værktøjshovedets sensor",
+      "Forbindelsen til værktøjshovedet er afbrudt",
+      "Udskrivningen er sat på pause",
+      "Forsøg på at tilkoble værktøjshovedet igen",
+      "Tidsgrænsen for forvarmning af værktøjshovedet er overskredet",
+      "Sikkerhedsstop for værktøjshovedets varmelegeme",
+      "Tilkoblingen kan ikke gendannes",
+      "Bekræft, at værktøjet er parkeret, og at vognen er tom",
+      "Værktøjshovedets temperatur er faldet",
+      "Værktøjshovedet er overophedet"
+    ],
+    "sv": [
+      "Kontrollera verktygshuvudets sensor",
+      "Anslutningen till verktygshuvudet bröts",
+      "Utskriften är pausad",
+      "Nytt försök att docka verktygshuvudet",
+      "Tidsgränsen för förvärmning av verktygshuvudet överskreds",
+      "Säkerhetsstopp för verktygshuvudets värmare",
+      "Dockningen kan inte återställas",
+      "Bekräfta att verktyget är parkerat och vagnen är tom",
+      "Verktygshuvudets temperatur sjönk",
+      "Verktygshuvudet är överhettat"
+    ],
+    "ru": [
+      "Проверьте датчик инструментальной головки",
+      "Связь с инструментальной головкой потеряна",
+      "Печать приостановлена",
+      "Попытка повторной стыковки головки",
+      "Время предварительного нагрева головки истекло",
+      "Защитное отключение нагревателя головки",
+      "Восстановление стыковки недоступно",
+      "Убедитесь, что инструмент в держателе, а каретка пуста",
+      "Температура головки снизилась",
+      "Перегрев инструментальной головки"
+    ],
+    "uk": [
+      "Перевірте датчик інструментальної головки",
+      "Зв’язок з інструментальною головкою втрачено",
+      "Друк призупинено",
+      "Спроба повторного стикування головки",
+      "Час попереднього нагрівання головки вичерпано",
+      "Захисне вимкнення нагрівача головки",
+      "Відновлення стикування недоступне",
+      "Переконайтеся, що інструмент у тримачі, а каретка порожня",
+      "Температура головки знизилася",
+      "Перегрів інструментальної головки"
+    ],
+    "pl": [
+      "Sprawdź czujnik głowicy narzędziowej",
+      "Utracono połączenie z głowicą narzędziową",
+      "Druk wstrzymany",
+      "Próba ponownego zadokowania głowicy",
+      "Przekroczono czas nagrzewania głowicy",
+      "Zadziałało zabezpieczenie grzałki głowicy",
+      "Nie można wznowić dokowania",
+      "Potwierdź, że narzędzie jest odłożone, a wózek jest pusty",
+      "Temperatura głowicy spadła",
+      "Przegrzanie głowicy narzędziowej"
+    ],
+    "cs": [
+      "Zkontrolujte snímač nástrojové hlavy",
+      "Spojení s nástrojovou hlavou bylo přerušeno",
+      "Tisk pozastaven",
+      "Pokus o opětovné připojení hlavy",
+      "Čas předehřevu hlavy vypršel",
+      "Bezpečnostní vypnutí topení hlavy",
+      "Připojení hlavy nelze obnovit",
+      "Potvrďte, že je nástroj odložený a vozík je prázdný",
+      "Teplota nástrojové hlavy poklesla",
+      "Přehřátí nástrojové hlavy"
+    ],
+    "sk": [
+      "Skontrolujte snímač nástrojovej hlavy",
+      "Spojenie s nástrojovou hlavou sa prerušilo",
+      "Tlač je pozastavená",
+      "Pokus o opätovné pripojenie hlavy",
+      "Čas predohrevu hlavy vypršal",
+      "Bezpečnostné vypnutie ohrevu hlavy",
+      "Pripojenie hlavy sa nedá obnoviť",
+      "Potvrďte, že je nástroj odložený a vozík je prázdny",
+      "Teplota nástrojovej hlavy klesla",
+      "Prehriatie nástrojovej hlavy"
+    ],
+    "sl": [
+      "Preverite tipalo glave orodja",
+      "Povezava z glavo orodja je prekinjena",
+      "Tiskanje je začasno ustavljeno",
+      "Poskus ponovnega priklopa glave",
+      "Čas za predgretje glave je potekel",
+      "Varnostni izklop grelnika glave",
+      "Priklopa ni mogoče obnoviti",
+      "Potrdite, da je orodje odloženo in voziček prazen",
+      "Temperatura glave je padla",
+      "Glava orodja je pregreta"
+    ],
+    "hr": [
+      "Provjerite senzor glave alata",
+      "Veza s glavom alata je prekinuta",
+      "Ispis je pauziran",
+      "Pokušaj ponovnog spajanja glave",
+      "Isteklo je vrijeme predgrijavanja glave",
+      "Sigurnosno isključivanje grijača glave",
+      "Spajanje glave nije moguće obnoviti",
+      "Potvrdite da je alat odložen i da su kolica prazna",
+      "Temperatura glave je pala",
+      "Pregrijavanje glave alata"
+    ],
+    "rs": [
+      "Проверите сензор главе алата",
+      "Веза са главом алата је прекинута",
+      "Штампање је паузирано",
+      "Покушај поновног спајања главе",
+      "Време предгревања главе је истекло",
+      "Безбедносно искључивање грејача главе",
+      "Спајање главе се не може обновити",
+      "Потврдите да је алат одложен и да су колица празна",
+      "Температура главе је опала",
+      "Прегревање главе алата"
+    ],
+    "bg": [
+      "Проверете датчика на инструменталната глава",
+      "Връзката с инструменталната глава е прекъсната",
+      "Печатът е на пауза",
+      "Опит за повторно скачване на главата",
+      "Времето за предварително загряване на главата изтече",
+      "Защитно изключване на нагревателя на главата",
+      "Скачването не може да бъде възстановено",
+      "Потвърдете, че инструментът е прибран и каретката е празна",
+      "Температурата на главата спадна",
+      "Прегряване на инструменталната глава"
+    ],
+    "et": [
+      "Kontrollige tööriistapea andurit",
+      "Ühendus tööriistapeaga katkes",
+      "Printimine on peatatud",
+      "Tööriistapea taasühendamise katse",
+      "Tööriistapea eelsoojenduse aeg sai täis",
+      "Tööriistapea küttekeha ohutusseiskamine",
+      "Dokiühendust ei saa taastada",
+      "Kinnitage, et tööriist on hoidikus ja kelk on tühi",
+      "Tööriistapea temperatuur langes",
+      "Tööriistapea on üle kuumenenud"
+    ],
+    "lt": [
+      "Patikrinkite įrankio galvutės jutiklį",
+      "Ryšys su įrankio galvute nutrūko",
+      "Spausdinimas pristabdytas",
+      "Bandoma iš naujo prijungti įrankio galvutę",
+      "Baigėsi galvutės pašildymo laikas",
+      "Apsauginis galvutės kaitintuvo išjungimas",
+      "Prijungimo atkurti nepavyko",
+      "Patvirtinkite, kad įrankis laikiklyje, o vežimėlis tuščias",
+      "Galvutės temperatūra nukrito",
+      "Įrankio galvutė perkaito"
+    ],
+    "hu": [
+      "Ellenőrizze a szerszámfej érzékelőjét",
+      "Megszakadt a kapcsolat a szerszámfejjel",
+      "A nyomtatás szünetel",
+      "Újradokkolási kísérlet",
+      "Lejárt a szerszámfej előmelegítési ideje",
+      "A szerszámfej fűtésének biztonsági leállítása",
+      "A dokkolás nem állítható helyre",
+      "Erősítse meg, hogy a szerszám a tartójában van, és a kocsi üres",
+      "A szerszámfej hőmérséklete csökkent",
+      "A szerszámfej túlmelegedett"
+    ],
+    "tr": [
+      "Takım kafası sensörünü kontrol edin",
+      "Takım kafası bağlantısı kesildi",
+      "Yazdırma duraklatıldı",
+      "Takım kafasını yeniden takma denemesi",
+      "Takım kafası ön ısıtma süresi doldu",
+      "Takım kafası ısıtıcısının güvenlik durdurması devreye girdi",
+      "Takım takma işlemi kurtarılamıyor",
+      "Takımın yuvasında ve taşıyıcının boş olduğunu doğrulayın",
+      "Takım kafasının sıcaklığı düştü",
+      "Takım kafası aşırı ısındı"
+    ],
+    "vi": [
+      "Kiểm tra cảm biến đầu công cụ",
+      "Mất kết nối với đầu công cụ",
+      "Đã tạm dừng in",
+      "Lần thử lắp lại đầu công cụ",
+      "Đã hết thời gian gia nhiệt đầu công cụ",
+      "Đã ngắt bộ gia nhiệt đầu công cụ để bảo đảm an toàn",
+      "Không thể khôi phục việc lắp đầu công cụ",
+      "Xác nhận công cụ đã ở giá đỡ và xe trượt đang trống",
+      "Nhiệt độ đầu công cụ đã giảm",
+      "Đầu công cụ quá nóng"
+    ],
+    "ar": [
+      "تحقق من مستشعر رأس الأداة",
+      "انقطع الاتصال برأس الأداة",
+      "توقفت الطباعة مؤقتًا",
+      "محاولة إعادة تركيب رأس الأداة",
+      "انتهت مهلة التسخين الأولي لرأس الأداة",
+      "تم إيقاف سخان رأس الأداة للحماية",
+      "تعذّر استئناف تركيب الأداة",
+      "تأكد من وضع الأداة في حاملها ومن خلو العربة",
+      "انخفضت حرارة رأس الأداة",
+      "ارتفاع مفرط في حرارة رأس الأداة"
+    ],
+    "fa": [
+      "حسگر هد ابزار را بررسی کنید",
+      "ارتباط با هد ابزار قطع شد",
+      "چاپ موقتاً متوقف شد",
+      "تلاش برای نصب دوباره هد ابزار",
+      "مهلت پیش‌گرمایش هد ابزار پایان یافت",
+      "گرم‌کن هد ابزار برای ایمنی متوقف شد",
+      "بازیابی اتصال ابزار ممکن نیست",
+      "تأیید کنید که ابزار در جایگاه است و کالسکه خالی است",
+      "دمای هد ابزار کاهش یافت",
+      "دمای هد ابزار بیش از حد بالا است"
+    ],
+    "he": [
+      "יש לבדוק את חיישן ראש הכלי",
+      "החיבור לראש הכלי נותק",
+      "ההדפסה הושהתה",
+      "ניסיון לעגן מחדש את ראש הכלי",
+      "תם הזמן לחימום מוקדם של ראש הכלי",
+      "מחמם ראש הכלי הופסק מטעמי בטיחות",
+      "לא ניתן לשחזר את עגינת הכלי",
+      "יש לוודא שהכלי נמצא בתושבת והעגלה ריקה",
+      "טמפרטורת ראש הכלי ירדה",
+      "ראש הכלי התחמם יתר על המידה"
+    ],
+    "de_formal": [
+      "Werkzeugkopfsensor prüfen",
+      "Verbindung zum Werkzeugkopf unterbrochen",
+      "Druck pausiert",
+      "Erneuter Andockversuch",
+      "Zeitlimit für das Vorheizen des Werkzeugkopfs erreicht",
+      "Sicherheitsabschaltung der Werkzeugkopfheizung",
+      "Andockvorgang kann nicht wiederhergestellt werden",
+      "Bitte prüfen, ob das Werkzeug abgelegt und der Schlitten leer ist",
+      "Temperatur des Werkzeugkopfs gesunken",
+      "Werkzeugkopf überhitzt"
+    ]
+  },
+  "extra": {
+    "en": [
+      "Ready",
+      "Off",
+      "Temperature"
+    ],
+    "ko": [
+      "준비됨",
+      "끄기",
+      "온도"
+    ],
+    "zh_CN": [
+      "准备好",
+      "关闭",
+      "温度"
+    ],
+    "zh_TW": [
+      "準備好",
+      "關閉",
+      "溫度"
+    ],
+    "jp": [
+      "準備完了",
+      "オフ",
+      "温度"
+    ],
+    "de": [
+      "Fertig",
+      "Aus",
+      "Temperatur"
+    ],
+    "fr": [
+      "Prêt",
+      "Arrêt",
+      "Température"
+    ],
+    "es": [
+      "Listo",
+      "Apagar",
+      "Temperatura"
+    ],
+    "it": [
+      "Pronto",
+      "Spento",
+      "Temperatura"
+    ],
+    "pt": [
+      "Pronto",
+      "Desligar",
+      "Temperatura"
+    ],
+    "pt_BR": [
+      "Pronto",
+      "Desligar",
+      "Temperatura"
+    ],
+    "nl": [
+      "Klaar",
+      "Uit",
+      "Temperatuur"
+    ],
+    "da": [
+      "Parat",
+      "Fra",
+      "Temperatur"
+    ],
+    "sv": [
+      "Klar",
+      "Av",
+      "Temperatur"
+    ],
+    "ru": [
+      "Готово",
+      "Выкл.",
+      "Температура"
+    ],
+    "uk": [
+      "Готовий",
+      "Вимк.",
+      "Температура"
+    ],
+    "pl": [
+      "Gotowe",
+      "Wyłącz",
+      "Temperatura"
+    ],
+    "cs": [
+      "Připraveno",
+      "Vypnout",
+      "Teplota"
+    ],
+    "sk": [
+      "Pripravený",
+      "Vypnúť",
+      "Teplota"
+    ],
+    "sl": [
+      "Pripravljen",
+      "Izklop",
+      "Temperatura"
+    ],
+    "hr": [
+      "Spremni",
+      "Isključi",
+      "Temperatura"
+    ],
+    "rs": [
+      "Спреман",
+      "Искључи",
+      "Температура"
+    ],
+    "bg": [
+      "Готов",
+      "Изкл.",
+      "Температура"
+    ],
+    "et": [
+      "Valmis",
+      "Väljas",
+      "Temperatuur"
+    ],
+    "lt": [
+      "Pasiruošę",
+      "Išjungti",
+      "Temperatūra"
+    ],
+    "hu": [
+      "Kész",
+      "Ki",
+      "Hőmérséklet"
+    ],
+    "tr": [
+      "Hazır",
+      "Kapat",
+      "Sıcaklık"
+    ],
+    "vi": [
+      "Sẵn sàng",
+      "Tắt",
+      "Nhiệt độ"
+    ],
+    "ar": [
+      "جاهز",
+      "إيقاف",
+      "درجة الحرارة"
+    ],
+    "fa": [
+      "آماده است",
+      "خاموش",
+      "دما"
+    ],
+    "he": [
+      "מוכן",
+      "כיבוי",
+      "טמפרטורה"
+    ],
+    "de_formal": [
+      "Fertig",
+      "Aus",
+      "Temperatur"
+    ]
+  },
+  "detail": {
+    "ko": {
+      "Toolhead detached: auxiliary heater off; reconnect window 5 seconds": "툴헤드 연결이 끊겨 보조 히터를 껐습니다. 5초 동안 재연결을 확인합니다.",
+      "Toolhead reconnected: auxiliary preheat restored; print is not automatically resumed": "툴헤드가 다시 연결되어 보조 예열을 복원했습니다. 출력은 일시정지 상태입니다.",
+      "Toolhead sensor check failed; paused without movement": "툴헤드 센서를 확인할 수 없어 현재 위치에서 일시정지했습니다.",
+      "Toolhead position or connection uncertain; print paused": "툴헤드 위치 또는 연결이 불확실해 일시정지했습니다.",
+      "Toolhead parked; print paused after a docking or prime fault": "툴을 거치하고 출력을 일시정지했습니다.",
+      "Toolhead connection failed at dock exit; print paused": "거치대에서 빠져나오는 중 툴헤드 연결이 끊겨 일시정지했습니다.",
+      "Toolhead connection not stable before leaving dock; print paused": "거치대를 빠져나가기 전 툴헤드 연결이 불안정해 일시정지했습니다.",
+      "Toolhead heater turned off after 10 minutes idle.": "10분 동안 대기해 보조 툴헤드 히터를 껐습니다.",
+      "Wait for both heater outputs to turn off before dock recovery.": "두 히터 출력이 모두 꺼진 뒤 도킹 복구를 다시 시도하세요.",
+      "Dock recovery is unavailable. Inspect the tool and cancel the held print.": "도킹 복구를 진행할 수 없습니다. 툴 상태를 확인하고 일시정지된 출력을 취소하세요.",
+      "Moved to X10 only. Inspect the toolhead attachment.": "X10까지만 이동했습니다. 툴헤드 장착 상태를 확인하세요.",
+      "Pause return skipped: Y125 is outside axis limits.": "Y125가 축 이동 범위를 벗어나 복귀 이동을 생략했습니다.",
+      "툴 거치 확인": "툴 거치 확인"
+    },
+    "zh_CN": {
+      "Toolhead detached: auxiliary heater off; reconnect window 5 seconds": "工具头连接已断开，辅助加热器已关闭。将在 5 秒内检查是否重新连接。",
+      "Toolhead reconnected: auxiliary preheat restored; print is not automatically resumed": "工具头已重新连接，辅助预热已恢复。打印仍处于暂停状态。",
+      "Toolhead heater turned off after 10 minutes idle.": "空闲 10 分钟后已关闭工具头辅助加热器。",
+      "Wait for both heater outputs to turn off before dock recovery.": "请等待两个加热器的输出都关闭，再重试装载恢复。",
+      "Dock recovery is unavailable. Inspect the tool and cancel the held print.": "无法恢复工具头装载。请检查工具并取消已暂停的打印。"
+    },
+    "zh_TW": {
+      "Toolhead detached: auxiliary heater off; reconnect window 5 seconds": "工具頭連線已中斷，輔助加熱器已關閉。將在 5 秒內檢查是否重新連線。",
+      "Toolhead reconnected: auxiliary preheat restored; print is not automatically resumed": "工具頭已重新連線，輔助預熱已恢復。列印仍處於暫停狀態。",
+      "Toolhead heater turned off after 10 minutes idle.": "閒置 10 分鐘後已關閉工具頭輔助加熱器。"
+    },
+    "en": {
+      "툴헤드의 센서를 확인하세요": "Check the toolhead sensor",
+      "툴 거치 확인": "Confirm tool parking",
+      "툴헤드 미부착 / 온도센서 연결 끊김": "Toolhead not attached / temperature sensor disconnected",
+      "툴헤드 온도센서 단락 의심": "Possible toolhead temperature sensor short circuit",
+      "툴헤드 온도센서 측정 범위 이상": "Toolhead temperature sensor reading out of range",
+      "툴헤드 온도센서 응답 대기": "Waiting for toolhead temperature sensor"
+    }
+  }
+}

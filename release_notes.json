@@ -10,20 +10,20 @@
     }
   },
   "lugoware_system": {
-    "version": "1.2.57",
+    "version": "1.2.58",
     "date": "2026/11/28",
     "notes": {
       "ko": [
-        "툴헤드 보조 두 버전의 노즐 가열 감시 설정을 통일했습니다.",
-        "툴을 바꾸는 동안 파츠 팬을 끄고, 도킹이 끝나면 이전 속도로 복원합니다."
+        "툴헤드 재도킹이 두 번 실패했을 때 내부 오류로 종료되던 문제를 수정했습니다.",
+        "툴헤드 센서·예열·일시정지·재개 알림에 화면 언어를 적용했습니다."
       ],
       "en": [
-        "Aligned nozzle heating-monitor settings across both auxiliary toolhead editions.",
-        "The part cooling fan turns off during a tool change and returns to its previous speed after docking."
+        "Fixed an internal error after the second unsuccessful toolhead redock attempt.",
+        "Toolhead sensor, heating, pause and resume notifications now follow the display language."
       ],
       "zh_CN": [
-        "统一两种工具头辅助加热版本的喷嘴加热监测设置。",
-        "换刀期间关闭模型冷却风扇，装载完成后恢复原有转速。"
+        "修复了工具头重新装载两次失败后触发内部错误的问题。",
+        "工具头传感器、加热、暂停和恢复的提示现在使用界面所选语言。"
       ]
     }
   }
