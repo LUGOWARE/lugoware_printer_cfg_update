@@ -10,20 +10,20 @@
     }
   },
   "lugoware_system": {
-    "version": "1.2.55",
+    "version": "1.2.56",
     "date": "2026/11/28",
     "notes": {
       "ko": [
-        "M5P 툴헤드 보조 설치를 노즐 히터 1개와 2개 구성으로 나눴습니다.",
-        "프라임 후 툴헤드 센서 안정 확인을 거치대 안에서 마쳐, 빠져나온 뒤 불필요한 대기를 줄였습니다."
+        "툴헤드 보조 두 버전에서 도킹 동작이 끝나고 센서 연결을 확인한 뒤 보조 가열을 시작합니다.",
+        "자동 재도킹으로 해결되지 않으면 안전이 확인된 경우 X10 Y125에서 일시정지합니다. 이동을 건너뛴 이유는 로그에서 확인할 수 있습니다."
       ],
       "en": [
-        "Added separate M5P auxiliary toolhead options for one or two nozzle heaters.",
-        "The toolhead sensor now settles at the dock after priming, reducing the delay after leaving the dock."
+        "Both auxiliary toolhead editions start heating after docking motion finishes and the sensor connection is confirmed.",
+        "If automatic redocking fails, printing pauses at X10 Y125 when movement is safe. The log records why movement was skipped."
       ],
       "zh_CN": [
-        "M5P 工具头辅助加热安装现可选择一个或两个喷嘴加热器。",
-        "预挤出后在工具架内完成传感器稳定检查，减少离开工具架后的等待。"
+        "两种工具头辅助加热版本均在完成装载动作并确认传感器连接后启动辅助加热。",
+        "自动重新装载失败时，若确认可安全移动，则在 X10 Y125 暂停打印。日志会记录跳过移动的原因。"
       ]
     }
   }

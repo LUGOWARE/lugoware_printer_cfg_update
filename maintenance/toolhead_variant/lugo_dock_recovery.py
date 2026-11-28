@@ -32,7 +32,7 @@ class DockRecovery:
         if dock and self.fast.sd.current_file is not None:
             self.candidate = (depth, int(dock[1]), line)
 
-    def begin_hold(self, slot):
+    def begin_hold(self, slot, returned=False):
         now = self.reactor.monotonic()
         position = tuple(self.printer.lookup_object('toolhead').get_status(now)['position'][:3])
         move = self.printer.lookup_object('gcode_move').get_status(now)
@@ -51,6 +51,7 @@ class DockRecovery:
                 self.record['position'] = position
                 self.record['recovery_z'] = recovery_z
                 self.record['id'] = self.sequence
+                self.record['returned'] = returned
             return
         dock = self.candidate
         self.record = None
@@ -60,7 +61,7 @@ class DockRecovery:
             return
         self.record = {'dock': dock[2], 'depth': dock[0], 'slot': slot, 'id': self.sequence,
                        'file': sd.current_file, 'offset': sd.get_file_position(),
-                       'position': position, 'recovery_z': recovery_z, 'route': settings,
+                       'position': position, 'recovery_z': recovery_z, 'route': settings, 'returned': returned,
                        'continuation': [], 'sealed': False}
 
     def begin_print_hold(self, slot, targets):
@@ -163,6 +164,11 @@ class DockRecovery:
             return False
         x, y = record['route']['retry_x'], record['route']['retry_y']
         saved_x, saved_y, _ = record['position']
+        if record.get('returned'):
+            if (abs(saved_x - 10.) <= .1 and abs(saved_y - 125.) <= .1
+                    and all(abs(a - b) <= .1 for a, b in zip(head['position'], record['position']))):
+                return True
+            raise gcmd.error('Carriage position changed from the verified X10 Y125 wait position.')
         if abs(saved_x - x) > .1 or abs(saved_y - y) > .1:
             raise gcmd.error('The saved tool position is outside the verified dock exit.')
         current_x, current_y = head['position'][:2]

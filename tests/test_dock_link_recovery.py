@@ -27,7 +27,8 @@ class DockLinkRecoveryTests(unittest.TestCase):
         a.wait_dock_link = Mock(return_value=True)
         a.park_recovery_tool = Mock(return_value=True)
         a.hold_dock = Mock()
-        a.fault_wait_position = Mock()
+        a.fault_wait_position = Mock(return_value=True)
+        a.log_dock_block = Mock()
 
     def pause(self, deadline):
         self.time = deadline
@@ -103,10 +104,52 @@ class DockLinkRecoveryTests(unittest.TestCase):
         self.fast.dock_abort = False
         a.dock_open_until = None
         a.dock_stage = 'prime'
+        a.pause_at_dock = Mock()
         a.wait_dock_link.return_value = False
         a.prime_complete(None)
-        a.hold_dock.assert_called_once()
+        a.pause_at_dock.assert_called_once()
+        self.assertTrue(a.pause_at_dock.call_args.kwargs["after_prime"])
         self.assertNotEqual(a.dock_stage, 'exit')
+
+    def test_pause_parks_attached_tool_before_returning(self):
+        a = self.adapter
+        self.fast.phase = 'docking'
+        a.printer.is_shutdown = lambda: False
+        a.pause_at_dock(None, self.fast, 'test')
+        a.park_recovery_tool.assert_called_once()
+        a.fault_wait_position.assert_called_once_with(self.fast)
+        self.assertTrue(a.hold_dock.call_args.kwargs['returned'])
+
+    def test_pause_moves_only_for_confirmed_empty_carriage(self):
+        a = self.adapter
+        a.printer.is_shutdown = lambda: False
+        a.wait_dock_link.side_effect = lambda fast, state: state == 'disconnected'
+        self.fast.phase = 'docking'
+        a.pause_at_dock(None, self.fast, 'test')
+        a.park_recovery_tool.assert_not_called()
+        a.fault_wait_position.assert_not_called()
+        a.log_dock_block.assert_called_once()
+        self.fast.phase = 'empty'
+        a.pause_at_dock(None, self.fast, 'test')
+        a.park_recovery_tool.assert_not_called()
+        a.fault_wait_position.assert_called_once_with(self.fast)
+
+    def test_protected_sensor_faults_still_stop_heating(self):
+        for state, temp, power, last_active in (
+                ('connected', -8.2, 0., 9.),
+                ('short_circuit', None, .4, None),
+                ('connected', 301., 0., None)):
+            with self.subTest(state=state, temp=temp):
+                a = self.adapter
+                a.failed = False
+                a.last_active = last_active
+                a.minimum, a.maximum = 0., 300.
+                a.heater = NS(target_temp=0., last_pwm_value=power, set_temp=Mock())
+                a.printer.invoke_shutdown = Mock()
+                a.sample(self.time, state, temp)
+                a.heater.set_temp.assert_called_once_with(0.)
+                a.printer.invoke_shutdown.assert_called_once()
+                self.assertEqual(self.trace, [])
 
     def test_unconfirmed_redock_stops_before_another_move(self):
         self.adapter.wait_dock_link.side_effect = [True, True, False, False]

@@ -139,6 +139,20 @@ class DockRecoveryTest(unittest.TestCase):
         self.assertLess(self.trace.index('ENABLE_SENSOR'), self.trace.index('BASE_RESUME'))
         self.assertFalse(self.rec.available())
 
+    def test_resumes_from_verified_x10_y125_only(self):
+        self.hold()
+        self.pose[:2] = [10., 125.]
+        self.rec.record.update(returned=True, position=tuple(self.pose[:3]))
+        self.pose[1] += 1.
+        with self.assertRaisesRegex(ValueError, 'X10 Y125'):
+            self.rec.resume(self.command)
+        self.assertEqual(self.trace, [])
+        self.pose[1] = 125.
+        self.rec.resume(self.command)
+        self.assertEqual([line for line in self.trace if line.startswith('G1 X')], [])
+        self.assertLess(self.trace.index('G28 X Y'), self.trace.index('HEAT'))
+        self.assertIn('BASE_RESUME', self.trace)
+
     def test_x0_does_not_bypass_saved_position_or_sensor_checks(self):
         self.hold()
         self.pose[0] = 0.

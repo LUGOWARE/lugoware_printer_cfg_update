@@ -154,6 +154,12 @@ def dock_temperature_actions(text, enable):
                                   '    {% set preheat_temp = normal_temp %}\n    M104')
             if block.count(gate) != 1:
                 raise ValueError('Missing safe preheat gate for DOCK_TOOL_%d' % slot)
+            # Drain the final wipe before checking the connector or arming heat.
+            phase_start = block.index(gate)
+            last_motion = list(re.finditer(r'(?m)^[ \t]+G[0123][ \t]', block[:phase_start]))
+            if not last_motion or not re.search(r'(?m)^[ \t]+M400[ \t]*(?:#.*)?$',
+                                                block[last_motion[-1].end():phase_start]):
+                raise ValueError('Missing final wipe barrier for DOCK_TOOL_%d' % slot)
             block, count = re.subn(r'(?m)^(    FAST_CANCEL_PRIME STATE=end TOOL=%d EXIT_X=([\d.]+)\n)' % slot,
                                    r'\1    TOOLHEAD_PRIME_COMPLETE EXIT_X=\2\n', block)
             if count != 1:
