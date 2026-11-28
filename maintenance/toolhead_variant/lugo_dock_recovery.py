@@ -179,6 +179,59 @@ class DockRecovery:
             raise gcmd.error('Carriage position changed outside the verified dock or its X0 exit. Print remains paused.')
         return False
 
+    def home_xy(self):
+        # Only these two periodic jobs can wait. Keep the sensor watchdog,
+        # status publishing and all motion, cancel and heater callbacks live.
+        deferred = {
+            ('exclude_tool_guard', 'ExcludeToolGuard.flush_pending'),
+            ('lugo_recovery', 'Recovery.tick'),
+        }
+        monitored = deferred | {
+            ('paused_tool_service', 'PausedToolService.watchdog'),
+            ('webhooks', 'QueryStatusHelper._do_query'),
+        }
+        samples = {}
+        wrapped = []
+        active = True
+
+        def profile(callback, key):
+            name = key[1]
+            row = samples[name] = dict(calls=0, deferred=0, max_ms=0., max_dispatch_ms=0.)
+
+            def measured(eventtime):
+                if not active:
+                    return callback(eventtime)
+                start = self.reactor.monotonic()
+                row['max_dispatch_ms'] = max(row['max_dispatch_ms'], (start - eventtime) * 1000.)
+                if key in deferred:
+                    row['deferred'] += 1
+                    return start + .25
+                row['calls'] += 1
+                try:
+                    return callback(eventtime)
+                finally:
+                    row['max_ms'] = max(row['max_ms'], (self.reactor.monotonic() - start) * 1000.)
+
+            return measured
+
+        try:
+            for timer in getattr(self.reactor, '_timers', ()):
+                callback = timer.callback
+                key = (getattr(callback, '__module__', '').rsplit('.', 1)[-1],
+                       getattr(callback, '__qualname__', ''))
+                if key in monitored:
+                    wrapper = profile(callback, key)
+                    timer.callback = wrapper
+                    wrapped.append((timer, callback, wrapper))
+            self.gcode.run_script_from_command('G28 X Y\nM400')
+        finally:
+            active = False
+            for timer, callback, wrapper in wrapped:
+                if timer.callback is wrapper:
+                    timer.callback = callback
+            if samples:
+                logging.info('Dock recovery XY homing callback timing: %s', samples)
+
     def resume(self, gcmd):
         if not self.available() or gcmd.get_int('CONFIRMED', 0) != self.record['id']:
             raise gcmd.error('No recoverable dock pause. Confirm the tool is parked before retrying.')
@@ -197,9 +250,11 @@ class DockRecovery:
             _, release_x, clear_x = record['route']['retry_exit']
             retreat = () if already_clear else ('G1 X%g F700' % release_x, 'G1 X%g F1800' % clear_x,
                                                'G1 X0 F3600')
-            for command in (*retreat, 'G28 X Y'):
+            for command in retreat:
                 self.require_safe(gcmd, record, at_dock=False)
                 run(command + '\nM400')
+            self.require_safe(gcmd, record, at_dock=False)
+            self.home_xy()
             self.require_safe(gcmd, record, at_dock=False)
             run('RESTORE_GCODE_STATE NAME=LUGO_DOCK_RECOVERY MOVE=0')
             run(record['dock'])
@@ -277,7 +332,7 @@ class DockRecovery:
             run('G1 Z%.9f F1000\nM400' % safe_z)
             self.require_empty(gcmd, record)
             self.check_print_pose(gcmd, (x, y, safe_z))
-            run('G28 X Y\nM400')
+            self.home_xy()
             self.require_empty(gcmd, record)
             self.check_print_pose(gcmd)
             now = self.reactor.monotonic()

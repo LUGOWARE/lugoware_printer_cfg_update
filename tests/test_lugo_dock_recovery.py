@@ -100,6 +100,50 @@ class DockRecoveryTest(unittest.TestCase):
         self.assertTrue(self.rec.available())
         self.trace.clear()
 
+    def test_home_defers_only_background_work_and_restores_timers_on_failure(self):
+        now = [10.]
+        seen = []
+
+        def timer(module, name):
+            def callback(eventtime):
+                seen.append(name)
+                now[0] += .010
+                return eventtime + .25
+            callback.__module__ = module
+            callback.__qualname__ = name
+            return NS(callback=callback)
+
+        timers = [
+            timer('extras.lugo_recovery', 'Recovery.tick'),
+            timer('extras.exclude_tool_guard', 'ExcludeToolGuard.flush_pending'),
+            timer('extras.paused_tool_service', 'PausedToolService.watchdog'),
+            timer('webhooks', 'QueryStatusHelper._do_query'),
+            timer('extras.verify_heater', 'HeaterCheck.check_event'),
+            timer('extras.fast_cancel', 'FastCancel.request'),
+            timer('extras.detachable_heater_sensor', 'DetachableSensor.watchdog'),
+        ]
+        original = [t.callback for t in timers]
+        self.rec.reactor._timers = timers
+        self.rec.reactor.monotonic = lambda: now[0]
+
+        def run(script):
+            self.assertEqual(script, 'G28 X Y\nM400')
+            for t in timers:
+                self.assertGreater(t.callback(10.), 10.)
+            raise ValueError('home failed')
+
+        self.gcode.run_script_from_command = run
+        with self.assertLogs(level='INFO') as logs:
+            with self.assertRaisesRegex(ValueError, 'home failed'):
+                self.rec.home_xy()
+        self.assertEqual(seen, [fn.__qualname__ for fn in original[2:]])
+        self.assertEqual([t.callback for t in timers], original)
+        self.assertIn("'deferred': 1", logs.output[0])
+        self.assertIn("'calls': 1", logs.output[0])
+        for t in timers[:2]:
+            t.callback(now[0])
+        self.assertEqual(seen[-2:], [fn.__qualname__ for fn in original[:2]])
+
     def test_continues_first_dock_before_advancing_sd(self):
         self.hold('START_PRINT')
         def process(commands, need_ack):

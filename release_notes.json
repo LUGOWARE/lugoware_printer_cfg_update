@@ -10,20 +10,17 @@
     }
   },
   "lugoware_system": {
-    "version": "1.2.61",
+    "version": "1.2.62",
     "date": "2026/11/28",
     "notes": {
       "ko": [
-        "툴헤드 프라임 후 정상 도킹이면 거치대를 빠져나와 출력 위치로 바로 이어서 이동합니다.",
-        "이탈 중 센서 이상이 생기면 가열을 차단하고 보호 일시정지합니다."
+        "툴헤드 보조 버전에서 출력 재개 시 XY 원점 복귀를 우선하고, 지연 원인을 확인할 수 있도록 로그를 남깁니다."
       ],
       "en": [
-        "After priming, a healthy toolhead moves continuously from the rack to the print.",
-        "A sensor fault during rack exit turns off heating and pauses the print."
+        "Auxiliary toolhead profiles prioritize XY homing during print recovery and log callback timing for troubleshooting."
       ],
       "zh_CN": [
-        "预挤出后，工具头状态正常时连续离开工具架并移向打印位置。",
-        "离开工具架时发现传感器故障，将关闭加热并暂停打印。"
+        "辅助工具头版本在恢复打印时优先执行 XY 回零，并记录回调耗时，便于排查延迟。"
       ]
     }
   }
