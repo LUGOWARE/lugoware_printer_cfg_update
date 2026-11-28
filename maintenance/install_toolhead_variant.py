@@ -762,6 +762,16 @@ def merge_auxiliary_release(content, defaults):
     pid = {name: config.get(AUX[1], name) for name in TOOLHEAD_PID}
     if pid['control'] != 'pid':
         raise ValueError('Released auxiliary heater must use PID control')
+    verifier = 'verify_heater Toolhead'
+    max_error = '400'
+    block = section(content, verifier)
+    if block is None:
+        content = content.rstrip() + f'\n\n[{verifier}]\nmax_error: {max_error}\n'
+    elif re.search(r'(?m)^[ \t]*max_error[ \t]*[:=]', block[0]):
+        content = option_profile(content, verifier, 'max_error', max_error)
+    else:
+        line = content.index('\n', block.start()) + 1
+        content = content[:line] + f'max_error: {max_error}\n' + content[line:]
     for name in ('gcode_macro TOOLHEAD_IDLE_STATE', 'delayed_gcode turn_off_toolhead'):
         macro = section(defaults, name)
         if not macro:

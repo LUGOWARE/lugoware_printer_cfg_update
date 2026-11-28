@@ -10,17 +10,17 @@
     }
   },
   "lugoware_system": {
-    "version": "1.2.63",
+    "version": "1.2.64",
     "date": "2026/11/28",
     "notes": {
       "ko": [
-        "툴헤드 자동 재도킹은 첫 시도에서 1초 대기 후 진행하며, 두 번째 시도에서는 XY 원점 복귀 후 진행합니다."
+        "보조 툴헤드가 목표 온도에 도달한 뒤 일시적으로 온도가 떨어질 때 회복할 수 있는 범위를 조정했습니다."
       ],
       "en": [
-        "Automatic toolhead redocking waits one second on the first retry and homes XY before the second retry."
+        "Adjusted the auxiliary toolhead heater recovery allowance after it reaches the target temperature."
       ],
       "zh_CN": [
-        "工具头第一次自动重试对接前等待一秒，第二次重试前先执行 XY 回零。"
+        "调整了辅助工具头达到目标温度后短暂降温时的恢复余量。"
       ]
     }
   }

@@ -65,6 +65,21 @@ class VariantTests(unittest.TestCase):
         self.assertIn('prime_timeout: 55', result)
         self.assertIn('pid_kp: 37.690', result)
 
+    def test_auxiliary_max_error_upgrades_fresh_and_existing_profiles(self):
+        defaults = (ROOT/'maintenance/toolhead_variant/toolhead_auxiliary.cfg').read_text(encoding='utf-8')
+        for old in (None, defaults, defaults + '\n[verify_heater Toolhead]\ncheck_gain_time: 20\n',
+                    defaults + '\n[verify_heater Toolhead]\nmax_error: 120\ncheck_gain_time: 20\n'):
+            with self.subTest(old=old is not None):
+                cfg = variant.merge_auxiliary_release(old, defaults)
+                parser = configparser.RawConfigParser(inline_comment_prefixes=('#', ';'))
+                parser.read_string(cfg)
+                options = dict(parser.items('verify_heater Toolhead'))
+                expected = {'max_error': '400'}
+                if old and 'check_gain_time' in old:
+                    expected['check_gain_time'] = '20'
+                self.assertEqual(options, expected)
+                self.assertEqual(variant.merge_auxiliary_release(cfg, defaults), cfg)
+
     def test_prepare_extrusion_upgrade_changes_one_stock_move(self):
         old = 'G1 E{10.0 * factor} F{8.0 * 60 / (3.141592653589793 * (dia / 2) ** 2)}'
         cfg = ('[gcode_macro PREPARE_ACTION]\ngcode:\n    ' + old
