@@ -118,24 +118,6 @@
       "T[1-4] print temperature: ([-+\\d.]+) C",
       16,
       " °C"
-    ],
-    [
-      "툴헤드 온도센서 연결: ([-+\\d.]+)°C \\(센서 연결 감지\\)",
-      14,
-      " °C"
-    ],
-    [
-      "Toolhead reconnected: auxiliary preheat restored; print is not automatically resumed",
-      14
-    ],
-    [
-      "Toolhead heater turned off after 10 minutes idle\\.",
-      15
-    ],
-    [
-      "T[1-4] print temperature: ([-+\\d.]+) C",
-      16,
-      " °C"
     ]
   ],
   "locales": {
