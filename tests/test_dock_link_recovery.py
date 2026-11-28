@@ -6,6 +6,7 @@ from unittest.mock import Mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'maintenance/toolhead_variant'))
 from detachable_heater_sensor import DetachableHeaterSensor
+from lugo_dock_recovery import DockRecovery
 
 
 class DockLinkRecoveryTests(unittest.TestCase):
@@ -88,8 +89,30 @@ class DockLinkRecoveryTests(unittest.TestCase):
         position[0] = 334.
         self.assertFalse(a.home_before_redock(self.fast))
         home.assert_called_once()
-        home.side_effect = lambda: position.__setitem__(slice(None, 2), [0., 255.])
-        self.assertTrue(a.home_before_redock(self.fast))
+        unknown_calls = []
+        callback = unknown_calls.append
+        self.assertIsNone(callback.__module__)
+        timer = NS(callback=callback)
+        recovery = DockRecovery.__new__(DockRecovery)
+        recovery.reactor = a.source.reactor
+        recovery.reactor._timers = [timer]
+        recovery.gcode = a.source.gcode
+        self.fast.dock_recovery = recovery
+        a.dock_retries = 1
+
+        def run(script):
+            self.trace.append(script)
+            if script.startswith('G28'):
+                self.assertIs(timer.callback, callback)
+                timer.callback(self.time)
+                position[:2] = [0., 255.]
+
+        recovery.gcode.run_script_from_command = run
+        self.assertTrue(a.redock_parked_tool(self.fast, lambda: True))
+        self.assertEqual(self.trace, ['G28 X Y\nM400', '_TOOL_RETRY_DOCK_XY_T2\nM400'])
+        self.assertEqual(a.dock_retries, 2)
+        self.assertEqual(unknown_calls, [self.time])
+        self.assertIs(timer.callback, callback)
 
     def test_no_link_checks_return_without_attempting_parking(self):
         self.adapter.wait_dock_link.return_value = False

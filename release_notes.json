@@ -10,17 +10,17 @@
     }
   },
   "lugoware_system": {
-    "version": "1.2.64",
+    "version": "1.2.65",
     "date": "2026/11/28",
     "notes": {
       "ko": [
-        "보조 툴헤드가 목표 온도에 도달한 뒤 일시적으로 온도가 떨어질 때 회복할 수 있는 범위를 조정했습니다."
+        "툴헤드의 두 번째 자동 재도킹에서 진단 정보가 없어도 XY 원점 복귀가 진행되도록 수정했습니다."
       ],
       "en": [
-        "Adjusted the auxiliary toolhead heater recovery allowance after it reaches the target temperature."
+        "Fixed a diagnostic error that could interrupt XY homing before the second automatic toolhead redock."
       ],
       "zh_CN": [
-        "调整了辅助工具头达到目标温度后短暂降温时的恢复余量。"
+        "修复了第二次自动重试对接前，诊断信息缺失可能导致 XY 回零中断的问题。"
       ]
     }
   }

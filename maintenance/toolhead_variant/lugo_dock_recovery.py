@@ -217,8 +217,11 @@ class DockRecovery:
         try:
             for timer in getattr(self.reactor, '_timers', ()):
                 callback = timer.callback
-                key = (getattr(callback, '__module__', '').rsplit('.', 1)[-1],
-                       getattr(callback, '__qualname__', ''))
+                module = getattr(callback, '__module__', None)
+                name = getattr(callback, '__qualname__', None)
+                if not isinstance(module, str) or not isinstance(name, str):
+                    continue
+                key = (module.rsplit('.', 1)[-1], name)
                 if key in monitored:
                     wrapper = profile(callback, key)
                     timer.callback = wrapper
