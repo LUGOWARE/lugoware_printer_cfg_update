@@ -28,6 +28,24 @@ def profile():
 
 
 class VariantTests(unittest.TestCase):
+    def test_legacy_single_heater_retains_its_wiring_profile(self):
+        with tempfile.TemporaryDirectory() as directory, patch.dict(os.environ, {'LUGOWARE_VARIANT': ''}):
+            home = Path(directory)
+            marker = home / '.local/share/lugoware/variant.json'
+            marker.parent.mkdir(parents=True)
+            marker.write_text('{"variant":"toolhead"}', encoding='utf-8')
+            config = home / 'printer_data/config'
+            config.mkdir(parents=True)
+            base = config / 'printer_base.cfg'
+            base.write_text('[extruder]\nheater_pin: PC5  # nozzle\n', encoding='utf-8')
+            auxiliary = config / 'toolhead_auxiliary.cfg'
+            auxiliary.write_text('[heater_generic Toolhead]\nheater_pin: PA7\n', encoding='utf-8')
+            self.assertEqual(variant.selected(home), 'toolhead_single')
+            with patch.dict(os.environ, {'LUGOWARE_VARIANT': 'toolhead'}):
+                self.assertEqual(variant.selected(home), 'toolhead')
+            base.write_text('[extruder]\nheater_pin: multi_pin:dual_hotend_heater\n', encoding='utf-8')
+            self.assertEqual(variant.selected(home), 'toolhead')
+
     def test_auxiliary_release_uses_published_tuning_and_preserves_device_settings(self):
         defaults = (Path(variant.__file__).parent / 'toolhead_variant/toolhead_auxiliary.cfg').read_text(encoding='utf-8')
         installed = defaults.replace('sync_manual_preheat: False', 'sync_manual_preheat: True')

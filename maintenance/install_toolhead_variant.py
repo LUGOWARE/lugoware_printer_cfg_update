@@ -12,7 +12,8 @@ import paused_tool_service_hooks as paused_tools
 from install_panels import TOOL_CARD_RUNTIME, runtime_payload
 from patch_print_controls import prepare_extrusion_distance
 
-VARIANTS = ('standard', 'toolhead')
+SINGLE_HEATER = 'toolhead_single'
+VARIANTS = ('standard', 'toolhead', SINGLE_HEATER)
 SENSOR = 'temperature_toolhead_sensor toolhead_sensor'
 AUX = ('toolhead_auxiliary', 'heater_generic Toolhead')
 LEGACY_AUX_SENSOR = 'toolhead_temperature_test'
@@ -21,6 +22,8 @@ TOOLHEAD_MODULES = ('toolhead_auxiliary.py', 'toolhead_temperature_test.py',
                     'lugo_dock_recovery.py')
 NOZZLE_PID = dict(control='pid', pid_kp='13.953', pid_ki='0.511', pid_kd='95.230')
 TOOLHEAD_PID = dict(control='pid', pid_kp='37.681', pid_ki='9.191', pid_kd='38.623')
+SINGLE_NOZZLE_PID = dict(control='pid', pid_kp='25.304', pid_ki='1.231', pid_kd='129.999')
+SINGLE_TOOLHEAD_PID = dict(control='pid', pid_kp='29.327', pid_ki='3.153', pid_kd='68.185')
 TOOLHEAD_TUNING = ('prime_temperature_margin', 'prime_timeout', 'park_nozzle_preheat_offset')
 LEGACY_NOZZLE_OFFSETS = ('nozzle_temperature_offset', 'nozzle_offset_threshold', 'nozzle_offset_max_temp')
 RESUME_DOCK_HOLD = "{% if printer.fast_cancel.phase == 'dock_sensor_hold' %}"
@@ -178,11 +181,23 @@ def dock_temperature_actions(text, enable):
     return text
 
 
+def is_auxiliary(variant):
+    return variant in ('toolhead', SINGLE_HEATER)
+
+
 def selected(home):
     value = os.environ.get('LUGOWARE_VARIANT')
     if not value:
         path = home / '.local/share/lugoware/variant.json'
         value = json.loads(path.read_text())['variant'] if path.exists() else 'standard'
+        if value == 'toolhead':
+            config = home / 'printer_data/config'
+            base = config / 'printer_base.cfg'
+            auxiliary = config / 'toolhead_auxiliary.cfg'
+            if base.is_file() and auxiliary.is_file():
+                if (heater_pin(base.read_text(encoding='utf-8-sig'), 'extruder') == 'PC5'
+                        and heater_pin(auxiliary.read_text(encoding='utf-8-sig')) == 'PA7'):
+                    value = SINGLE_HEATER
     if value not in VARIANTS:
         raise ValueError('Unknown hardware variant; refusing to guess')
     return value
@@ -262,22 +277,22 @@ def pid_profile(text, name, values, variant='toolhead', fill=True, remember=Fals
     return text[:match.start()] + block + text[match.end():]
 
 
-def header_fields(text, variant):
+def header_fields(text, variant, nozzle_pid, toolhead_pid):
     text = nozzle_sensor_profile(text, variant)
-    text = pid_profile(text, 'extruder', NOZZLE_PID, variant, fill=False, remember=True)
+    text = pid_profile(text, 'extruder', nozzle_pid, variant, fill=False, remember=True)
     if variant == 'toolhead':
-        text = pid_profile(text, 'heater_generic Toolhead', TOOLHEAD_PID, fill=False)
+        text = pid_profile(text, 'heater_generic Toolhead', toolhead_pid, fill=False)
     return text
 
 
-def nozzle_header_profile(text, variant):
-    text = header_fields(text, variant)
+def nozzle_header_profile(text, variant, nozzle_pid=NOZZLE_PID, toolhead_pid=TOOLHEAD_PID):
+    text = header_fields(text, variant, nozzle_pid, toolhead_pid)
     # SAVE_CONFIG values override ordinary sections; apply the same release PID.
     start = re.search(r'(?m)^#\*# \[', text)
     if start:
         tail = text[start.start():]
         plain = re.sub(r'(?m)^#\*# ?', '', tail)
-        patched = header_fields(plain, variant)
+        patched = header_fields(plain, variant, nozzle_pid, toolhead_pid)
         if patched != plain:
             text = text[:start.start()] + ''.join('#*# ' + line for line in patched.splitlines(True))
     return text
@@ -637,6 +652,38 @@ def plan_paused_tools(home, assets, base, variant, screen_override, changes):
     return base
 
 
+def option_profile(text, name, option, value, required=True):
+    block = section(text, name)
+    pattern = r'(?m)^([ \t]*' + re.escape(option) + r'[ \t]*[:=][ \t]*)[^#;\r\n]+'
+    if block:
+        updated, count = re.subn(pattern, lambda m: m[1] + value + re.search(r'[ \t]*$', m[0])[0], block[0])
+        if count == 1:
+            return text[:block.start()] + updated + text[block.end():]
+        if count > 1:
+            raise ValueError('Duplicate option: ' + name + ' / ' + option)
+    if required:
+        raise ValueError('Missing option: ' + name + ' / ' + option)
+    return text
+
+
+def heater_pin(content, name=AUX[1]):
+    heater = section(content, name)
+    if not heater:
+        return None
+    found = re.search(r'(?m)^[ \t]*heater_pin[ \t]*[:=][ \t]*([^\s#;]+)', heater[0])
+    return found[1] if found else None
+
+
+def single_heater_base(base):
+    base = option_profile(base, 'extruder', 'heater_pin', 'PC5')
+    base = remove_section(base, 'multi_pin dual_hotend_heater')
+    base = re.sub(r'(?m)^[ \t]*SET_MULTI_PIN_MODE[ \t]+PIN=dual_hotend_heater[^\r\n]*\r?\n', '', base)
+    for match in re.finditer(r'(?m)^[ \t]*\w*pins?[ \t]*[:=][ \t]*([^#;\n]+)', base):
+        if re.search(r'\bPA7\b', match[1]):
+            raise ValueError('PA7 already assigned in printer_base.cfg')
+    return pid_profile(base, 'extruder', SINGLE_NOZZLE_PID)
+
+
 def merge_auxiliary_release(content, defaults):
     # Start with the installed file so device-specific options and sections survive.
     defaults = migrate_auxiliary_section(defaults.rstrip() + '\n')
@@ -662,6 +709,12 @@ def plan(home, variant, assets, base_override=None, screen_override=None, auxili
          header_template=None):
     if variant not in VARIANTS:
         raise ValueError('Invalid variant')
+    profile = variant
+    single = profile == SINGLE_HEATER
+    if is_auxiliary(profile):
+        variant = 'toolhead'
+    nozzle_pid = SINGLE_NOZZLE_PID if single else NOZZLE_PID
+    toolhead_pid = SINGLE_TOOLHEAD_PID if single else TOOLHEAD_PID
     config = home / 'printer_data/config'
     header_path = config / 'printer.cfg'
     original_header = header_path.read_bytes().decode('utf-8')
@@ -674,7 +727,7 @@ def plan(home, variant, assets, base_override=None, screen_override=None, auxili
     experimental = bool(section(header, AUX[0]) or section(base, SENSOR)
                         or '[include toolhead_auxiliary.cfg]' in header)
     changes = {}
-    if variant == 'standard' and previous != 'toolhead' and not experimental:
+    if variant == 'standard' and not is_auxiliary(previous) and not experimental:
         organized = organize_printer_header(header, order, model)
         if organized != original_header:
             changes[header_path] = organized.encode()
@@ -697,7 +750,16 @@ def plan(home, variant, assets, base_override=None, screen_override=None, auxili
         defaults = auxiliary_override
         if defaults is None:
             defaults = (assets / 'toolhead_auxiliary.cfg').read_text(encoding='utf-8')
-        changes[auxiliary] = merge_auxiliary_release(content, defaults).encode()
+        merged = merge_auxiliary_release(content, defaults)
+        if single:
+            merged = option_profile(merged, AUX[1], 'heater_pin', 'PA7')
+            merged = option_profile(merged, AUX[0], 'prime_temperature_margin', '0')
+            merged = pid_profile(merged, AUX[1], toolhead_pid)
+        elif previous == SINGLE_HEATER:
+            merged = option_profile(merged, AUX[1], 'heater_pin', 'PB7')
+        elif (heater_pin(merged) or '').lstrip('!^~') in ('PC5', 'PA7'):
+            raise ValueError('Auxiliary heater pin conflicts with the dual nozzle. Select the matching heater profile.')
+        changes[auxiliary] = merged.encode()
     for name in AUX:
         header = remove_section(header, name)
     if variant == 'standard':
@@ -706,8 +768,17 @@ def plan(home, variant, assets, base_override=None, screen_override=None, auxili
     header = re.sub(r'(?m)^\[include toolhead_auxiliary.cfg\]\s*\n', '', header)
     if variant == 'toolhead':
         header = '[include toolhead_auxiliary.cfg]\n' + header
-    changes[header_path] = organize_printer_header(nozzle_header_profile(header, variant), order, model).encode()
+    if single:
+        header = option_profile(header, 'extruder', 'heater_pin', 'PC5', required=False)
+    elif previous == SINGLE_HEATER:
+        if not section(base, 'multi_pin dual_hotend_heater'):
+            raise ValueError('The selected profile needs the original model config; run the installer.')
+        header = option_profile(header, 'extruder', 'heater_pin', 'multi_pin:dual_hotend_heater', required=False)
+    changes[header_path] = organize_printer_header(
+        nozzle_header_profile(header, variant, nozzle_pid, toolhead_pid), order, model).encode()
     base = toolchange_profile(paused_tools.strip_config(prepare_extrusion_distance(base)), variant, assets)
+    if single:
+        base = single_heater_base(base)
     base = pause_return_profile(base, variant == 'toolhead')
     patches = json.loads((assets / 'ui_patches.json').read_text(encoding='utf-8'))
     for rel, edits in patches.items():
@@ -743,7 +814,7 @@ def plan(home, variant, assets, base_override=None, screen_override=None, auxili
     changes[index] = text.encode()
     # Unused module files/auxiliary cfg remain for rollback, but no config loads
     # them in standard mode. The Mainsail script is likewise not included.
-    changes[marker] = json.dumps({'variant': variant}).encode()
+    changes[marker] = json.dumps({'variant': profile}).encode()
     return changes
 
 
@@ -800,9 +871,9 @@ def apply(home, variant, backup, base_override=None):
     assets = Path(__file__).with_name('toolhead_variant')
     auxiliary_path = home / 'lugoware_config/toolhead_auxiliary.cfg'
     auxiliary = None
-    if variant == 'toolhead' and auxiliary_path.is_file():
+    if is_auxiliary(variant) and auxiliary_path.is_file():
         auxiliary = auxiliary_path.read_text(encoding='utf-8-sig')
-    template_name = 'printer_header_toolhead.cfg' if variant == 'toolhead' else 'printer_header.cfg'
+    template_name = 'printer_header_toolhead.cfg' if is_auxiliary(variant) else 'printer_header.cfg'
     template_path = home / 'lugoware_config' / template_name
     template = template_path.read_text(encoding='utf-8-sig') if template_path.is_file() else None
     changes = plan(home, variant, assets, base_override, auxiliary_override=auxiliary, header_template=template)
@@ -841,8 +912,15 @@ def preflight(home, variant, assets, screen_upgrade_pending=None):
         raise ValueError('Invalid stored hardware profile; inspect variant.json')
     header = migrate_auxiliary_section((home / 'printer_data/config/printer.cfg').read_text(encoding='utf-8'))
     experimental = bool(section(header, AUX[0]) or '[include toolhead_auxiliary.cfg]' in header)
-    if variant == 'standard' and previous != 'toolhead' and not experimental:
+    if variant == 'standard' and not is_auxiliary(previous) and not experimental:
         return
+    if variant == 'toolhead' and previous != SINGLE_HEATER:
+        auxiliary = home / 'printer_data/config/toolhead_auxiliary.cfg'
+        content = auxiliary.read_text(encoding='utf-8-sig') if auxiliary.is_file() else header
+        if (heater_pin(content) or '').lstrip('!^~') in ('PC5', 'PA7'):
+            raise ValueError('Auxiliary heater pin conflicts with the dual nozzle. Select the matching heater profile.')
+    if is_auxiliary(variant):
+        variant = 'toolhead'
     if screen_upgrade_pending is None:
         import subprocess
         from upgrade_klipperscreen import MIN_VERSION

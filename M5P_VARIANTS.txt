@@ -2,14 +2,21 @@ M5P installation profiles / M5P 설치 방식
 
 Installation order: select FLEX4 M/L/W, then select:
 1. Standard / 표준 버전 / 标准版
-2. Auxiliary toolhead heating / 툴헤드 예열 보조 버전 / 工具头辅助加热版
+2. Auxiliary (2 nozzle heaters, 1 toolhead heater) / 툴헤드 보조 (히터2,툴헤드1)
+3. Auxiliary (1 nozzle heater, 1 toolhead heater) / 툴헤드 보조 (히터1,툴헤드1)
+
+Option 3 uses PC5 for the nozzle and PA7 for the auxiliary heater. It uses the
+.50 reference PID and waits for the auxiliary toolhead to reach the slicer
+target before priming. Nozzle and auxiliary temperature protections remain in
+place. Existing option 2 installations keep their stored selection. A legacy
+auxiliary configuration using PC5 and PA7 is migrated to option 3 on update.
 
 Only M5P GitHub and Gitee distributions support this selection. M8P is unchanged.
 The model Git branches remain FLEX4_M, FLEX4_L, FLEX4_W. Hardware profiles are
 separate overlays; model motion coordinates are never copied from the test printer.
 The standard model branches were not modified by this release.
 
-The auxiliary profile matches the tested .97 software configuration:
+The two-nozzle-heater auxiliary profile matches the tested .97 software configuration:
 - Existing PT1000 nozzle sensor PA1 (stock conversion, no pt1000_cal); Generic 3950 thermistor PA2, pull-up 4700 ohm.
 - PB7 drives the DFR0457 heater interface, with a 24V 48W heater.
 - Sensor presence replaces the standard PC3 toolhead presence input.

@@ -49,15 +49,19 @@ echo "선택된 모델: $MODEL (브랜치: $BRANCH)"
 if (( ! SYSTEM_ONLY )); then
     echo "버전을 선택하세요 / Select version / 选择版本:"
     echo "  1) 표준 버전 / Standard / 标准版"
-    echo "  2) 툴헤드 예열 보조 버전 / Auxiliary toolhead heating / 工具头辅助加热版"
-    read -r -p "번호 입력 (1/2): " variant_choice </dev/tty
+    echo "  2) 툴헤드 보조 (히터2,툴헤드1) / Auxiliary (2 nozzle heaters, 1 toolhead heater) / 辅助加热（喷嘴2，工具头1）"
+    echo "  3) 툴헤드 보조 (히터1,툴헤드1) / Auxiliary (1 nozzle heater, 1 toolhead heater) / 辅助加热（喷嘴1，工具头1）"
+    read -r -p "번호 입력 (1/2/3): " variant_choice </dev/tty
     case "$variant_choice" in
         1) export LUGOWARE_VARIANT=standard ;;
         2) export LUGOWARE_VARIANT=toolhead ;;
+        3) export LUGOWARE_VARIANT=toolhead_single ;;
         *) echo "Invalid version selection" >&2; exit 1 ;;
     esac
     if [[ "$LUGOWARE_VARIANT" == toolhead ]]; then
         echo "M5P: nozzle sensor PA1; Generic3950 PA2; DFR0457 PB7; 24V 48W. Verify wiring before heating."
+    elif [[ "$LUGOWARE_VARIANT" == toolhead_single ]]; then
+        echo "M5P: nozzle heater PC5; auxiliary heater PA7; nozzle sensor PA1; Generic3950 PA2. Verify wiring before heating."
     fi
 fi
 
@@ -157,7 +161,7 @@ fi
 # Capture sensor wiring before the existing header/includes are replaced.
 if (( ! SYSTEM_ONLY )); then
 BASE_CONFIG="$REPO_DIR/printer_base.cfg"
-if [[ "$LUGOWARE_VARIANT" == toolhead && -f "$REPO_DIR/printer_base_toolhead.cfg" ]]; then
+if [[ "$LUGOWARE_VARIANT" == toolhead* && -f "$REPO_DIR/printer_base_toolhead.cfg" ]]; then
     BASE_CONFIG="$REPO_DIR/printer_base_toolhead.cfg"
 fi
 python3 "$COMMON_REPO/maintenance/preserve_sensor_pins.py" \
@@ -193,7 +197,7 @@ fi
 copy_config "$REPO_DIR/crowsnest.conf" "$CONFIG_DIR/crowsnest.conf"
 if (( ! SYSTEM_ONLY )); then
 SCREEN_CONFIG="$REPO_DIR/KlipperScreen.conf"
-if [[ "$LUGOWARE_VARIANT" == toolhead && -f "$REPO_DIR/KlipperScreen_toolhead.conf" ]]; then
+if [[ "$LUGOWARE_VARIANT" == toolhead* && -f "$REPO_DIR/KlipperScreen_toolhead.conf" ]]; then
     SCREEN_CONFIG="$REPO_DIR/KlipperScreen_toolhead.conf"
 fi
 python3 "$COMMON_REPO/maintenance/install_screen_config.py" \

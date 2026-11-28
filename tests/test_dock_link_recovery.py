@@ -58,7 +58,7 @@ class DockLinkRecoveryTests(unittest.TestCase):
         self.assertEqual(self.trace, [])
 
     def test_preprime_disconnected_retries_twice_without_heating(self):
-        self.adapter.wait_dock_link.side_effect = lambda fast, state, deadline: state == 'disconnected'
+        self.adapter.wait_dock_link.side_effect = lambda fast, state, deadline=None: state == 'disconnected'
         self.assertFalse(self.recover())
         self.assertEqual(self.trace, ['_TOOL_RETRY_DOCK_XY_T2\nM400'] * 2)
         self.assertEqual(self.adapter.park_recovery_tool.call_count, 2)
@@ -75,6 +75,38 @@ class DockLinkRecoveryTests(unittest.TestCase):
         self.adapter.park_recovery_tool.assert_called_once_with(None, self.fast, True)
         self.adapter.hold_dock.assert_called_once()
         self.assertEqual(self.trace, [])
+
+    def test_settle_before_exit_and_check_once_after_motion(self):
+        a = self.adapter
+        a.printer = NS(lookup_object=lambda name: self.fast if name == 'fast_cancel' else
+                       NS(wait_moves=lambda: self.trace.append('moves drained')),
+                       is_shutdown=lambda: False)
+        self.fast.dock_abort = False
+        a.dock_open_until = None
+        a.dock_stage = 'prime'
+        a.pause_at_dock = Mock()
+        a.prime_complete(None)
+        a.wait_dock_link.assert_called_once_with(self.fast, 'connected', 11.)
+        self.assertEqual(a.dock_stage, 'exit')
+        a.wait_dock_link.reset_mock()
+        a.wait_dock_link.return_value = False
+        a.verify_dock_exit(None)
+        a.wait_dock_link.assert_called_once_with(self.fast, 'connected')
+        self.assertEqual(self.trace, ['moves drained', 'moves drained'])
+        a.pause_at_dock.assert_called_once()
+        self.assertTrue(a.pause_at_dock.call_args.kwargs['at_exit'])
+
+    def test_unstable_sensor_holds_before_exit(self):
+        a = self.adapter
+        a.printer = NS(lookup_object=lambda name: self.fast if name == 'fast_cancel' else
+                       NS(wait_moves=Mock()), is_shutdown=lambda: False)
+        self.fast.dock_abort = False
+        a.dock_open_until = None
+        a.dock_stage = 'prime'
+        a.wait_dock_link.return_value = False
+        a.prime_complete(None)
+        a.hold_dock.assert_called_once()
+        self.assertNotEqual(a.dock_stage, 'exit')
 
     def test_unconfirmed_redock_stops_before_another_move(self):
         self.adapter.wait_dock_link.side_effect = [True, True, False, False]

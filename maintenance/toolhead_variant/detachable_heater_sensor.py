@@ -255,10 +255,10 @@ class DetachableHeaterSensor:
                 raise gcmd.error('Toolhead did not reach %.1f C before prime' % threshold)
             now = reactor.pause(min(now + .1, deadline))
 
-    def wait_dock_link(self, fast, expected, deadline):
+    def wait_dock_link(self, fast, expected, deadline=None):
         reactor = self.source.reactor
         now = reactor.monotonic()
-        while now <= deadline:
+        while deadline is None or now <= deadline:
             if self.failed or self.printer.is_shutdown() or fast.requested or fast.cleaning:
                 return False
             status = self.source.get_status(now)
@@ -266,7 +266,7 @@ class DetachableHeaterSensor:
             if state == expected and (state == 'disconnected' or (
                     temp is not None and self.minimum <= temp <= self.maximum and self.valid_samples >= 9)):
                 return True
-            if state in ('short_circuit', 'invalid', 'stale') or now == deadline:
+            if state in ('short_circuit', 'invalid', 'stale') or deadline is None or now >= deadline:
                 return False
             now = reactor.pause(min(now + .1, deadline))
         return False
@@ -304,9 +304,9 @@ class DetachableHeaterSensor:
         retreat = () if at_exit else ('G1 X%g F700' % exit_x, 'G1 X%g F700' % release_x,
                                       'G1 X%g F1800' % clear_x)
         for command in (*retreat, '_TOOL_RETRY_PARK_XY_T%d' % (slot + 1)):
-            if not (self.wait_dock_link(fast, 'connected', reactor.monotonic())
+            if not (self.wait_dock_link(fast, 'connected')
                     or (allow_disconnected and not after_prime and not at_exit
-                        and self.wait_dock_link(fast, 'disconnected', reactor.monotonic()))):
+                        and self.wait_dock_link(fast, 'disconnected'))):
                 return False
             run(command + '\nM400')
         return self.wait_dock_link(fast, 'disconnected', reactor.monotonic() + 1.)
@@ -321,7 +321,7 @@ class DetachableHeaterSensor:
                 or any(abs(head['position'][i] - move['gcode_position'][i]) > .1 for i in (0, 1))):
             return
         for command in ('G1 X0 F6000', 'G1 Y125 F6000'):
-            if not self.wait_dock_link(fast, 'disconnected', self.source.reactor.monotonic()):
+            if not self.wait_dock_link(fast, 'disconnected'):
                 return
             self.source.gcode.run_script_from_command(command + '\nM400')
 
@@ -332,7 +332,7 @@ class DetachableHeaterSensor:
         self.printer.lookup_object('extruder').get_heater().set_temp(0.)
         parked = False
         try:
-            if self.wait_dock_link(fast, 'connected', self.source.reactor.monotonic()):
+            if self.wait_dock_link(fast, 'connected'):
                 parked = self.park_recovery_tool(gcmd, fast, after_prime=False, at_exit=at_exit)
                 if parked:
                     self.fault_wait_position(fast)
@@ -363,7 +363,7 @@ class DetachableHeaterSensor:
             if connected:
                 parked = self.park_recovery_tool(gcmd, fast, after_prime)
             elif (not after_prime and not self.prime_incomplete and self.dock_retries < 2
-                  and self.wait_dock_link(fast, 'disconnected', reactor.monotonic())):
+                  and self.wait_dock_link(fast, 'disconnected')):
                 # Only the verified pre-prime dock pose is eligible without a sensor reading.
                 parked = self.park_recovery_tool(gcmd, fast, False, allow_disconnected=True)
             else:
@@ -377,7 +377,7 @@ class DetachableHeaterSensor:
                 self.hold_dock(gcmd, fast, 'Toolhead parked; print paused after a docking or prime fault')
                 return False
             reactor.pause(reactor.monotonic() + 1.)
-            if not self.wait_dock_link(fast, 'disconnected', reactor.monotonic()):
+            if not self.wait_dock_link(fast, 'disconnected'):
                 break
             self.dock_retries += 1
             self.source.gcode.respond_info('Toolhead redock attempt %d/2' % self.dock_retries)
@@ -409,17 +409,26 @@ class DetachableHeaterSensor:
                 break
             exit_x = gcmd.get_float('EXIT_X')
             self.source.gcode.run_script_from_command('G1 X%g F700\nM400' % exit_x)
-        self.dock_stage = 'exit' if not fast.requested and not self.printer.is_shutdown() else None
+        if fast.requested or fast.dock_abort or self.printer.is_shutdown():
+            self.dock_stage = None
+            return
+        # Finish sensor settling while the tool is still at the station.
+        deadline = self.source.reactor.monotonic() + 1.
+        if (not self.wait_dock_link(fast, 'connected', deadline)
+                or self.dock_open_until is not None):
+            if not fast.requested and not self.printer.is_shutdown():
+                self.hold_dock(gcmd, fast, 'Toolhead connection not stable before leaving dock; print paused')
+            return
+        self.dock_stage = 'exit'
 
     def verify_dock_exit(self, gcmd):
         self.printer.lookup_object('toolhead').wait_moves()
         fast = self.printer.lookup_object('fast_cancel')
-        now = self.source.reactor.monotonic()
         flagged = self.dock_stage == 'exit' and self.dock_open_until is not None
         self.dock_stage = None
         if fast.requested or self.printer.is_shutdown():
             return
-        if flagged or not self.wait_dock_link(fast, 'connected', now + 1.):
+        if flagged or not self.wait_dock_link(fast, 'connected'):
             self.pause_at_dock(gcmd, fast, 'Toolhead connection failed at dock exit; print paused', at_exit=True)
 
     def skip_interrupted_prime_line(self, command):
@@ -523,7 +532,7 @@ class DetachableHeaterSensor:
             return
         if (slot == tool == fast.slot and fast.phase == 'docked'
                 and set(head.get_status(now)['homed_axes']) == set('xyz')
-                and self.wait_dock_link(fast, 'connected', self.source.reactor.monotonic())):
+                and self.wait_dock_link(fast, 'connected')):
             try:
                 self.source.gcode.run_script_from_command('PAUSE\nM400')
                 self.fault_wait_position(fast)
