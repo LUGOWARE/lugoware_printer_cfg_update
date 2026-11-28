@@ -672,6 +672,65 @@ def option_profile(text, name, option, value, required=True):
     return text
 
 
+AUX_FAN_SAVE = '    {% set part_fan_pwm = (printer.fan.speed|float * 255)|round(0)|int %}\n    M107\n'
+AUX_FAN_RESTORE = '    _RESTORE_TOOLCHANGE_PART_FAN TOOL={next_tool} PWM={part_fan_pwm}\n'
+AUX_FAN_MACRO = '''[gcode_macro _RESTORE_TOOLCHANGE_PART_FAN]
+gcode:
+    {% set tc = printer.fast_cancel %}
+    {% set tool = params.TOOL|int %}
+    {% set pwm = params.PWM|int %}
+    {% if 0 < pwm <= 255 and tc.phase == 'docked' and tc.tool == tool and not tc.requested and not tc.cleaning and printer['gcode_macro TOOL_STATE'].active_tool|int == tool %}
+        M106 S{pwm}
+    {% endif %}'''
+DUTY_CHECK = '{% if target > 0 and duty > 0.85 and rise < 5.0 %}'
+AUX_DUTY_CHECK = DUTY_CHECK.replace('and duty', 'and (target - temp) > 5.0 and duty')
+
+
+def auxiliary_print_profile(base, enabled):
+    verifier = section(base, 'verify_heater extruder')
+    if verifier:
+        backup = re.search(r'(?m)^# lugoware_standard_max_error: ([0-9.eE+-]+)\n', verifier[0])
+        if enabled and not backup:
+            value = re.search(r'(?m)^max_error[ \t]*[:=][ \t]*([0-9.eE+-]+)', verifier[0])
+            if not value:
+                raise ValueError('Missing nozzle max_error')
+            index = verifier.start() + verifier[0].index('\n') + 1
+            base = base[:index] + '# lugoware_standard_max_error: ' + value[1] + '\n' + base[index:]
+        if enabled or backup:
+            base = option_profile(base, 'verify_heater extruder', 'max_error', '400' if enabled else backup[1])
+        if not enabled and backup:
+            base = base.replace(backup[0], '', 1)
+    elif enabled:
+        raise ValueError('Missing nozzle heater verification')
+
+    base = remove_section(base, 'gcode_macro _RESTORE_TOOLCHANGE_PART_FAN')
+    duty = section(base, 'delayed_gcode duty_guard_check')
+    if duty:
+        block = duty[0].replace(AUX_DUTY_CHECK, DUTY_CHECK)
+        if enabled:
+            if block.count(DUTY_CHECK) != 1:
+                raise ValueError('Unsupported nozzle duty guard')
+            block = block.replace(DUTY_CHECK, AUX_DUTY_CHECK)
+        base = base[:duty.start()] + block + base[duty.end():]
+    change = section(base, 'gcode_macro CHANGE_TOOL')
+    if enabled and (not change or not duty):
+        raise ValueError('Missing toolchange or nozzle duty guard')
+    if change:
+        block = change[0].replace(AUX_FAN_SAVE, '').replace(AUX_FAN_RESTORE, '')
+        if enabled:
+            start = '    {% if st.active_tool|int != next_tool %}\n'
+            end = r'(?m)^    M220 S\{\(sf \* 100\)\|round\(1\)\}[^\n]*\n'
+            if block.count(start) != 1:
+                raise ValueError('Unsupported toolchange fan start')
+            block = block.replace(start, start + AUX_FAN_SAVE)
+            block, count = re.subn(end, lambda m: m[0] + AUX_FAN_RESTORE, block)
+            if count != 1:
+                raise ValueError('Unsupported toolchange fan restore point')
+            block = block.rstrip() + '\n\n' + AUX_FAN_MACRO + '\n\n'
+        base = base[:change.start()] + block + base[change.end():]
+    return base
+
+
 def heater_pin(content, name=AUX[1]):
     heater = section(content, name)
     if not heater:
@@ -785,6 +844,8 @@ def plan(home, variant, assets, base_override=None, screen_override=None, auxili
     base = toolchange_profile(paused_tools.strip_config(prepare_extrusion_distance(base)), variant, assets)
     if single:
         base = single_heater_base(base)
+    if variant == 'toolhead' or is_auxiliary(previous):
+        base = auxiliary_print_profile(base, variant == 'toolhead')
     base = pause_return_profile(base, variant == 'toolhead')
     patches = json.loads((assets / 'ui_patches.json').read_text(encoding='utf-8'))
     for rel, edits in patches.items():
